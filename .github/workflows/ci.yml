@@ -31,6 +31,13 @@ jobs:
         run: forge build
       - name: Test
         run: forge test -vv
+      - name: Export compiled FWA ABI
+        uses: actions/upload-artifact@v7
+        with:
+          name: hwa-fwa-abi-${{ github.sha }}
+          path: out/FWA.sol/FWA.json
+          if-no-files-found: error
+          retention-days: 1
 
   frontend:
     runs-on: ubuntu-latest
@@ -60,6 +67,7 @@ jobs:
       - run: npm run test:e2e:production
 
   indexer:
+    needs: solidity
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -73,6 +81,11 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: indexer/package-lock.json
+      - name: Import ABI compiled by the Solidity job
+        uses: actions/download-artifact@v8
+        with:
+          name: hwa-fwa-abi-${{ github.sha }}
+          path: out/FWA.sol
       - run: npm ci
       # The indexer has no runtime npm dependencies. graph-cli and graph-ts are
       # build-only tools, so this mirrors the release gate's shipped-dependency audit.
