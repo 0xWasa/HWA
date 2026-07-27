@@ -1,10 +1,10 @@
 {
     "schemaVersion":  2,
-    "generatedAtUtc":  "2026-07-27T18:39:20.8834642Z",
+    "generatedAtUtc":  "2026-07-27T18:53:21.9488648Z",
     "containsSecrets":  false,
-    "regenerationReason":  "Freeze the approved Genesis v3 VPS package, Safe mint and freeze ceremony, Project X Safe binding guard, production Docker packaging, and final pre-launch readiness state without any mainnet broadcast.",
-    "previousManifestSha256":  "638a5e1bcf12a115a177ee25659be1860b00e328d490faa01e07438d112f9da6",
-    "fileCount":  2545,
+    "regenerationReason":  "CI reproducibility hardening: tracked Chainlink interfaces, active invariant helper, production-bundle E2E",
+    "previousManifestSha256":  "07f229b925ca8a0e9d52579b549c8444f3ad932a2f8bcaa488b597fef494c109",
+    "fileCount":  2546,
     "files":  [
                   {
                       "path":  ".env.mainnet.example",
@@ -78,8 +78,8 @@
                   },
                   {
                       "path":  "frontend/e2e/pages.spec.ts",
-                      "bytes":  3787,
-                      "sha256":  "a331af54b4d390a0d65d534532c9f9b96b8736d733d5f0e8f1722da039204109"
+                      "bytes":  3914,
+                      "sha256":  "5bbad258628ee59d677c83787f68c43c377ba665fe62eb8525fd9c24734e2824"
                   },
                   {
                       "path":  "frontend/e2e/pool.spec.ts",
@@ -118,8 +118,8 @@
                   },
                   {
                       "path":  "frontend/package.json",
-                      "bytes":  2062,
-                      "sha256":  "cb0b7f70bb99282056bfe37f528bc557c24e8ddf8ad4a3f71564a4b660164467"
+                      "bytes":  2364,
+                      "sha256":  "8b84f639daf54bb3b2a56eca15b509ec8c4b1e1a7f125e9a19efda920fdca906"
                   },
                   {
                       "path":  "frontend/package-lock.json",
@@ -128,8 +128,8 @@
                   },
                   {
                       "path":  "frontend/playwright.config.ts",
-                      "bytes":  1431,
-                      "sha256":  "d83f1bcf5f4c3ff60a8b1c19dbeac9314d3ad1480d04531eb471494cf3b43841"
+                      "bytes":  1605,
+                      "sha256":  "30fde86a4fb587a54197ebc8a55a665aaf74d6ee79ccf77dcfc9bb6c9f8f265d"
                   },
                   {
                       "path":  "frontend/public/genesis/concepts/hwa-genesis-colossal-v1.png",
@@ -12313,8 +12313,8 @@
                   },
                   {
                       "path":  "test/FWARewardsIntegrationInvariant.t.sol",
-                      "bytes":  21380,
-                      "sha256":  "731cd8399b783e1fca0217745cccdb1ba02c1ed9122ef45b6cf41a86e82e06b2"
+                      "bytes":  21357,
+                      "sha256":  "840d78562cb04724cdf5a38dba8f0f174f6537b351c24d98c7e3ddcb61e06ef3"
                   },
                   {
                       "path":  "test/FWASettlementBranches.t.sol",
@@ -12323,13 +12323,13 @@
                   },
                   {
                       "path":  "test/FWASettlementInvariant.t.sol",
-                      "bytes":  15776,
-                      "sha256":  "b49b1dd51c47d29b4c55fb000292d17c7b57cb26799dc479da2ce4114cbf2a22"
+                      "bytes":  15753,
+                      "sha256":  "b3dff21ffb97c8618da7727b8ba193f1d14fed3219f3348b9227876a7e59769a"
                   },
                   {
                       "path":  "test/FWAStatefulInvariant.t.sol",
-                      "bytes":  9379,
-                      "sha256":  "0ca75cbd8a95aee1836c5003980488195204e8c4d3e3b858cec0ebe71138f3e4"
+                      "bytes":  9356,
+                      "sha256":  "04e0a053457136462a2051f770ee15a8b533156bf205bd63453a269673780dbf"
                   },
                   {
                       "path":  "test/FWATestnetNFT.t.sol",
@@ -12395,6 +12395,11 @@
                       "path":  "test/SplitterHyperEVM.t.sol",
                       "bytes":  8577,
                       "sha256":  "95a2ade8d4ed8ff03b683a35d3d9f8e3e7853f4fc159f3180fac7c2baff835be"
+                  },
+                  {
+                      "path":  "test/utils/StdInvariant.sol",
+                      "bytes":  3289,
+                      "sha256":  "7ea0134e458989c8742eaa3764c9984da41c0031e196b0f98e5a957fd1d54d11"
                   },
                   {
                       "path":  "test/utils/TestBase.sol",
@@ -12688,8 +12693,8 @@
                   },
                   {
                       "path":  "vendor/fwa-reference-union/src/FWA.sol",
-                      "bytes":  122864,
-                      "sha256":  "b69064937419b995c5a73729686ad44fda067643b7ff1ea574019c12f5c5c570"
+                      "bytes":  125878,
+                      "sha256":  "3d8672cbf6596b3f4f465215038f007210eab762d8bdf87ad021e83db93cd2d5"
                   },
                   {
                       "path":  "vendor/fwa-reference-union/src/FWAClaim.sol",
@@ -12698,8 +12703,8 @@
                   },
                   {
                       "path":  "vendor/fwa-reference-union/src/FWAConfigKeys.sol",
-                      "bytes":  2969,
-                      "sha256":  "2e3121ea35b49f6e9022321214c7a5e210cf99e31c3815d1560d73384eddb8cc"
+                      "bytes":  3140,
+                      "sha256":  "4651a9e4cda55dddf37a8e6763005603cec23bbc3f519e17b9c9f3b82b2a3400"
                   },
                   {
                       "path":  "vendor/fwa-reference-union/src/FWARewards.sol",

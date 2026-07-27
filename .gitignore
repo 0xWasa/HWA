@@ -27,7 +27,7 @@ release/hwa-genesis-v3-hosting-package/
 release/hwa-genesis-v3-hosting/
 .claude/
 archives/
-contracts/
+/contracts/
 robinhood-frontend/
 frontend/.next-polish/
 frontend/.next-visual/

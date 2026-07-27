@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
-import {StdInvariant} from "../contracts/lib/forge-std/src/StdInvariant.sol";
+import {StdInvariant} from "./utils/StdInvariant.sol";
 import {FWA} from "fwa-reference/src/FWA.sol";
 import {FWAConfigKeys} from "fwa-reference/src/FWAConfigKeys.sol";
 import {FWAVRFService} from "fwa-vrf-reference/src/FWAVRFService.sol";

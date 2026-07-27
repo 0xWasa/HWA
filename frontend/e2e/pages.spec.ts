@@ -39,9 +39,11 @@ test.describe("Token, acquisitions, docs and terms", () => {
     await page.goto("/acquisitions?scenario=default");
     await page.getByTestId("connect-wallet").click();
 
-    await expect(page.getByText(/purchases/i).first()).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText(/all-in/i).first()).toBeVisible();
-    await expect(page.getByText(/net listing p\/?l/i).first()).toBeVisible();
+    const stats = page.getByTestId("acquisition-stats");
+    await expect(stats).toBeVisible({ timeout: 20_000 });
+    await expect(stats.getByText("Purchases", { exact: true })).toBeVisible();
+    await expect(stats.getByText("All-in spend", { exact: true })).toBeVisible();
+    await expect(stats.getByText("Net listing P/L", { exact: true })).toBeVisible();
   });
 
   test("an acquisition keeps a persistent, deep-linkable result and its four choices", async ({ page }) => {

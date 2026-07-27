@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "cross-env NEXT_DIST_DIR=.next-live next dev -p 3900",
     "build": "cross-env NEXT_DIST_DIR=.next-build next build",
+    "build:e2e": "cross-env NEXT_PUBLIC_APP_ENV=development NEXT_PUBLIC_DATA_MODE=mock NEXT_PUBLIC_HYPEREVM_CHAIN_ID=998 NFT_METADATA_ALLOWED_HOSTS=127.0.0.1 NEXT_DIST_DIR=.next-e2e next build",
     "build:standalone": "cross-env NEXT_OUTPUT_MODE=standalone NEXT_DIST_DIR=.next-standalone next build",
     "start": "cross-env NEXT_DIST_DIR=.next-build next start -p 3900",
     "lint": "eslint src e2e",
@@ -12,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test --project=e2e",
+    "test:e2e:production": "cross-env PLAYWRIGHT_USE_PRODUCTION_BUILD=true playwright test --project=e2e",
     "screenshots": "playwright test --project=screenshots",
     "genesis:generate": "node ../scripts/generate-hwa-genesis.mjs",
     "genesis:verify": "node ../scripts/generate-hwa-genesis.mjs --verify-only",

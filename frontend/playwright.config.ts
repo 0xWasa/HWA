@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const useProductionBuild = process.env.PLAYWRIGHT_USE_PRODUCTION_BUILD === "true";
+
 /**
  * E2E runs entirely in mock data mode: no wallet extension, no RPC.
  * Scenarios are selected per-test through the `?scenario=` query parameter.
@@ -35,7 +37,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "cross-env NEXT_DIST_DIR=.next-e2e next dev -p 3901",
+    command: useProductionBuild
+      ? "cross-env NEXT_DIST_DIR=.next-e2e next start -p 3901"
+      : "cross-env NEXT_DIST_DIR=.next-e2e next dev -p 3901",
     url: "http://localhost:3901",
     reuseExistingServer: true,
     timeout: 120_000,
