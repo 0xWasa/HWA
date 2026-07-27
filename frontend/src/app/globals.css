@@ -1,0 +1,1349 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/*  Hyper World Assets — "Volt Loot" visual direction.                */
+/*  Midnight canvas, ultraviolet depth, acid-lime interaction.        */
+/* ------------------------------------------------------------------ */
+
+:root {
+  --hwa-bg: #080a12;
+  --hwa-surface: #0e1220;
+  --hwa-surface-2: #151a2c;
+  --hwa-surface-3: #1a2034;
+  --hwa-control: #20263b;
+  --hwa-hover: #293149;
+  --hwa-field: #0b0e18;
+  --hwa-border: #2a3148;
+  --hwa-separator: #1c2235;
+  --hwa-strong: #3b4563;
+  --hwa-fg: #f5f6ff;
+  --hwa-dim: #c8cee5;
+  --hwa-muted: #8f96b2;
+  --hwa-faint: #7c85a2;
+  --hwa-accent: #d8ff52;
+  --hwa-accent-edge: #8fae22;
+  --hwa-accent-fg: #080a12;
+  --hwa-accent-hover: #e8ff91;
+  --hwa-secondary: #7354f5;
+  --hwa-secondary-readable: #a995ff;
+  --hwa-secondary-deep: #2a205a;
+  --hwa-chain: #50d2c1;
+  --hwa-gold: #ffd166;
+  --hwa-danger: #ff5d73;
+  --hwa-success: #48d6a3;
+  --hwa-warning: #ff9f43;
+  --hwa-info: #5cb7ff;
+  --hwa-scrollbar: #3b4563;
+
+  color-scheme: dark;
+  --shadow-pop: 0 12px 30px rgba(3, 4, 10, 0.62);
+  --shadow-drawer: -16px 0 48px rgba(3, 4, 10, 0.58);
+  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  --elev-2: 0 2px 6px rgba(0, 0, 0, 0.45), 0 18px 40px -20px rgba(0, 0, 0, 0.7);
+}
+
+.light {
+  --hwa-bg: #f6f5ee;
+  --hwa-surface: #ffffff;
+  --hwa-surface-2: #eceef7;
+  --hwa-surface-3: #e7e9f3;
+  --hwa-control: #e1e4f0;
+  --hwa-hover: #d8dcea;
+  --hwa-field: #ffffff;
+  --hwa-border: #d4d8e7;
+  --hwa-separator: #e3e5ee;
+  --hwa-strong: #b8bfd4;
+  --hwa-fg: #11131d;
+  --hwa-dim: #3b4259;
+  --hwa-muted: #626a83;
+  --hwa-faint: #707890;
+  --hwa-accent: #beeb36;
+  --hwa-accent-edge: #829f24;
+  --hwa-accent-fg: #101308;
+  --hwa-accent-hover: #cffa4d;
+  --hwa-secondary: #6247e5;
+  --hwa-secondary-readable: #5b3fd6;
+  --hwa-secondary-deep: #e5e0ff;
+  --hwa-chain: #168f83;
+  --hwa-gold: #a96f00;
+  --hwa-danger: #d8324d;
+  --hwa-success: #15845f;
+  --hwa-warning: #a85e13;
+  --hwa-info: #2379b8;
+  --hwa-scrollbar: #b8bfd4;
+
+  color-scheme: light;
+  --shadow-pop: 0 12px 30px rgba(31, 27, 61, 0.14);
+  --shadow-drawer: -16px 0 48px rgba(31, 27, 61, 0.13);
+  --elev-1: 0 1px 2px rgba(31, 27, 61, 0.05), 0 8px 24px -14px rgba(31, 27, 61, 0.2);
+  --elev-2: 0 2px 6px rgba(31, 27, 61, 0.07), 0 18px 40px -22px rgba(31, 27, 61, 0.28);
+}
+
+@theme inline {
+  /* Surfaces */
+  --color-bg: var(--hwa-bg);
+  --color-panel: var(--hwa-surface);
+  --color-elevated: var(--hwa-surface-2);
+  --color-surface3: var(--hwa-surface-3);
+  --color-control: var(--hwa-control);
+  --color-hover: var(--hwa-hover);
+  --color-inset: var(--hwa-field);
+
+  /* Lines */
+  --color-line: var(--hwa-border);
+  --color-line-subtle: var(--hwa-separator);
+  --color-line-strong: var(--hwa-strong);
+
+  /* Text */
+  --color-ink: var(--hwa-fg);
+  --color-dim: var(--hwa-dim);
+  --color-mute: var(--hwa-muted);
+  --color-faint: var(--hwa-faint);
+
+  /* Brand + chain are intentionally separate. */
+  --color-accent: var(--hwa-accent);
+  --color-accent-edge: var(--hwa-accent-edge);
+  --color-accent-hover: var(--hwa-accent-hover);
+  --color-accent-fg: var(--hwa-accent-fg);
+  --color-secondary: var(--hwa-secondary);
+  --color-secondary-readable: var(--hwa-secondary-readable);
+  --color-secondary-deep: var(--hwa-secondary-deep);
+  --color-chain: var(--hwa-chain);
+  --color-gold: var(--hwa-gold);
+
+  /* Status */
+  --color-red: var(--hwa-danger);
+  --color-green: var(--hwa-success);
+  --color-amber: var(--hwa-warning);
+  --color-blue: var(--hwa-info);
+
+  /* Rarity is semantic and never borrows the brand color. */
+  --color-r-common: #a2a9bc;
+  --color-r-uncommon: #67d5a9;
+  --color-r-rare: #54c7ff;
+  --color-r-epic: #a995ff;
+  --color-r-grail: #ffd166;
+}
+
+@theme {
+  /* Type — Inter body, functional micro-mono (fwa.fun scale) */
+  --text-3xs: 0.5625rem; /* 9px — sort chips            */
+  --text-3xs--line-height: 0.75rem;
+  --text-2xs: 0.625rem; /* 10px — mono labels, meta    */
+  --text-2xs--line-height: 0.875rem;
+  --text-xs: 0.75rem; /* 12px — captions, CTA text   */
+  --text-xs--line-height: 1.05rem;
+  --text-sm: 0.8125rem; /* 13px — dense UI             */
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.875rem; /* 14px — default UI, buttons  */
+  --text-base--line-height: 1.375rem;
+  --text-md: 1rem; /* 16px — body copy, row names */
+  --text-md--line-height: 1.5rem;
+  --text-lg: 1.125rem; /* 18px — panel titles         */
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 2.125rem;
+
+  --font-sans:
+    var(--font-sans-hwa), "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-display), "Sora", var(--font-sans-hwa), sans-serif;
+  --font-mono:
+    var(--font-mono-hwa), "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
+
+  /* Radii — softer than fwa.fun's 8px system, closer to prjx's generous
+     rounding, while keeping small controls crisp. */
+  --radius-xs: 5px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-2xl: 28px;
+
+  /* Control heights */
+  --spacing-ctl: 2rem; /* 32px — sm buttons (Connect) */
+  --spacing-ctl-lg: 3rem; /* 48px — main CTA             */
+
+  --ease-swift: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html {
+  background: var(--hwa-bg);
+}
+
+body {
+  background: var(--hwa-bg);
+  color: var(--hwa-fg);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Tabular data never wiggles */
+.num,
+td.num,
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Display face — titles and the wordmark */
+h1,
+h2,
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Functional micro-mono label (fwa.fun signature) */
+.mlabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--hwa-secondary) 48%, transparent);
+  color: var(--hwa-fg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--hwa-accent);
+  outline-offset: 1px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--hwa-scrollbar) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--hwa-scrollbar);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Surfaces — midnight cards with ultraviolet depth.                  */
+/* ------------------------------------------------------------------ */
+
+/* The workhorse card: rounded, hairline border, gentle lift. */
+.card {
+  background: var(--hwa-surface);
+  border: 1px solid var(--hwa-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elev-1);
+}
+.card-inset {
+  background: var(--hwa-field);
+  border: 1px solid var(--hwa-separator);
+  border-radius: var(--radius-md);
+}
+/* Floating capsule (nav bar, pill groups) */
+.capsule {
+  background: color-mix(in srgb, var(--hwa-surface) 92%, transparent);
+  border: 1px solid var(--hwa-border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--elev-2);
+  backdrop-filter: blur(14px);
+}
+/* Graph-paper backdrop behind hero content */
+.grid-paper {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--hwa-fg) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--hwa-fg) 4%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 70% 80% at 50% 45%, black 20%, transparent 100%);
+}
+
+/* Branded but honest fallback for NFTs whose metadata has no usable image. */
+.nft-fallback {
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--hwa-secondary) 22%, transparent), transparent 36%),
+    linear-gradient(color-mix(in srgb, var(--hwa-fg) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--hwa-fg) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(145deg, var(--hwa-field), var(--hwa-surface-2));
+  background-size: auto, 18px 18px, 18px 18px, auto;
+}
+.nft-fallback::after {
+  content: "";
+  position: absolute;
+  inset: 7%;
+  border: 1px solid color-mix(in srgb, var(--hwa-secondary) 25%, transparent);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+}
+.nft-fallback-orbit {
+  position: absolute;
+  width: 54%;
+  aspect-ratio: 1;
+  border: 1px dashed color-mix(in srgb, var(--hwa-secondary-readable) 30%, transparent);
+  border-radius: 9999px;
+  animation: hwa-orbit 18s linear infinite;
+}
+
+.page-header {
+  box-shadow: var(--elev-1), inset 0 1px 0 color-mix(in srgb, var(--hwa-fg) 3%, transparent);
+}
+.page-header-mark {
+  transition: transform 0.35s var(--ease-swift), border-color 0.35s;
+}
+.page-header:hover .page-header-mark {
+  transform: translateY(-2px) rotate(3deg);
+  border-color: color-mix(in srgb, var(--hwa-secondary-readable) 62%, transparent);
+}
+
+.genesis-deck {
+  filter: drop-shadow(0 26px 36px rgba(0, 0, 0, 0.28));
+}
+.genesis-orbit {
+  animation: hwa-orbit 24s linear infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/*  The 3D pressable button — acid-lime is reserved for primary action. */
+/*  1px border + 4px bottom edge + colored glow; presses down on click */
+/* ------------------------------------------------------------------ */
+
+.btn3d {
+  --btn-bg: var(--hwa-control);
+  --btn-edge: var(--hwa-strong);
+  --btn-fg: var(--hwa-fg);
+  --btn-glow: transparent;
+  background-color: var(--btn-bg);
+  color: var(--btn-fg);
+  border: 1px solid var(--btn-edge);
+  border-bottom-width: 4px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 22px var(--btn-glow);
+  transition:
+    filter 0.16s,
+    transform 0.16s,
+    border-bottom-width 0.16s,
+    background-color 0.16s,
+    box-shadow 0.16s;
+}
+.btn3d:not(:disabled):hover {
+  filter: brightness(1.05);
+}
+.btn3d:not(:disabled):active {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+  filter: brightness(0.92);
+  box-shadow: 0 5px 14px var(--btn-glow);
+}
+.btn3d:disabled {
+  filter: saturate(0.7);
+  cursor: not-allowed;
+}
+.btn3d--primary {
+  --btn-bg: var(--hwa-accent);
+  --btn-edge: var(--hwa-accent-edge);
+  --btn-fg: var(--hwa-accent-fg);
+  --btn-glow: color-mix(in srgb, var(--hwa-accent) 26%, transparent);
+}
+.btn3d--violet {
+  --btn-bg: var(--hwa-secondary);
+  --btn-edge: color-mix(in srgb, var(--hwa-secondary) 62%, black);
+  --btn-fg: #f5f6ff;
+  --btn-glow: color-mix(in srgb, var(--hwa-secondary) 30%, transparent);
+}
+.btn3d--danger {
+  --btn-bg: color-mix(in srgb, var(--hwa-danger) 88%, black);
+  --btn-edge: color-mix(in srgb, var(--hwa-danger) 60%, black);
+  --btn-fg: #fff5f6;
+  --btn-glow: color-mix(in srgb, var(--hwa-danger) 22%, transparent);
+}
+/* Flat variant: connected-wallet style — 1px border, no glow, no press */
+.btn3d--flat {
+  border-bottom-width: 1px;
+  box-shadow: none;
+}
+.btn3d--flat:not(:disabled):active {
+  transform: none;
+  border-bottom-width: 1px;
+  box-shadow: none;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Segment control (Recent / Top / Pool / Deposits)                   */
+/* ------------------------------------------------------------------ */
+
+.segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: var(--hwa-field);
+  border: 1px solid var(--hwa-border);
+  border-radius: var(--radius-md);
+}
+.segment__item {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  line-height: 1;
+  height: 1.75rem;
+  padding: 0 0.625rem;
+  border-radius: var(--radius-sm);
+  color: var(--hwa-muted);
+  transition:
+    background-color 0.16s,
+    color 0.16s;
+}
+.segment__item:hover {
+  color: var(--hwa-dim);
+}
+.segment__item[aria-checked="true"] {
+  background: var(--hwa-secondary-deep);
+  color: var(--hwa-fg);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Hero atmosphere — ultraviolet depth with a restrained Volt flare. */
+/* ------------------------------------------------------------------ */
+
+@keyframes hwa-aurora {
+  0%,
+  100% {
+    transform: translate3d(-4%, 0, 0) scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translate3d(4%, -2%, 0) scale(1.08);
+    opacity: 0.9;
+  }
+}
+
+.aurora {
+  background:
+    radial-gradient(38rem 22rem at 22% 12%, color-mix(in srgb, var(--hwa-secondary) 24%, transparent), transparent 70%),
+    radial-gradient(30rem 20rem at 82% 78%, color-mix(in srgb, var(--hwa-accent) 7%, transparent), transparent 70%);
+  animation: hwa-aurora 18s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.light .aurora {
+  opacity: 0.6;
+}
+
+/* Market cockpit: a compact game loop with trading-terminal hierarchy. */
+@keyframes hwa-market-scan {
+  0% {
+    transform: translateX(-125%);
+    opacity: 0;
+  }
+  12%,
+  68% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translateX(425%);
+    opacity: 0;
+  }
+}
+
+.market-hud {
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--hwa-secondary) 11%, transparent), transparent 30%),
+    color-mix(in srgb, var(--hwa-field) 90%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hwa-fg) 3%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.market-hud::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 24%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--hwa-chain) 9%, transparent), transparent);
+  animation: hwa-market-scan 8s ease-in-out infinite;
+}
+
+.market-step__index {
+  display: grid;
+  width: 1.35rem;
+  height: 1.35rem;
+  place-items: center;
+  border: 1px solid var(--hwa-border);
+  border-radius: 9999px;
+  color: var(--hwa-faint);
+  background: var(--hwa-field);
+  transition: border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.market-step__title {
+  color: var(--hwa-muted);
+  transition: color 0.25s ease;
+}
+
+.market-step__line {
+  background: var(--hwa-border);
+  transition: background-color 0.25s ease;
+}
+
+.market-step[data-active="true"] .market-step__index {
+  border-color: color-mix(in srgb, var(--hwa-accent) 65%, transparent);
+  color: var(--hwa-accent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--hwa-accent) 22%, transparent);
+}
+
+.market-step[data-active="true"] .market-step__title {
+  color: var(--hwa-fg);
+}
+
+.market-step[data-complete="true"] .market-step__index {
+  border-color: color-mix(in srgb, var(--hwa-chain) 45%, transparent);
+  color: var(--hwa-chain);
+}
+
+.market-step[data-complete="true"] .market-step__line {
+  background: color-mix(in srgb, var(--hwa-chain) 42%, var(--hwa-border));
+}
+
+.order-ticket-head {
+  position: relative;
+  padding-bottom: 0.1rem;
+}
+
+.order-ticket-mark {
+  box-shadow: inset 0 0 16px color-mix(in srgb, var(--hwa-accent) 8%, transparent);
+}
+
+.order-ticket-metrics {
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hwa-fg) 3%, transparent);
+}
+
+@media (max-width: 639px) {
+  .market-hud {
+    padding-inline: 0.65rem;
+  }
+  .market-step__line {
+    display: none;
+  }
+  .market-step__index {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+}
+
+/* NFT foil interaction — FWA's tactile depth, translated to Volt Loot.
+   The spectrum follows the pointer without tinting the source artwork. */
+.hero-prize-card {
+  --card-tilt-x: 0deg;
+  --card-tilt-y: 0deg;
+  --card-pointer-x: 50%;
+  --card-pointer-y: 50%;
+  --card-spectrum-x: 50%;
+  --card-spectrum-y: 50%;
+  --card-fx-opacity: 0;
+  isolation: isolate;
+  transform-style: preserve-3d;
+  transition:
+    transform 0.48s var(--ease-swift),
+    border-color 0.3s ease,
+    box-shadow 0.35s ease;
+}
+
+.hero-prize-card--active {
+  transform: perspective(1200px) rotateX(var(--card-tilt-x)) rotateY(var(--card-tilt-y)) translateZ(0);
+  will-change: transform;
+}
+
+.hero-prize-card--active:hover {
+  border-color: color-mix(in srgb, var(--hwa-accent) 82%, transparent);
+  transition-duration: 0.1s, 0.2s, 0.2s;
+}
+
+.hero-card-header,
+.hero-card-art {
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  transition: transform 0.45s var(--ease-swift);
+}
+
+.hero-prize-card--active .hero-card-header {
+  transform: translateZ(15px);
+}
+
+.hero-prize-card--active .hero-card-art {
+  transform: translateZ(9px) scale(1.008);
+}
+
+.hero-card-back-overlay {
+  opacity: 0;
+  pointer-events: none;
+  backface-visibility: hidden;
+  transform: rotateY(180deg) translateZ(2px);
+  transform-origin: 50% 50%;
+  transition:
+    transform 0.55s var(--ease-swift),
+    opacity 0.18s ease 0.12s;
+}
+
+.hero-card-is-flipped .hero-card-header,
+.hero-card-is-flipped .hero-card-art {
+  opacity: 0;
+  transform: rotateY(-180deg) translateZ(1px);
+  transition:
+    transform 0.55s var(--ease-swift),
+    opacity 0.16s ease 0.08s;
+}
+
+.hero-card-is-flipped .hero-card-back-overlay {
+  opacity: 1;
+  transform: rotateY(0deg) translateZ(18px);
+  transition-delay: 0s;
+}
+
+.randomness-card-back {
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--hwa-secondary) 13%, transparent), transparent 43%),
+    radial-gradient(circle at 50% 44%, color-mix(in srgb, var(--hwa-accent) 9%, transparent), transparent 38%),
+    var(--hwa-panel);
+  box-shadow:
+    0 26px 54px rgba(0, 0, 0, 0.52),
+    inset 0 0 0 1px color-mix(in srgb, var(--hwa-fg) 4%, transparent);
+  transition: transform 0.5s var(--ease-swift), opacity 0.35s ease;
+}
+
+.randomness-card-back::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(125deg, rgba(255,255,255,.04) 0 1px, transparent 1px 7px);
+  mix-blend-mode: soft-light;
+  animation: hwa-sealed-scan 2.8s linear infinite;
+}
+
+.purchase-success-gradient {
+  color: transparent;
+  background-image: linear-gradient(90deg, var(--hwa-accent), var(--hwa-chain) 34%, #56b5ff 55%, var(--hwa-secondary-readable) 75%, #ff8a3d);
+  background-clip: text;
+  -webkit-background-clip: text;
+  filter: drop-shadow(0 0 22px color-mix(in srgb, var(--hwa-secondary) 18%, transparent));
+}
+
+@keyframes hwa-sealed-scan {
+  from { background-position: 0 0; }
+  to { background-position: 80px 40px; }
+}
+
+.hero-card-spectrum {
+  background-image: linear-gradient(
+    115deg,
+    transparent 16%,
+    color-mix(in srgb, var(--hwa-accent) 68%, transparent) 34%,
+    color-mix(in srgb, var(--hwa-chain) 54%, transparent) 47%,
+    color-mix(in srgb, var(--hwa-secondary-readable) 76%, transparent) 61%,
+    color-mix(in srgb, var(--hwa-secondary) 62%, transparent) 72%,
+    transparent 86%
+  );
+  background-position: var(--card-spectrum-x) var(--card-spectrum-y);
+  background-size: 210% 210%;
+  mix-blend-mode: color-dodge;
+  opacity: calc(0.1 + var(--card-fx-opacity) * 0.48);
+  transition:
+    opacity 0.3s ease,
+    background-position 0.08s linear;
+}
+
+.hero-card-texture {
+  background-image: repeating-linear-gradient(
+    125deg,
+    rgba(255, 255, 255, 0.14) 0,
+    rgba(255, 255, 255, 0) 2px,
+    rgba(255, 255, 255, 0) 6px
+  );
+  background-position: var(--card-spectrum-x) var(--card-spectrum-y);
+  background-size: 180% 180%;
+  mix-blend-mode: soft-light;
+  opacity: calc(0.08 + var(--card-fx-opacity) * 0.18);
+  transition: opacity 0.3s ease;
+}
+
+.hero-card-glare {
+  background-image: radial-gradient(
+    circle at var(--card-pointer-x) var(--card-pointer-y),
+    rgba(255, 255, 255, 0.44),
+    color-mix(in srgb, var(--hwa-accent) 22%, transparent) 16%,
+    transparent 46%
+  );
+  mix-blend-mode: screen;
+  opacity: calc(var(--card-fx-opacity) * 0.72);
+  transition: opacity 0.28s ease;
+}
+
+.light .hero-card-spectrum {
+  mix-blend-mode: multiply;
+  opacity: calc(0.05 + var(--card-fx-opacity) * 0.24);
+}
+
+.light .hero-card-glare {
+  mix-blend-mode: soft-light;
+  opacity: calc(var(--card-fx-opacity) * 0.48);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Dot-grid backdrop (48px tile, radial fade) — fwa.fun hero motif    */
+/* ------------------------------------------------------------------ */
+
+/* The deposit confirmation makes the custody transition legible: card -> pool. */
+.deposit-launch {
+  border-color: color-mix(in srgb, var(--hwa-secondary-readable) 36%, var(--hwa-border));
+  box-shadow:
+    0 28px 80px -44px color-mix(in srgb, var(--hwa-secondary) 58%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 4%, transparent);
+  animation: deposit-shell-in 0.52s var(--ease-swift) both;
+}
+
+.deposit-launch.is-active {
+  border-color: color-mix(in srgb, var(--hwa-accent) 45%, var(--hwa-border));
+  box-shadow:
+    0 30px 90px -46px color-mix(in srgb, var(--hwa-accent) 48%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 5%, transparent);
+}
+
+.deposit-launch.is-failed {
+  border-color: color-mix(in srgb, var(--hwa-danger) 40%, var(--hwa-border));
+}
+
+.deposit-launch-visual {
+  isolation: isolate;
+  background:
+    linear-gradient(color-mix(in srgb, var(--hwa-secondary) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--hwa-secondary) 5%, transparent) 1px, transparent 1px),
+    radial-gradient(circle at 78% 48%, color-mix(in srgb, var(--hwa-accent) 10%, transparent), transparent 26%),
+    radial-gradient(circle at 28% 44%, color-mix(in srgb, var(--hwa-secondary) 18%, transparent), transparent 43%),
+    var(--hwa-field);
+  background-size: 28px 28px, 28px 28px, auto, auto, auto;
+}
+
+.deposit-launch-aurora {
+  position: absolute;
+  inset: -20%;
+  z-index: -1;
+  background:
+    conic-gradient(from 215deg at 72% 48%, transparent 0 18%, color-mix(in srgb, var(--hwa-accent) 12%, transparent) 24%, transparent 31% 100%),
+    radial-gradient(ellipse at 28% 45%, color-mix(in srgb, var(--hwa-secondary) 22%, transparent), transparent 48%);
+  filter: blur(8px);
+  animation: deposit-aurora 7s ease-in-out infinite alternate;
+}
+
+.deposit-orbit {
+  position: absolute;
+  left: 76%;
+  top: 49%;
+  width: 172px;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border: 1px solid color-mix(in srgb, var(--hwa-accent) 30%, transparent);
+  border-radius: 50%;
+  opacity: 0.72;
+}
+
+.deposit-orbit::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -4px;
+  width: 7px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--hwa-accent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--hwa-accent) 78%, transparent);
+}
+
+.deposit-orbit-one {
+  animation: deposit-orbit-spin 6s linear infinite;
+}
+
+.deposit-orbit-two {
+  width: 226px;
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--hwa-chain) 24%, transparent);
+  animation: deposit-orbit-spin 11s linear infinite reverse;
+}
+
+.deposit-orbit-two::before {
+  width: 5px;
+  background: var(--hwa-chain);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--hwa-chain) 76%, transparent);
+}
+
+.deposit-pool-core {
+  position: absolute;
+  left: 76%;
+  top: 49%;
+  display: grid;
+  width: 94px;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  place-content: center;
+  gap: 3px;
+  border: 1px solid color-mix(in srgb, var(--hwa-accent) 45%, var(--hwa-border));
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 35% 25%, color-mix(in srgb, var(--hwa-accent) 20%, transparent), transparent 45%),
+    var(--hwa-surface);
+  box-shadow:
+    0 0 0 8px color-mix(in srgb, var(--hwa-accent) 3%, transparent),
+    0 0 34px color-mix(in srgb, var(--hwa-accent) 18%, transparent),
+    inset 0 0 22px color-mix(in srgb, var(--hwa-secondary) 18%, transparent);
+  color: var(--hwa-accent);
+  text-align: center;
+  animation: deposit-core-breathe 1.9s ease-in-out infinite;
+}
+
+.deposit-pool-core span {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.deposit-pool-core strong {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  color: var(--hwa-muted);
+}
+
+.deposit-flight-card {
+  position: absolute;
+  left: 10%;
+  top: 12%;
+  z-index: 3;
+  width: clamp(165px, 43%, 210px);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--hwa-secondary-readable) 58%, var(--hwa-border));
+  border-radius: 14px;
+  background: var(--hwa-surface);
+  box-shadow:
+    0 24px 55px rgba(0, 0, 0, 0.52),
+    0 0 30px color-mix(in srgb, var(--hwa-secondary) 20%, transparent);
+  transform: rotate(-2deg);
+  transform-origin: 50% 55%;
+}
+
+.deposit-flight-card.tone-wallet {
+  animation: deposit-card-await 2.4s ease-in-out infinite;
+}
+
+.deposit-flight-card.tone-moving,
+.deposit-flight-card.tone-syncing {
+  animation: deposit-card-transit 1.45s var(--ease-swift) both, deposit-card-hover 2.2s ease-in-out 1.45s infinite;
+}
+
+.deposit-flight-card.tone-active {
+  border-color: color-mix(in srgb, var(--hwa-accent) 70%, var(--hwa-border));
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.56),
+    0 0 38px color-mix(in srgb, var(--hwa-accent) 28%, transparent);
+  animation: deposit-card-complete 0.82s var(--ease-swift) both;
+}
+
+.deposit-flight-card.tone-failed {
+  border-color: color-mix(in srgb, var(--hwa-danger) 55%, var(--hwa-border));
+  filter: saturate(0.55);
+  animation: deposit-card-failed 0.46s ease-out both;
+}
+
+.deposit-flight-card-head,
+.deposit-flight-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--hwa-muted);
+}
+
+.deposit-flight-card-head strong,
+.deposit-flight-card-foot > :last-child {
+  color: var(--hwa-fg);
+}
+
+.deposit-flight-card-foot > :first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deposit-flight-art {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-block: 1px solid var(--hwa-border);
+  background: var(--hwa-control);
+}
+
+.deposit-flight-scan {
+  position: absolute;
+  inset: -20% 0 auto;
+  height: 35%;
+  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--hwa-accent) 42%, transparent), transparent);
+  mix-blend-mode: screen;
+  opacity: 0.7;
+  animation: deposit-scan 1.7s linear infinite;
+}
+
+.deposit-signal {
+  position: absolute;
+  left: 56%;
+  top: 49%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  translate: -50% -50%;
+}
+
+.deposit-signal span {
+  width: 6px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--hwa-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--hwa-accent) 72%, transparent);
+  animation: deposit-signal 1.1s ease-in-out infinite;
+}
+
+.deposit-signal span:nth-child(2) { animation-delay: 0.15s; }
+.deposit-signal span:nth-child(3) { animation-delay: 0.3s; }
+
+.deposit-spark {
+  --spark-angle: 0deg;
+  --spark-delay: 0s;
+  position: absolute;
+  left: 76%;
+  top: 49%;
+  width: 4px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--hwa-accent);
+  opacity: 0;
+  animation: deposit-spark 2.2s ease-out infinite;
+  animation-delay: var(--spark-delay);
+}
+
+.deposit-progress-step {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--hwa-separator);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--hwa-field) 74%, transparent);
+  transition: border-color 0.25s ease, background-color 0.25s ease, transform 0.25s ease;
+}
+
+.deposit-progress-step.is-reached {
+  border-color: color-mix(in srgb, var(--hwa-success) 30%, var(--hwa-border));
+  background: color-mix(in srgb, var(--hwa-success) 5%, var(--hwa-field));
+}
+
+.deposit-progress-step.is-current {
+  border-color: color-mix(in srgb, var(--hwa-secondary-readable) 50%, var(--hwa-border));
+  background: color-mix(in srgb, var(--hwa-secondary) 9%, var(--hwa-field));
+  transform: translateX(3px);
+}
+
+.deposit-progress-index {
+  display: grid;
+  width: 28px;
+  aspect-ratio: 1;
+  place-content: center;
+  border: 1px solid var(--hwa-border);
+  border-radius: 50%;
+  font-family: var(--font-mono);
+  font-size: 0.61rem;
+  font-weight: 800;
+  color: var(--hwa-muted);
+}
+
+.deposit-progress-step.is-reached .deposit-progress-index {
+  border-color: color-mix(in srgb, var(--hwa-success) 55%, transparent);
+  background: color-mix(in srgb, var(--hwa-success) 12%, transparent);
+  color: var(--hwa-success);
+}
+
+.deposit-progress-step.is-current .deposit-progress-index {
+  border-color: color-mix(in srgb, var(--hwa-secondary-readable) 65%, transparent);
+  color: var(--hwa-secondary-readable);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--hwa-secondary) 28%, transparent);
+  animation: deposit-current-step 1.4s ease-in-out infinite;
+}
+
+.deposit-live-dot {
+  position: relative;
+  width: 7px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--hwa-chain);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--hwa-chain) 75%, transparent);
+}
+
+.deposit-live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid var(--hwa-chain);
+  animation: deposit-live-ring 1.45s ease-out infinite;
+}
+
+@keyframes deposit-shell-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes deposit-aurora {
+  from { transform: translate3d(-3%, 1%, 0) rotate(-2deg); opacity: 0.65; }
+  to { transform: translate3d(3%, -2%, 0) rotate(2deg); opacity: 1; }
+}
+
+@keyframes deposit-orbit-spin {
+  to { rotate: 360deg; }
+}
+
+@keyframes deposit-core-breathe {
+  0%, 100% { scale: 1; filter: brightness(0.92); }
+  50% { scale: 1.045; filter: brightness(1.12); }
+}
+
+@keyframes deposit-card-await {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-7px) rotate(-0.5deg); }
+}
+
+@keyframes deposit-card-transit {
+  0% { opacity: 0; transform: translateX(-65px) rotate(-7deg) scale(0.9); }
+  58% { opacity: 1; transform: translateX(11px) rotate(1deg) scale(1.025); }
+  100% { opacity: 1; transform: translateX(0) rotate(-2deg) scale(1); }
+}
+
+@keyframes deposit-card-hover {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-5px) rotate(-1deg); }
+}
+
+@keyframes deposit-card-complete {
+  0% { opacity: 0.6; transform: translateX(62px) rotate(4deg) scale(0.86); filter: brightness(1.8); }
+  62% { opacity: 1; transform: translateX(-5px) rotate(-2.5deg) scale(1.035); filter: brightness(1.14); }
+  100% { opacity: 1; transform: translateX(0) rotate(-2deg) scale(1); filter: brightness(1); }
+}
+
+@keyframes deposit-card-failed {
+  0%, 100% { transform: translateX(0) rotate(-2deg); }
+  25% { transform: translateX(-6px) rotate(-3deg); }
+  75% { transform: translateX(6px) rotate(-1deg); }
+}
+
+@keyframes deposit-scan {
+  from { transform: translateY(-80%); }
+  to { transform: translateY(420%); }
+}
+
+@keyframes deposit-signal {
+  0%, 100% { opacity: 0.18; transform: translateX(-4px) scale(0.75); }
+  50% { opacity: 1; transform: translateX(4px) scale(1); }
+}
+
+@keyframes deposit-spark {
+  0% { opacity: 0; transform: rotate(var(--spark-angle)) translateX(52px) scale(0.5); }
+  35% { opacity: 0.85; }
+  100% { opacity: 0; transform: rotate(calc(var(--spark-angle) + 28deg)) translateX(132px) scale(1.1); }
+}
+
+@keyframes deposit-current-step {
+  0%, 100% { box-shadow: 0 0 10px color-mix(in srgb, var(--hwa-secondary) 20%, transparent); }
+  50% { box-shadow: 0 0 22px color-mix(in srgb, var(--hwa-secondary) 48%, transparent); }
+}
+
+@keyframes deposit-live-ring {
+  to { opacity: 0; transform: scale(2.5); }
+}
+
+@media (max-width: 560px) {
+  .deposit-launch-visual { min-height: 330px; }
+  .deposit-flight-card { left: 5%; width: 156px; }
+  .deposit-orbit,
+  .deposit-pool-core,
+  .deposit-spark { left: 78%; }
+  .deposit-orbit { width: 142px; }
+  .deposit-orbit-two { width: 186px; }
+  .deposit-signal { left: 59%; }
+}
+
+.dot-grid {
+  background-image: url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' fill='none'%3E%3Cg opacity='0.15'%3E%3Cpath d='M11 11h1v1h-1zM23 11h1v1h-1zM35 11h1v1h-1zM47 11h1v1h-1zM11 23h1v1h-1zM23 23h1v1h-1zM35 23h1v1h-1zM47 23h1v1h-1zM11 35h1v1h-1zM23 35h1v1h-1zM35 35h1v1h-1zM47 35h1v1h-1zM11 47h1v1h-1zM23 47h1v1h-1zM35 47h1v1h-1zM47 47h1v1h-1zM5 5h1v1H5zM17 5h1v1h-1zM29 5h1v1h-1zM41 5h1v1h-1zM5 17h1v1H5zM17 17h1v1h-1zM29 17h1v1h-1zM41 17h1v1h-1zM5 29h1v1H5zM17 29h1v1h-1zM29 29h1v1h-1zM41 29h1v1h-1zM5 41h1v1H5zM17 41h1v1h-1zM29 41h1v1h-1zM41 41h1v1h-1z' fill='%231C1F21'/%3E%3C/g%3E%3Cg opacity='0.15'%3E%3Cpath d='M23 25h1v3h-1zM20 26h1v1h-1zM26 26h1v1h-1zM19 23h3v1h-3zM25 23h3v1h-3zM23 19h1v3h-1zM20 20h1v1h-1zM26 20h1v1h-1z' fill='%230A0A0A'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 48px 48px;
+  background-repeat: repeat;
+  mask-image: radial-gradient(ellipse 75% 90% at 50% 45%, black 10%, transparent 100%);
+  /* SVG is authored for light backgrounds (like fwa.fun); dark inverts it. */
+  filter: invert(1);
+}
+.light .dot-grid {
+  filter: none;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Motion                                                             */
+/* ------------------------------------------------------------------ */
+
+@keyframes fwa-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fwa-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes fwa-shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+@keyframes fwa-reveal-pop {
+  0% {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.015);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes fwa-drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes fwa-sheet-up {
+  from {
+    transform: translateY(32px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes feed-item-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* Value changed on screen — on-chain mint tick, no layout shift. */
+@keyframes hwa-tick {
+  0% {
+    color: var(--hwa-chain);
+    text-shadow: 0 0 12px color-mix(in srgb, var(--hwa-chain) 55%, transparent);
+  }
+  100% {
+    color: inherit;
+    text-shadow: none;
+  }
+}
+/* Idle breathing glow under the primary CTA */
+@keyframes hwa-cta-glow {
+  0%,
+  100% {
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--hwa-accent) 22%, transparent);
+  }
+  50% {
+    box-shadow: 0 12px 30px color-mix(in srgb, var(--hwa-accent) 38%, transparent);
+  }
+}
+/* Live dot halo */
+@keyframes hwa-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@keyframes hwa-reveal-burst {
+  0% {
+    transform: scale(0.82) rotate(-3deg);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.04) rotate(1deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+@keyframes hwa-halo {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.06);
+  }
+}
+@keyframes hwa-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes hwa-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes hwa-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.anim-reveal-burst {
+  animation: hwa-reveal-burst 0.6s var(--ease-swift) both;
+}
+.anim-halo {
+  animation: hwa-halo 2.6s ease-in-out infinite;
+}
+.anim-float {
+  animation: hwa-float 4s ease-in-out infinite;
+}
+.anim-marquee {
+  animation: hwa-marquee 60s linear infinite;
+}
+.anim-marquee:hover {
+  animation-play-state: paused;
+}
+
+.anim-tick {
+  animation: hwa-tick 0.9s ease-out both;
+}
+.anim-cta-glow {
+  animation: hwa-cta-glow 3.2s ease-in-out infinite;
+}
+.anim-ping::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: hwa-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.anim-fade-up {
+  animation: fwa-fade-up 0.28s var(--ease-swift) both;
+}
+.anim-pulse {
+  animation: fwa-pulse 1.6s ease-in-out infinite;
+}
+.anim-reveal {
+  animation: fwa-reveal-pop 0.42s var(--ease-swift) both;
+}
+@utility anim-drawer {
+  animation: fwa-drawer-in 0.24s var(--ease-swift) both;
+}
+@utility anim-sheet {
+  animation: fwa-sheet-up 0.26s var(--ease-swift) both;
+}
+.anim-feed-item {
+  animation: feed-item-enter 0.132s ease-out both;
+}
+
+.skeleton {
+  background: linear-gradient(
+    100deg,
+    var(--hwa-control) 40%,
+    var(--hwa-surface-3) 50%,
+    var(--hwa-control) 60%
+  );
+  background-size: 200% 100%;
+  animation: fwa-shimmer 1.6s linear infinite;
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .hero-prize-card--active,
+  .hero-prize-card--active .hero-card-header,
+  .hero-prize-card--active .hero-card-art,
+  .hero-card-back-overlay {
+    transform: none !important;
+  }
+  .hero-card-spectrum,
+  .hero-card-texture,
+  .hero-card-glare {
+    opacity: 0 !important;
+  }
+}
+
+.app-backdrop {
+  background: var(--hwa-bg);
+}

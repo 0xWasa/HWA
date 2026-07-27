@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "remediationId": "CODEX-FABLE5-FOLLOWUP-REMEDIATION-2026-07-27",
+  "date": "2026-07-27",
+  "target": "HWA release candidate, HyperEVM mainnet 999, Project X V3",
+  "broadcastsPerformed": 0,
+  "mainnetVerdict": "NO-GO",
+  "findings": [
+    {
+      "id": "F5F-006",
+      "originalSeverity": "High",
+      "status": "code-fixed-pending-independent-reaudit",
+      "summary": "Static launch-derived buyback bounds replaced by a 30-minute Project X TWAP minOut and current-spot-relative price limit.",
+      "adminPowerAdded": false,
+      "regressionTests": [
+        "testBuybackRebasesPriceLimitAfterMarketMovesPastLaunchBand",
+        "testBuybackFailsClosedUntilTwapWindowExists",
+        "testAtomicLockedLaunchAndProtocolBuyAgainstProjectXMainnetFork"
+      ],
+      "residualRisk": "TWAP manipulation/MEV remains possible and oracle unavailability fails closed."
+    },
+    {
+      "id": "F5F-015",
+      "originalSeverity": "High",
+      "status": "code-fixed-operationally-open",
+      "summary": "Public-RPC historical scanning removed; dedicated bounded and checkpointed log RPC is mandatory.",
+      "regressionTests": [
+        "never plans an emergency log request wider than the reviewed provider range",
+        "fails closed instead of scanning the public RPC when no dedicated log endpoint is configured",
+        "uses only provider-sized windows when emergency discovery is explicitly configured"
+      ],
+      "blockingDependency": "A real chain-999 archival/log provider, its documented range/SLA and a live outage drill have not yet been selected or executed."
+    }
+  ],
+  "gate": {
+    "status": "prepared",
+    "solidity": { "passed": 154, "failed": 0 },
+    "projectXMainnetFork": { "passed": 2, "failed": 0 },
+    "v3TestnetFork": { "passed": 4, "failed": 0 },
+    "vitest": { "passed": 53, "failed": 0 },
+    "playwright": { "passed": 36, "failed": 0 },
+    "liveTestnetAttestations": { "passed": 3, "failed": 0 },
+    "skipped": ["Indexer mainnet deterministic build: no chain-999 deployment manifest exists"],
+    "broadcastPerformed": false,
+    "broadcastCapableSteps": 0
+  }
+}

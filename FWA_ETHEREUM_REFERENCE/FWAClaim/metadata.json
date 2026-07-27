@@ -1,0 +1,32 @@
+{
+  "label": "FWAClaim",
+  "address": "0xd4085d38855F17EdF0B1CCBFad7B3846fb305655",
+  "sourceUrl": "https://etherscan.io/address/0xd4085d38855F17EdF0B1CCBFad7B3846fb305655#code",
+  "exactMatchVerified": true,
+  "contractName": "FWAClaim",
+  "compilerVersion": "v0.8.30+commit.73712a01",
+  "language": "Solidity",
+  "sourceCount": 5,
+  "sourceSha256": {
+    "src/FWAClaim.sol": "0xd4123dc31072341bf33c529122a305794eb06f2ab4aeecc4ef16b26b2da764c7",
+    "lib/solady/src/auth/Ownable.sol": "0xa74625ee15f4872b773cd4730c9b578db57455eb1005ea35f120b5e01e49f753",
+    "lib/solady/src/utils/MerkleProofLib.sol": "0x8cc40c8c1044d336a6aaf00903666dc4fa3a1447c103a86566c2a50308f12fac",
+    "lib/solady/src/utils/SafeTransferLib.sol": "0x395cd7802ab0a7efaf0d7ad33c980bbe45ebf571de660938739fa2d4c6078458",
+    "settings.json": "0xf361f136da5c96511ef921133336a2626894ef184629cadad272e3f742df1fc7"
+  },
+  "constructorArguments": {
+    "encoded": "0x000000000000000000000000a0df17b5ac76ababa36e1450e2cbcd18a620c845000000000000000000000000019817ad02a31b990433542097be29d97613e8cb",
+    "etherscanDecodedText": "000000000000000000000000a0df17b5ac76ababa36e1450e2cbcd18a620c845000000000000000000000000019817ad02a31b990433542097be29d97613e8cb\n\n-----Decoded View---------------\nArg [0] : token_ (address): 0xa0Df17B5aC76ABaBA36E1450E2cbCd18A620C845\nArg [1] : owner_ (address): 0x019817aD02a31B990433542097bE29D97613E8Cb\n\n-----Encoded View---------------\n2 Constructor Arguments found :\nArg [0] : 000000000000000000000000a0df17b5ac76ababa36e1450e2cbcd18a620c845\nArg [1] : 000000000000000000000000019817ad02a31b990433542097be29d97613e8cb"
+  },
+  "creator": "0x019817ad02a31b990433542097be29d97613e8cb",
+  "creationTransaction": "0x955ccb6eef01d3ebcc554fe9836126577a5c14f9a2a6d12e532f0e29b9f6125c",
+  "deployedBytecodeBytes": 1800,
+  "deployedBytecodeKeccak256": "0x2bcc7652822828e6672fe46b9f2330ea71bad315f2df8e740605e0e0fff89f0d",
+  "deployedBytecodeSha256": "0x8997ef254acc12216529c0975f1464752a44d27807dd20eb653e111d5aa123ec",
+  "eip1967Slots": {
+    "implementation": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "admin": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "beacon": "0x0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "snapshotBlock": "0x186c50a"
+}

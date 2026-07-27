@@ -1,0 +1,66 @@
+{
+  "snapshotBlock": "0x186c51e",
+  "balanceWei": "10462005488763610261",
+  "views": {
+    "BPS": {
+      "0": "10000"
+    },
+    "approvedCallbackGasLimit": {
+      "0": "900000"
+    },
+    "approvedVrfKeyHash": {
+      "0": "0x8077df514608a09f83e4e8d300645594e5d7234665448ba83f51a50f842bd3d9"
+    },
+    "availableProcessorSurplus": {
+      "available": "10462005488763610261"
+    },
+    "fwa": {
+      "0": "0xb276f62db0ce8ca2ca5bc522695be604521eac1c"
+    },
+    "maxFulfillmentCostWei": {
+      "0": "350000000000000000"
+    },
+    "maxReimbursementBaseFeeWei": {
+      "0": "5000000000"
+    },
+    "maxReimbursementGas": {
+      "0": "2100000"
+    },
+    "maxReimbursementPriorityFeeWei": {
+      "0": "1000000000"
+    },
+    "maxReimbursementWei": {
+      "0": "20000000000000000"
+    },
+    "maxSponsoredCount": {
+      "0": "10"
+    },
+    "minimumSubscriptionBuffer": {
+      "0": "350000000000000000"
+    },
+    "owner": {
+      "result": "0x019817ad02a31b990433542097be29d97613e8cb"
+    },
+    "reimbursementGasOverhead": {
+      "0": "55000"
+    },
+    "requestConfigCoverageFloor": {
+      "0": "350000000000000000"
+    },
+    "requestFee": {
+      "0": "0"
+    },
+    "serviceFlatWei": {
+      "0": "0"
+    },
+    "serviceGasEstimate": {
+      "0": "800000"
+    },
+    "serviceMarginBps": {
+      "0": "3000"
+    },
+    "subscriptionNativeBalance": {
+      "nativeBalance": "31700011321335054885"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "snapshotBlock": "0x186c51e",
+  "balanceWei": "0",
+  "views": {
+    "claimsEnabled": {
+      "0": true
+    },
+    "merkleRoot": {
+      "0": "0x304c5bafbde1693914071ed4981f750f846f9963cb0cec3914bf7bf02d17a1af"
+    },
+    "owner": {
+      "result": "0x019817ad02a31b990433542097be29d97613e8cb"
+    },
+    "token": {
+      "0": "0xa0df17b5ac76ababa36e1450e2cbcd18a620c845"
+    }
+  }
+}

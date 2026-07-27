@@ -1,0 +1,137 @@
+{
+  "generatedAt": "2026-07-25T11:33:22.966Z",
+  "snapshotBlock": "0x186c524",
+  "modules": {
+    "FWAVRFService": {
+      "mapping": "operators",
+      "history": [
+        {
+          "blockNumber": "25546791",
+          "transactionHash": "0xd02d6e26c8ee268491f56a3ed535fca601657dc5c48059039afbf466c5626b75",
+          "logIndex": "524",
+          "account": "0x019817ad02a31b990433542097be29d97613e8cb",
+          "allowed": true
+        },
+        {
+          "blockNumber": "25546799",
+          "transactionHash": "0x30c534b6d86da64392b2705c17e474dfe5865c3b3da28ece9e87513b8835825a",
+          "logIndex": "479",
+          "account": "0x1033eaa8a296b68b4c56dd98e742175f9e81fc14",
+          "allowed": true,
+          "confirmedOnchain": true
+        },
+        {
+          "blockNumber": "25546799",
+          "transactionHash": "0x5b60fe162cf9fc5699b6ef80c49833d6e03ba9a3fefc9ac20a18691277e9f9ce",
+          "logIndex": "482",
+          "account": "0x019817ad02a31b990433542097be29d97613e8cb",
+          "allowed": false,
+          "confirmedOnchain": false
+        }
+      ],
+      "current": {
+        "0x019817ad02a31b990433542097be29d97613e8cb": {
+          "blockNumber": "25546799",
+          "transactionHash": "0x5b60fe162cf9fc5699b6ef80c49833d6e03ba9a3fefc9ac20a18691277e9f9ce",
+          "logIndex": "482",
+          "account": "0x019817ad02a31b990433542097be29d97613e8cb",
+          "allowed": false,
+          "confirmedOnchain": false
+        },
+        "0x1033eaa8a296b68b4c56dd98e742175f9e81fc14": {
+          "blockNumber": "25546799",
+          "transactionHash": "0x30c534b6d86da64392b2705c17e474dfe5865c3b3da28ece9e87513b8835825a",
+          "logIndex": "479",
+          "account": "0x1033eaa8a296b68b4c56dd98e742175f9e81fc14",
+          "allowed": true,
+          "confirmedOnchain": true
+        }
+      }
+    },
+    "FWAToken": {
+      "mapping": "isDistributor",
+      "history": [
+        {
+          "blockNumber": "25546797",
+          "transactionHash": "0x95dab9b5e52f437bd5b7d18397cb6ca0cfb4fb37520b68dbcf0694232bccdc72",
+          "logIndex": "1582",
+          "account": "0x6a1a1c0cfb3d3c538e13d36d608a5bcaa992fc78",
+          "allowed": true,
+          "confirmedOnchain": true
+        },
+        {
+          "blockNumber": "25546798",
+          "transactionHash": "0x88694d705f7278fadb819c06ad8384deb4b27d40514b0ab5aec89bed439116a2",
+          "logIndex": "809",
+          "account": "0xd4085d38855f17edf0b1ccbfad7b3846fb305655",
+          "allowed": true,
+          "confirmedOnchain": true
+        }
+      ],
+      "current": {
+        "0x6a1a1c0cfb3d3c538e13d36d608a5bcaa992fc78": {
+          "blockNumber": "25546797",
+          "transactionHash": "0x95dab9b5e52f437bd5b7d18397cb6ca0cfb4fb37520b68dbcf0694232bccdc72",
+          "logIndex": "1582",
+          "account": "0x6a1a1c0cfb3d3c538e13d36d608a5bcaa992fc78",
+          "allowed": true,
+          "confirmedOnchain": true
+        },
+        "0xd4085d38855f17edf0b1ccbfad7b3846fb305655": {
+          "blockNumber": "25546798",
+          "transactionHash": "0x88694d705f7278fadb819c06ad8384deb4b27d40514b0ab5aec89bed439116a2",
+          "logIndex": "809",
+          "account": "0xd4085d38855f17edf0b1ccbfad7b3846fb305655",
+          "allowed": true,
+          "confirmedOnchain": true
+        }
+      }
+    },
+    "FWATokenHook": {
+      "mapping": "isPool",
+      "history": [
+        {
+          "blockNumber": "25546797",
+          "transactionHash": "0xb063d2f244d35c74f3f61166be0e2b2f9ef94ed0e526932af18c43ee05a1f69d",
+          "logIndex": "1583",
+          "account": "0x6a1a1c0cfb3d3c538e13d36d608a5bcaa992fc78",
+          "allowed": true,
+          "confirmedOnchain": true
+        }
+      ],
+      "current": {
+        "0x6a1a1c0cfb3d3c538e13d36d608a5bcaa992fc78": {
+          "blockNumber": "25546797",
+          "transactionHash": "0xb063d2f244d35c74f3f61166be0e2b2f9ef94ed0e526932af18c43ee05a1f69d",
+          "logIndex": "1583",
+          "account": "0x6a1a1c0cfb3d3c538e13d36d608a5bcaa992fc78",
+          "allowed": true,
+          "confirmedOnchain": true
+        }
+      }
+    },
+    "FWA": {
+      "owner": {
+        "result": "0x019817ad02a31b990433542097be29d97613e8cb"
+      },
+      "payoutAddress": {
+        "blockNumber": "25546799",
+        "transactionHash": "0xd218e3e4867f10e9cbd50fa092677c72c758c808a03d02208437011b8522dcac",
+        "logIndex": "467",
+        "key": "61",
+        "name": "PAYOUT_ADDRESS",
+        "value": "160372640064888306397119702977937857414174292990",
+        "address": "0x1c175b9f0e8c73ed3e677e1cbb1b5a2dd4373bfe"
+      },
+      "whitelistManager": {
+        "blockNumber": "25546799",
+        "transactionHash": "0x63eaa96a46f19a1e1c9e72564ec966e4106f344378f84cccab839d499a297693",
+        "logIndex": "385",
+        "key": "62",
+        "name": "WHITELIST_MANAGER",
+        "value": "760797126382176556741867635920364812330130610115",
+        "address": "0x854352b275cf6a0dffcf2983c986fbe9345e17c3"
+      }
+    }
+  }
+}

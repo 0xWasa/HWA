@@ -1,0 +1,136 @@
+{
+  "snapshotBlock": "0x186c51e",
+  "balanceWei": "1729988173466029793416",
+  "views": {
+    "BPS": {
+      "0": "10000"
+    },
+    "MAX_CALLBACK_GAS_LIMIT": {
+      "0": "2500000"
+    },
+    "MIN_CALLBACK_GAS_LIMIT": {
+      "0": "150000"
+    },
+    "accruedOwnerFees": {
+      "0": "1120991273305111860"
+    },
+    "acquisitionEscrowTotal": {
+      "0": "2267989552556401222"
+    },
+    "acquisitionFee": {
+      "0": "151519511254550737"
+    },
+    "acquisitionRefundCreditTotal": {
+      "0": "173674835258455902"
+    },
+    "activeListingCount": {
+      "0": "2813"
+    },
+    "callbackGasLimit": {
+      "0": "900000"
+    },
+    "canRescueRewards": {
+      "0": false
+    },
+    "feeShareTotal": {
+      "0": "2813"
+    },
+    "finalizeWindow": {
+      "0": "604800"
+    },
+    "lastIssuedSequence": {
+      "0": "50229"
+    },
+    "nextListingId": {
+      "0": "47911"
+    },
+    "nextSequenceToProcess": {
+      "0": "50215"
+    },
+    "owner": {
+      "result": "0x019817ad02a31b990433542097be29d97613e8cb"
+    },
+    "ownerAcquisitionFeeBps": {
+      "0": "100"
+    },
+    "ownerSettlementFeeBps": {
+      "0": "100"
+    },
+    "payoutAddress": {
+      "0": "0x1c175b9f0e8c73ed3e677e1cbb1b5a2dd4373bfe"
+    },
+    "pendingAcquisitionCount": {
+      "0": "10"
+    },
+    "quoteAcquisitionPrice": {
+      "fee": "151519511254550737",
+      "vrf": "0",
+      "total": "151519511254550737"
+    },
+    "reservedStagedCount": {
+      "0": "18"
+    },
+    "retainedToProtocol": {
+      "0": true
+    },
+    "rewards": {
+      "0": "0x6a1a1c0cfb3d3c538e13d36d608a5bcaa992fc78"
+    },
+    "selectionSlippageBps": {
+      "0": "1000"
+    },
+    "selectionTimeoutBlocks": {
+      "0": "30"
+    },
+    "settlementDiscountBps": {
+      "0": "8500"
+    },
+    "settlementWindow": {
+      "0": "86400"
+    },
+    "token": {
+      "0": "0xa0df17b5ac76ababa36e1450e2cbcd18a620c845"
+    },
+    "topListingId": {
+      "0": "45152"
+    },
+    "topListingPot": {
+      "0": "3324547780789330443"
+    },
+    "topListingShareBps": {
+      "0": "100"
+    },
+    "topThresholdBps": {
+      "0": "1000"
+    },
+    "totalWeight": {
+      "0": "20421792377627312171677"
+    },
+    "treeRootWeight": {
+      "0": "20421792377627312171677"
+    },
+    "unfulfilledVrfCount": {
+      "0": "10"
+    },
+    "unsettledAcquisitionCount": {
+      "0": "15"
+    },
+    "vrfCoordinatorAndSubId": {
+      "coordinator": "0xd7f86b4b8cae7d942340ff628f82735b7a20893a",
+      "subId": "86051977179707821307457886411406404562727233339972463773011284528235484806451"
+    },
+    "vrfRequestConfig": {
+      "keyHash": "0x8077df514608a09f83e4e8d300645594e5d7234665448ba83f51a50f842bd3d9",
+      "gasLimit": "900000"
+    },
+    "vrfService": {
+      "0": "0xa084c33fb7a467307452898b8d58165ebd2e5d9f"
+    },
+    "vrfServiceFee": {
+      "0": "0"
+    },
+    "weightedBackingTotal": {
+      "0": "2812999999999999999513454282361996610763"
+    }
+  }
+}

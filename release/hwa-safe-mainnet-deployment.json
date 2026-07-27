@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "status": "deployed-attested",
+  "chainId": 999,
+  "safe": "0x75818fd0a2Ff801F974C9a5d23616fbd38b15f4C",
+  "safeVersion": "1.4.1",
+  "transactionHash": "0x08388e69e7735803257ab78a8c53aa5e530fcbd8fc9983e28288bc27957625cc",
+  "deploymentBlock": 41595628,
+  "receiptStatus": 1,
+  "deploymentPayer": "0xd565B4D357aF8e9e06dDb9b66008c868b03718AE",
+  "gasUsed": "306207",
+  "effectiveGasPriceWei": "200000000",
+  "gasCostWei": "61241400000000",
+  "owners": [
+    "0x645b7e2A32cfF5e131a3D6Cf16155e006fe74F5c",
+    "0x487F29A5C4eE0669D40d77Cd78F5b6A95046fECB",
+    "0x10B327d693F223399F2D8151B2B97a66818FF681"
+  ],
+  "threshold": 2,
+  "modules": [],
+  "modulePaginationSentinel": "0x0000000000000000000000000000000000000001",
+  "remainingStackDeployer": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+  "deploymentPayerHasProtocolRole": false,
+  "otherMainnetContractsDeployed": false
+}

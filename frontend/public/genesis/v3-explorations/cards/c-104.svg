@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="c104-t">
+  <title id="c104-t">HWA Genesis 104 — simulated long position</title>
+  <defs>
+    <radialGradient id="c104-bg" cx="50%" cy="44%" r="78%">
+      <stop offset="0" stop-color="#0A2B21"/>
+      <stop offset="0.55" stop-color="#061A14"/>
+      <stop offset="1" stop-color="#030C09"/>
+    </radialGradient>
+    <linearGradient id="c104-mass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BFFFE7"/>
+      <stop offset="1" stop-color="#2FBE92"/>
+    </linearGradient>
+    <radialGradient id="c104-core" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#6FEFC6" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#6FEFC6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#c104-bg)"/>
+  
+  <g transform="translate(-0.12 -0.46)">
+    
+    <circle cx="600" cy="585" r="126.1" fill="none" stroke="#E9F5EF" stroke-opacity="0.05" stroke-width="1.2"/>
+    <circle cx="600" cy="585" r="242.5" fill="none" stroke="#E9F5EF" stroke-opacity="0.05" stroke-width="1.2"/>
+    <circle cx="842.5" cy="585" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="810.01" cy="706.25" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="721.25" cy="795.01" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="600" cy="827.5" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="478.75" cy="795.01" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="389.99" cy="706.25" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="357.5" cy="585" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="389.99" cy="463.75" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="478.75" cy="374.99" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="600" cy="342.5" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="721.25" cy="374.99" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="810.01" cy="463.75" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="600" cy="585" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    
+    <path d="M 600 827.5 A 242.5 242.5 0 0 1 478.75 374.99" fill="none" stroke="#6FEFC6" stroke-width="16.36" stroke-linecap="round"/>
+    <path d="M 478.75 374.99 A 242.5 242.5 0 0 1 810.01 706.25" fill="none" stroke="#6FEFC6" stroke-width="16.36" stroke-linecap="round"/>
+    <path d="M 810.01 706.25 A 242.5 242.5 0 0 0 810.01 463.75" fill="none" stroke="#6FEFC6" stroke-width="16.36" stroke-linecap="round"/>
+    <path d="M 810.01 463.75 A 242.5 242.5 0 0 1 810.01 706.25" fill="none" stroke="#6FEFC6" stroke-width="16.36" stroke-linecap="round"/>
+    <path d="M 810.01 706.25 L 731.02 660.65" fill="none" stroke="#6FEFC6" stroke-width="16.36" stroke-linecap="round"/>
+    
+    <circle cx="600" cy="827.5" r="14.07" fill="#D9FFF1"/>
+    <circle cx="709.21" cy="648.05" r="18.32" fill="none" stroke="#6FEFC6" stroke-width="8.18"/>
+    <rect x="798.23" y="694.47" width="23.56" height="23.56" transform="rotate(45 810.01 706.25)" fill="#D9FFF1"/>
+  </g>
+  
+  <g font-family="ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace" font-size="19" letter-spacing="2.5">
+    <text x="72" y="1150" fill="#7E9A8F" fill-opacity="0.85">HWA 104/333 · SIZE</text>
+    <text x="1128" y="1150" text-anchor="end" fill="#6FEFC6" fill-opacity="0.62">LONG 20X · +127.6% · SIM</text>
+  </g>
+</svg>

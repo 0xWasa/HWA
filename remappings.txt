@@ -1,0 +1,14 @@
+fwa-reference/=FWA_ETHEREUM_REFERENCE/FWA/sources/
+fwa-rewards-reference/=FWA_ETHEREUM_REFERENCE/FWARewards/sources/
+fwa-vrf-reference/=FWA_ETHEREUM_REFERENCE/FWAVRFService/sources/
+fwa-hook-reference/=FWA_ETHEREUM_REFERENCE/FWATokenHook/sources/
+fwa-claim-reference/=FWA_ETHEREUM_REFERENCE/FWAClaim/sources/
+fwa-whitelist-reference/=FWA_ETHEREUM_REFERENCE/FWAWhitelist/sources/
+fwa-splitter-reference/=FWA_ETHEREUM_REFERENCE/Splitter/sources/
+solady/=vendor/fwa-reference-union/lib/solady/
+@chainlink/contracts/=vendor/fwa-reference-union/lib/chainlink-evm/contracts/
+@uniswap/v4-core/=vendor/fwa-reference-union/lib/v4-core/
+@uniswap/v4-periphery/=vendor/fwa-reference-union/lib/v4-periphery/
+permit2/=vendor/fwa-reference-union/lib/v4-periphery/lib/permit2/
+openzeppelin-contracts/=vendor/fwa-reference-union/lib/v4-core/lib/openzeppelin-contracts/
+solmate/=vendor/fwa-reference-union/lib/v4-core/lib/solmate/

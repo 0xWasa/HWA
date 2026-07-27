@@ -1,0 +1,81 @@
+{
+  "snapshotBlock": "0x186c51e",
+  "balanceWei": "0",
+  "views": {
+    "BUYBACK_DELAY_BLOCKS": {
+      "0": "1"
+    },
+    "BUYBACK_INCREMENT": {
+      "0": "1000000000000000000"
+    },
+    "CALLER_REWARD_BPS": {
+      "0": "50"
+    },
+    "DOMAIN_SEPARATOR": {
+      "result": "0x4d9b8aa3dc060b6efcca13d700f71d5dac256c0380e1b9d415b0649a11f4db2d"
+    },
+    "buybackSqrtPriceLimitX96": {
+      "0": "477782542051216404772491119593238"
+    },
+    "decimals": {
+      "0": "18"
+    },
+    "getTransferAllowance": {
+      "transferAllowance": "0"
+    },
+    "hook": {
+      "0": "0x2c67eba8a50af0db5fba55f725247a75cbda6444"
+    },
+    "lastBuybackBlock": {
+      "0": "0"
+    },
+    "launched": {
+      "0": true
+    },
+    "launching": {
+      "isLaunching": false
+    },
+    "name": {
+      "0": "Fake World Assets"
+    },
+    "owner": {
+      "result": "0x019817ad02a31b990433542097be29d97613e8cb"
+    },
+    "permit2": {
+      "0": "0x000000000022d473030f116ddee9f6b43ac78ba3"
+    },
+    "pool": {
+      "0": "0x6a1a1c0cfb3d3c538e13d36d608a5bcaa992fc78"
+    },
+    "poolKey": {
+      "0": {
+        "currency0": "0x0000000000000000000000000000000000000000",
+        "currency1": "0xa0df17b5ac76ababa36e1450e2cbcd18a620c845",
+        "fee": "0",
+        "tickSpacing": "60",
+        "hooks": "0x2c67eba8a50af0db5fba55f725247a75cbda6444"
+      }
+    },
+    "poolManager": {
+      "0": "0x000000000004444c5dc75cb358380d2e3de08a90"
+    },
+    "positionManager": {
+      "0": "0xbd216513d74c8cf14cf4747e6aaa6420ff64ee9e"
+    },
+    "routeBurnBps": {
+      "0": "2000"
+    },
+    "routeDepositorBps": {
+      "0": "4000"
+    },
+    "routePurchaserBps": {
+      "0": "4000"
+    },
+    "symbol": {
+      "0": "FWA"
+    },
+    "totalSupply": {
+      "result": "1000000000000000000000000000"
+    }
+  }
+}

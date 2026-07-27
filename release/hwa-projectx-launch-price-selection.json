@@ -1,0 +1,22 @@
+{
+    "schemaVersion":  1,
+    "generatedAtUtc":  "2026-07-27T18:13:22.0250955Z",
+    "status":  "preview-only",
+    "chainId":  999,
+    "deployer":  "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+    "deployerNonce":  0,
+    "predictedLaunchFactory":  "0x3620C6FDA12EC91ACAfdABa6Ff94Ac8824e8C79E",
+    "predictedHwaToken":  "0x1a87DF5c140EB738F31fF75D1fC874762E7FC8F2",
+    "whype":  "0x5555555555555555555555555555555555555555",
+    "ordering":  "HWA_TOKEN0",
+    "targetFdvHype":  "640",
+    "minimumFdvHype":  "600",
+    "maximumFdvHype":  "700",
+    "sqrtPriceX96":  "63382530011411470074835160",
+    "derivedFdvHypeWei":  "639999999999999999999",
+    "currentTick":  -142626,
+    "tickLower":  -142600,
+    "tickUpper":  -139000,
+    "validOnlyWhileDeployerNonceEquals":  0,
+    "broadcastPerformed":  false
+}

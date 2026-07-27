@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "chainId": 998,
+  "deployedAtBlock": 59973043,
+  "contracts": {
+    "fwa": "0xC37f752aa37Aa697e3997394442fAA93C382cAC0",
+    "whitelist": "0x1A23Cff53751DDdbe91eD0C6aC3a4281F4D8BD76",
+    "vrfService": "0x5F60Bb3Dd8ba0EAA9954516F85F77A3F37C3029A",
+    "randomnessCoordinator": "0xFf9f4a730BC31a3b6C04CcFEcC6174027E66E078",
+    "randomnessRegistry": "0xb6Eac59c08e0C8138aF917Ee77fD011Aa87CDc34",
+    "splitter": "0x0d67daA431Db6AD54C4CC68f55BCB3d884392997",
+    "rewards": "0x16BBa592c24803089360bbF211bD02dE9b6988F0",
+    "token": "0x663321C8b5C8DeB97013A9752b6af68B365d05dE",
+    "projectXAdapter": "0x7B724C01bb47b3bAf982305A99fF996b751d11a2",
+    "projectXPool": "0x06EA042adA62A01aD25554EE72C3d2aBF12bF5Db",
+    "projectXLiquidityLocker": "0x23AfC70f47f05504932fC64e3b2eDC324AC6d401",
+    "snapshotNft": "0x4023E79861D53bD82F9c4Eed6f994218a5067a62"
+  },
+  "features": {
+    "writesEnabled": true,
+    "acquisitionsEnabled": false,
+    "randomnessMode": "drand-bn254",
+    "dexMode": "projectx-v3-compat-testnet"
+  },
+  "collections": [
+    {
+      "address": "0x4023E79861D53bD82F9c4Eed6f994218a5067a62",
+      "name": "Hyper World Assets Genesis",
+      "symbol": "HWAG",
+      "deploymentBlock": 59973043,
+      "maxTokenId": 4,
+      "testnetFixture": true,
+      "snapshotCollection": true
+    },
+    {
+      "address": "0x82a4ebE1495dA7F59c189e0a0810C0e9D585eac2",
+      "name": "HWA Testnet V2 Gameplay",
+      "symbol": "HWANFT-V2",
+      "deploymentBlock": 59973049,
+      "maxTokenId": 6,
+      "testnetFixture": true,
+      "snapshotCollection": false
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+specVersion: 1.3.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: FWA
+    network: __NETWORK__
+    source:
+      address: "__FWA_ADDRESS__"
+      abi: FWA
+      startBlock: __START_BLOCK__
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Listing
+        - AcquisitionTransaction
+        - Acquisition
+        - Activity
+      abis:
+        - name: FWA
+          file: ./abis/FWA.json
+        - name: ERC721
+          file: ./abis/ERC721.json
+      eventHandlers:
+        - event: NFTListed(indexed uint256,indexed uint256,indexed address,address,uint256,uint256,uint256)
+          handler: handleNFTListed
+        - event: ListingStaged(indexed uint256,indexed address,address,uint256,uint256,uint256)
+          handler: handleListingStaged
+        - event: ListingWithdrawn(indexed uint256,indexed address,uint256)
+          handler: handleListingWithdrawn
+        - event: BackingUpdated(indexed uint256,indexed address,uint256,uint256,uint256)
+          handler: handleBackingUpdated
+        - event: VrfServiceFeePaid(indexed address,uint256)
+          handler: handleVrfServiceFeePaid
+        - event: AcquisitionRequested(indexed uint256,indexed address,uint256,uint256)
+          handler: handleAcquisitionRequested
+        - event: AcquisitionSequenced(indexed uint256,indexed uint64,uint64,uint256)
+          handler: handleAcquisitionSequenced
+        - event: RandomnessCached(indexed uint256,indexed uint64,uint256)
+          handler: handleRandomnessCached
+        - event: RandomnessTimedOut(indexed uint256,indexed uint64,uint64,uint256)
+          handler: handleRandomnessTimedOut
+        - event: AcquisitionProcessed(indexed uint256,indexed uint64,uint8,indexed address)
+          handler: handleAcquisitionProcessed
+        - event: AcquisitionExpired(indexed uint256,indexed uint64,indexed address,uint256)
+          handler: handleAcquisitionExpired
+        - event: AcquisitionRefundedNoListing(indexed uint256,indexed address,uint256)
+          handler: handleAcquisitionRefundedNoListing
+        - event: AcquisitionRefundedSlippage(indexed uint256,indexed address,uint256,uint256,uint256)
+          handler: handleAcquisitionRefundedSlippage
+        - event: AcquisitionRefundWithdrawn(indexed address,uint256)
+          handler: handleAcquisitionRefundWithdrawn
+        - event: NFTAllocated(indexed uint256,indexed uint256,indexed address,address,uint256,uint256)
+          handler: handleNFTAllocated
+        - event: NFTKept(indexed uint256,indexed address,indexed address,uint256)
+          handler: handleNFTKept
+        - event: NFTRelisted(indexed uint256,indexed uint256,uint256)
+          handler: handleNFTRelisted
+        - event: DepositorBidAccepted(indexed uint256,indexed address,indexed address,uint256,uint256)
+          handler: handleDepositorBidAccepted
+        - event: DepositorBidAcceptedAsTokens(indexed uint256,indexed address,indexed address,uint256,uint256,uint256)
+          handler: handleDepositorBidAcceptedAsTokens
+        - event: DepositorTimeoutResolved(indexed uint256,indexed address,bool)
+          handler: handleDepositorTimeoutResolved
+        - event: UnsettledFinalized(indexed uint256,indexed address,indexed address)
+          handler: handleUnsettledFinalized
+        - event: NFTDeliveryFailed(indexed uint256,indexed address,address,uint256)
+          handler: handleNFTDeliveryFailed
+        - event: StuckNFTRecovered(indexed uint256,indexed address)
+          handler: handleStuckNFTRecovered
+        - event: EarningsWithdrawn(indexed address,uint256)
+          handler: handleEarningsWithdrawn
+        - event: EarningsAccrued(indexed address,indexed uint256,uint256)
+          handler: handleEarningsAccrued
+        - event: ConfigSet(indexed uint256,uint256)
+          handler: handleConfigSet
+        - event: CollectionWhitelistSet(indexed address,bool)
+          handler: handleCollectionWhitelistSet
+        - event: FeesPaidOut(indexed address,uint256)
+          handler: handleFeesPaidOut
+        - event: TopListingSet(indexed uint256,indexed address)
+          handler: handleTopListingSet
+        - event: TopListingFunded(indexed uint256,uint256,uint256)
+          handler: handleTopListingFunded
+        - event: TopListingSettled(indexed uint256,indexed address,uint256)
+          handler: handleTopListingSettled
+        - event: ProtocolFeesToToken(uint256)
+          handler: handleProtocolFeesToToken
+      file: ./src/mapping.ts

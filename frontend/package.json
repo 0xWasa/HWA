@@ -1,0 +1,58 @@
+{
+  "name": "fwa-hyperevm-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "cross-env NEXT_DIST_DIR=.next-live next dev -p 3900",
+    "build": "cross-env NEXT_DIST_DIR=.next-build next build",
+    "build:standalone": "cross-env NEXT_OUTPUT_MODE=standalone NEXT_DIST_DIR=.next-standalone next build",
+    "start": "cross-env NEXT_DIST_DIR=.next-build next start -p 3900",
+    "lint": "eslint src e2e",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test --project=e2e",
+    "screenshots": "playwright test --project=screenshots",
+    "genesis:generate": "node ../scripts/generate-hwa-genesis.mjs",
+    "genesis:verify": "node ../scripts/generate-hwa-genesis.mjs --verify-only",
+    "genesis:verify:v1": "node ../scripts/generate-hwa-genesis.mjs --verify-only --output frontend/public/genesis/v1",
+    "genesis:v3:generate": "node ../scripts/generate-hwa-genesis-v3.mjs --force",
+    "genesis:v3:verify": "node ../scripts/generate-hwa-genesis-v3.mjs --verify-only",
+    "genesis:v3:png": "node ../scripts/render-hwa-genesis-v3-contact-sheet-png.mjs"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.101.4",
+    "next": "^16.2.12",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "viem": "^2.55.8",
+    "wagmi": "^3.7.4",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.0",
+    "@tailwindcss/postcss": "^4.1.0",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.5.0",
+    "cross-env": "^10.1.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.2.12",
+    "jsdom": "^26.1.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  },
+  "overrides": {
+    "axios": "1.18.1",
+    "brace-expansion": "5.0.8",
+    "minimatch": "10.2.5",
+    "postcss": "8.5.23",
+    "sharp": "0.35.3",
+    "uuid": "14.0.1",
+    "ws": "8.21.1"
+  }
+}

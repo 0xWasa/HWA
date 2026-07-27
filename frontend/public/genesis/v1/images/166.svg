@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="hwa-166-title hwa-166-desc">
+  <title id="hwa-166-title">HWA Genesis Position #166</title>
+  <desc id="hwa-166-desc">A deterministic simulated long HWA position in the scalp visual class.</desc>
+  <defs>
+    <linearGradient id="hwa-166-edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#50E3C2"/>
+      <stop offset="0.56" stop-color="#4CA8FF"/>
+      <stop offset="1" stop-color="#FF6685"/>
+    </linearGradient>
+    <radialGradient id="hwa-166-field" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#50E3C2" stop-opacity="0.13"/>
+      <stop offset="1" stop-color="#070A0D" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="hwa-166-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#000000" flood-opacity="0.62"/>
+    </filter>
+    <clipPath id="hwa-166-clip"><rect x="170" y="90" width="860" height="1020" rx="36"/></clipPath>
+  </defs>
+
+  <rect width="1200" height="1200" fill="#070A0D"/>
+  <rect width="1200" height="1200" fill="url(#hwa-166-field)"/>
+  <g transform="rotate(-18 600 600)"><ellipse cx="442" cy="746" rx="98" ry="70.6" fill="none" stroke="#4CA8FF" stroke-opacity="0.070" stroke-width="2"/>
+<ellipse cx="442" cy="746" rx="154" ry="110.9" fill="none" stroke="#50E3C2" stroke-opacity="0.078" stroke-width="2"/>
+<ellipse cx="442" cy="746" rx="210" ry="151.2" fill="none" stroke="#50E3C2" stroke-opacity="0.086" stroke-width="2"/>
+<ellipse cx="442" cy="746" rx="266" ry="191.5" fill="none" stroke="#4CA8FF" stroke-opacity="0.094" stroke-width="2"/>
+<ellipse cx="442" cy="746" rx="322" ry="231.8" fill="none" stroke="#50E3C2" stroke-opacity="0.102" stroke-width="2"/>
+<ellipse cx="442" cy="746" rx="378" ry="272.2" fill="none" stroke="#50E3C2" stroke-opacity="0.110" stroke-width="2"/>
+<ellipse cx="442" cy="746" rx="434" ry="312.5" fill="none" stroke="#4CA8FF" stroke-opacity="0.118" stroke-width="2"/>
+<ellipse cx="442" cy="746" rx="490" ry="352.8" fill="none" stroke="#50E3C2" stroke-opacity="0.126" stroke-width="2"/>
+<ellipse cx="442" cy="746" rx="546" ry="393.1" fill="none" stroke="#50E3C2" stroke-opacity="0.134" stroke-width="2"/>
+<ellipse cx="442" cy="746" rx="602" ry="433.4" fill="none" stroke="#4CA8FF" stroke-opacity="0.142" stroke-width="2"/></g>
+  <g opacity="0.2" stroke="#8DA19E" stroke-width="1">
+    <path d="M 0 210 H 1200 M 0 600 H 1200 M 0 990 H 1200"/>
+    <path d="M 210 0 V 1200 M 600 0 V 1200 M 990 0 V 1200"/>
+  </g>
+
+  <g transform="translate(600 600) scale(0.72) translate(-600 -600)" filter="url(#hwa-166-shadow)">
+    <rect x="145" y="65" width="910" height="1070" rx="50" fill="#0B1115" stroke="url(#hwa-166-edge)" stroke-width="3"/>
+    
+    <g clip-path="url(#hwa-166-clip)">
+      <rect x="170" y="90" width="860" height="1020" fill="#0B1115"/>
+      <rect x="170" y="90" width="860" height="1020" fill="url(#hwa-166-field)"/>
+      <path d="M 170 350 H 1030 M 170 775 H 1030" stroke="#223036" stroke-width="2"/>
+      <g opacity="0.14" stroke="#8DA19E" stroke-width="1">
+        <path d="M 220 420 H 980 M 220 520 H 980 M 220 620 H 980 M 220 720 H 980"/>
+      </g>
+      <path d="M 235.0 584.7 L 296.0 599.9 L 357.0 557.9 L 418.0 588.7 L 479.0 619.2 L 540.0 643.3 L 601.0 646.6 L 662.0 609.5 L 723.0 660.5 L 784.0 645.8 L 845.0 616.0 L 906.0 577.3 L 967.0 615.5" fill="none" stroke="#FF6685" stroke-opacity="0.32" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="967" cy="615.5" r="8" fill="#FF6685"/>
+      <g><ellipse cx="658" cy="570" rx="64" ry="35.8" fill="none" stroke="#50E3C2" stroke-opacity="0.28" stroke-width="2"/>
+<ellipse cx="658" cy="570" rx="106" ry="59.4" fill="none" stroke="#4CA8FF" stroke-opacity="0.34" stroke-width="2" stroke-dasharray="5 15"/>
+<ellipse cx="658" cy="570" rx="148" ry="82.9" fill="none" stroke="#50E3C2" stroke-opacity="0.40" stroke-width="2"/>
+<ellipse cx="658" cy="570" rx="190" ry="106.4" fill="none" stroke="#4CA8FF" stroke-opacity="0.46" stroke-width="2" stroke-dasharray="7 19"/><circle cx="652.2" cy="605.7" r="5.3" fill="#50E3C2"/>
+<circle cx="624.7" cy="513.7" r="6.6" fill="#4CA8FF"/>
+      <circle cx="658" cy="570" r="61" fill="#070A0D" stroke="#4CA8FF" stroke-width="3"/>
+      <circle cx="658" cy="570" r="39" fill="#030506" stroke="#50E3C2" stroke-width="2" stroke-dasharray="4 9"/>
+      <circle cx="658-8.4" cy="5700.7" r="8" fill="#50E3C2"/></g>
+    </g>
+
+    
+    <text x="205" y="151" fill="#F1F7F5" font-family="Arial, sans-serif" font-size="27" font-weight="700" letter-spacing="2">HWA</text>
+    <text x="282" y="151" fill="#7F9491" font-family="Arial, sans-serif" font-size="20" letter-spacing="3">GENESIS POSITION</text>
+    <text x="995" y="151" text-anchor="end" fill="#7F9491" font-family="monospace" font-size="19">#166</text>
+
+    <text x="205" y="218" fill="#7F9491" font-family="monospace" font-size="18" letter-spacing="2">HWA/HYPE · 5M</text>
+    <text x="205" y="319" fill="#FF6685" font-family="Arial, sans-serif" font-size="104" font-weight="300" letter-spacing="-5">-39.1%</text>
+    <rect x="846" y="250" width="149" height="50" rx="25" fill="#FF6685" fill-opacity="0.12" stroke="#FF6685" stroke-opacity="0.55"/>
+    <text x="920.5" y="283" text-anchor="middle" fill="#FF6685" font-family="monospace" font-size="21" font-weight="700">LONG</text>
+
+    <g font-family="monospace">
+      <text x="205" y="850" fill="#6F8582" font-size="17" letter-spacing="2">SIZE</text>
+      <text x="205" y="892" fill="#F1F7F5" font-size="27">0.641 HYPE</text>
+      <text x="490" y="850" fill="#6F8582" font-size="17" letter-spacing="2">ENTRY</text>
+      <text x="490" y="892" fill="#F1F7F5" font-size="27">0.2562</text>
+      <text x="740" y="850" fill="#6F8582" font-size="17" letter-spacing="2">MARK</text>
+      <text x="740" y="892" fill="#F1F7F5" font-size="27">0.2529</text>
+      <text x="205" y="972" fill="#6F8582" font-size="17" letter-spacing="2">LEVERAGE</text>
+      <text x="205" y="1014" fill="#F1F7F5" font-size="25">30x</text>
+      <text x="490" y="972" fill="#6F8582" font-size="17" letter-spacing="2">SIGNAL</text>
+      <text x="490" y="1014" fill="#F1F7F5" font-size="22">PRICE DISCOVERY</text>
+    </g>
+    <text x="995" y="978" text-anchor="end" fill="#50E3C2" font-family="monospace" font-size="20" font-weight="700" letter-spacing="2">SCALP</text>
+    <text x="995" y="1015" text-anchor="end" fill="#6F8582" font-family="monospace" font-size="16">GENESIS / SIM</text>
+    <path d="M 205 1052 H 995" stroke="#223036" stroke-width="2"/>
+    <text x="205" y="1084" fill="#60736F" font-family="monospace" font-size="14" letter-spacing="1.5">ONE OF 333 · EQUAL SNAPSHOT UNIT · HWA-GEN-1.0.0</text>
+  </g>
+</svg>

@@ -1,0 +1,34 @@
+[profile.default]
+src = "src"
+test = "test"
+script = "script"
+out = "out"
+cache_path = "cache"
+solc_version = "0.8.30"
+evm_version = "cancun"
+optimizer = true
+optimizer_runs = 1
+via_ir = true
+bytecode_hash = "none"
+cbor_metadata = false
+libs = []
+fs_permissions = [{ access = "read", path = "./" }]
+
+[profile.default.fuzz]
+runs = 512
+
+[profile.default.invariant]
+runs = 256
+depth = 64
+fail_on_revert = true
+
+[profile.fork]
+test = "fork-test"
+
+[profile.hyperevm]
+test = "hyperevm-fork-test"
+
+[rpc_endpoints]
+ethereum = "${ETHEREUM_RPC_URL}"
+hyperevm_testnet = "https://rpc.hyperliquid-testnet.xyz/evm"
+hyperevm_mainnet = "https://rpc.hyperliquid.xyz/evm"

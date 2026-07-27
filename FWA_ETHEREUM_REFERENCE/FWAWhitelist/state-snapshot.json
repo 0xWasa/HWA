@@ -1,0 +1,21 @@
+{
+  "snapshotBlock": "0x186c51e",
+  "balanceWei": "0",
+  "views": {
+    "DEAD_ADDRESS": {
+      "0": "0x000000000000000000000000000000000000dead"
+    },
+    "TTT_AMOUNT": {
+      "0": "0"
+    },
+    "fwa": {
+      "0": "0xb276f62db0ce8ca2ca5bc522695be604521eac1c"
+    },
+    "owner": {
+      "result": "0x019817ad02a31b990433542097be29d97613e8cb"
+    },
+    "ttt": {
+      "0": "0x26d7ad0e930b54b84c00daad077ee31ba9e2fb2e"
+    }
+  }
+}

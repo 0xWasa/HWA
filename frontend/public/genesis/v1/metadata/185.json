@@ -1,0 +1,84 @@
+{
+  "name": "HWA Genesis Position #185",
+  "description": "A deterministic HWA Genesis Position. All trading statistics are simulated, all visual traits are cosmetic, and every token represents one equal unit of the 333-token Genesis snapshot.",
+  "image": "ipfs://__HWA_GENESIS_IMAGES_CID__/185.svg",
+  "background_color": "070A0D",
+  "attributes": [
+    {
+      "trait_type": "Edition",
+      "value": "HWA Genesis"
+    },
+    {
+      "trait_type": "Size Class",
+      "value": "SCALP"
+    },
+    {
+      "trait_type": "Class Supply",
+      "display_type": "number",
+      "value": 200
+    },
+    {
+      "trait_type": "Side",
+      "value": "SHORT"
+    },
+    {
+      "trait_type": "Market",
+      "value": "HWA/HYPE"
+    },
+    {
+      "trait_type": "PNL Band",
+      "value": "GREEN"
+    },
+    {
+      "trait_type": "Simulated PNL",
+      "display_type": "number",
+      "value": 72.2
+    },
+    {
+      "trait_type": "Position Size HYPE",
+      "display_type": "number",
+      "value": 0.604
+    },
+    {
+      "trait_type": "Leverage",
+      "display_type": "number",
+      "value": 29
+    },
+    {
+      "trait_type": "Core",
+      "value": "PULSE"
+    },
+    {
+      "trait_type": "Signal",
+      "value": "PRICE DISCOVERY"
+    },
+    {
+      "trait_type": "Timeframe",
+      "value": "15M"
+    },
+    {
+      "trait_type": "Palette",
+      "value": "AQUA"
+    },
+    {
+      "trait_type": "Renderer",
+      "value": "HWA-GEN-1.0.0"
+    },
+    {
+      "trait_type": "Snapshot Unit",
+      "value": "1 / 333"
+    },
+    {
+      "trait_type": "Simulated",
+      "value": "Yes"
+    }
+  ],
+  "properties": {
+    "token_id": 185,
+    "renderer": "HWA-GEN-1.0.0",
+    "simulated": true,
+    "equal_snapshot_unit": "1/333",
+    "visual_seed": "0x412c2701d1cb88be8a5aec936c36585a0525e33dcdce5eed81d57aa9a2a8086c",
+    "image_sha256": "9123a2fd9bade254095b8b51d913907d2bbbab54b549cfd04eff431b4343b2e0"
+  }
+}

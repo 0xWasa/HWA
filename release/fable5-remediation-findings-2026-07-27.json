@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "remediator": "Claude Fable 5",
+  "remediationDateUtc": "2026-07-27",
+  "sourceFindings": "release/fable5-security-findings-2026-07-27.json",
+  "policy": {
+    "fixed": "All confirmed Critical and High findings.",
+    "notFixed": "Medium findings were fixed only where required to properly close a Critical or High. None were.",
+    "noWeakening": "No protocol check was relaxed to make an existing deployment or an existing test pass.",
+    "noCosmetics": "No refactoring unrelated to a finding.",
+    "productDecisions": "Any fix that would change an irreversible product assumption was stopped and escalated instead of applied."
+  },
+  "counts": {
+    "criticalFixed": 0,
+    "highFixed": 1,
+    "mediumFixed": 0,
+    "openAfterRemediation": 3
+  },
+  "remediations": [
+    {
+      "id": "F5-001",
+      "severity": "High",
+      "status": "fixed",
+      "summary": "Repaired the reachability of the stateful settlement evidence and added deterministic branch coverage.",
+      "approach": "The defect was in the test harness, not in the protocol, so nothing in the protocol was changed. The fix makes the post-allocation state space reachable and then asserts custody and solvency inside it.",
+      "filesModified": [
+        {
+          "path": "test/FWASettlementInvariant.t.sol",
+          "change": "Rewritten as a two-actor adversarial campaign with 14 handler selectors. Tracks every outstanding randomness request and fulfils an arbitrary one so callbacks arrive out of order; advances block height and timestamp on both short and window-length hops; exposes all eight settlement branches; toggles collection transfer failure so the stuck-NFT state is reachable."
+        },
+        {
+          "path": "test/FWASettlementBranches.t.sol",
+          "change": "New deterministic suite that drives listings to Allocated and walks each settlement branch explicitly, asserting listing status, NFT ownership and full native solvency at every step."
+        }
+      ],
+      "filesNotModified": [
+        "test/FWAStatefulInvariant.t.sol - left byte-for-byte intact so the original evidence remains auditable and the pre-existing invariant count does not change.",
+        "vendor/fwa-reference-union/src/FWA.sol - the FIFO head-of-line behaviour is correct protocol design; the expiry escape hatch exists and is now proven to work."
+      ],
+      "regressionTests": [
+        {
+          "name": "testKeepNFTDeliversToPurchaser",
+          "proves": "Purchaser-initiated strict delivery settles the listing and transfers the NFT to the purchaser."
+        },
+        {
+          "name": "testAcceptDepositorBidReturnsNFTToDepositor",
+          "proves": "The ETH-settlement branch returns the NFT to the depositor."
+        },
+        {
+          "name": "testRelistKeepsCustodyAndOpensNewListing",
+          "proves": "A relist settles the old listing, opens exactly one new listing, and the NFT never leaves core custody."
+        },
+        {
+          "name": "testDepositorReclaimBackingAfterSettlementWindow",
+          "proves": "After the purchaser window lapses the depositor can keep the backing and the NFT goes to the purchaser."
+        },
+        {
+          "name": "testDepositorReclaimNFTAfterSettlementWindow",
+          "proves": "After the purchaser window lapses the depositor can reclaim the NFT instead."
+        },
+        {
+          "name": "testFinalizeUnsettledIsPermissionlessAfterFinalizeWindow",
+          "proves": "Once the finalize window lapses any third party can resolve the default, so neither asset can lock."
+        },
+        {
+          "name": "testRevertingCollectionLeavesNFTCustodiedThenRecoverable",
+          "proves": "A collection that reverts on transfer cannot lock a listing: ETH legs settle, the core retains custody, recovery reverts while the collection is still failing and preserves entitlement, only the owed recipient can recover, and recovery succeeds once the collection behaves."
+        },
+        {
+          "name": "testUnfulfilledAcquisitionExpiresAndRefunds",
+          "proves": "An acquisition whose word never arrives expires, advances the queue head and credits a refund - the exact state the original campaign was permanently stuck in."
+        },
+        {
+          "name": "testOutOfOrderCallbackDoesNotJumpTheQueue",
+          "proves": "Fulfilling the second request first leaves it Ready and does not advance the head; both drain in order only once the head is fulfilled."
+        },
+        {
+          "name": "invariant_TreeAndRunningTotalsSurviveSettlement",
+          "proves": "The weight tree and every running total agree with the enumerated listings across all settlement branches."
+        },
+        {
+          "name": "invariant_CoreCustodiesEveryOwedNFT",
+          "proves": "The core custodies every NFT it still owes, including one awaiting stuck-NFT recovery - a case the original custody invariant did not cover at all."
+        },
+        {
+          "name": "invariant_NativeBalanceCoversAllLiabilities",
+          "proves": "Native balance covers every enumerated liability, summed across both actors."
+        }
+      ],
+      "securityPropertyNowHeld": "Custody and liability conservation are asserted in the allocated and settled state space, not only in the staged and active one. Reachability of each branch is proven by deterministic tests rather than assumed from a passing fuzz campaign."
+    }
+  ],
+  "openAfterRemediation": [
+    {
+      "id": "F5-002",
+      "severity": "Medium",
+      "reason": "Not required to close any Critical or High. The mitigation changes acquisition reveal latency, which is a product-visible assumption, so it is escalated for an explicit decision rather than applied unilaterally.",
+      "recommendation": "Raise FWA_RANDOMNESS_MIN_ROUND_DELAY_SECONDS to at least 30 before mainnet, and consider raising the contract floor MIN_DELAY_SECONDS above one beacon period."
+    },
+    {
+      "id": "F5-003",
+      "severity": "Low",
+      "reason": "Report-fidelity only; the enforced no-broadcast guarantee is measured and holds.",
+      "recommendation": "Derive broadcastCapableSteps from recorded step arguments."
+    },
+    {
+      "id": "F5-004",
+      "severity": "Informational",
+      "reason": "Both uncovered files are generated or test-only.",
+      "recommendation": "Add them to the manifest or record an explicit exclusion rule."
+    }
+  ],
+  "testCountDelta": {
+    "solidityBefore": 123,
+    "solidityAfter": 135,
+    "delta": 12,
+    "note": "No pre-existing test was removed, renamed or weakened. The increase is entirely the twelve new regression tests."
+  }
+}

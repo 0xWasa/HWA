@@ -1,0 +1,69 @@
+{
+  "snapshotBlock": "0x186c51e",
+  "balanceWei": "88025706926495340",
+  "views": {
+    "BPS": {
+      "0": "10000"
+    },
+    "EMISSION_DAYS": {
+      "0": "15"
+    },
+    "EMISSION_DURATION": {
+      "0": "1296000"
+    },
+    "accTokenPerSqrt": {
+      "0": "245424434629709712816447283430560641315420254424266"
+    },
+    "coldGap": {
+      "0": "3600"
+    },
+    "currentEpoch": {
+      "0": "4"
+    },
+    "depositorRatePerSec": {
+      "0": "115740740740740740740"
+    },
+    "emissionStart": {
+      "0": "1784574083"
+    },
+    "forcedTokenShareBps": {
+      "0": "-1"
+    },
+    "fwa": {
+      "0": "0xb276f62db0ce8ca2ca5bc522695be604521eac1c"
+    },
+    "hotGap": {
+      "0": "60"
+    },
+    "isBuying": {
+      "0": false
+    },
+    "lastAcquisitionTs": {
+      "0": "1784979119"
+    },
+    "lastTokenAccrual": {
+      "0": "1784979119"
+    },
+    "owner": {
+      "result": "0x019817ad02a31b990433542097be29d97613e8cb"
+    },
+    "purchaserDailyPot": {
+      "0": "10000000000000000000000000"
+    },
+    "sqrtBackingTotal": {
+      "0": "1441187158188"
+    },
+    "token": {
+      "0": "0xa0df17b5ac76ababa36e1450e2cbcd18a620c845"
+    },
+    "tokenBuyAllowanceTotal": {
+      "0": "88025706926495340"
+    },
+    "tokenHook": {
+      "0": "0x2c67eba8a50af0db5fba55f725247a75cbda6444"
+    },
+    "tokenPoolManager": {
+      "0": "0x000000000004444c5dc75cb358380d2e3de08a90"
+    }
+  }
+}

@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 2,
+  "revision": 2,
+  "revisionNoteUtc": "2026-07-27",
+  "revisionReason": "Revision 1 wrongly declared the Project X launch-price safeguards closed. A hostile cross-check across all six mandated scope areas disproved that and surfaced further findings. Revision 1 counts must not be used.",
+  "auditor": "Claude Fable 5 (independent, hostile re-audit)",
+  "target": {
+    "release": "HWA release candidate for HyperEVM mainnet 999 + Project X V3",
+    "auditAnchor": "release/audit-manifest.json"
+  },
+  "trustPosture": "No prior audit, finding classification, or closure claim was taken on trust — including this auditor's own revision 1. Every claim reproduced here was re-derived from source by direct inspection.",
+  "counts": {
+    "critical": 0,
+    "high": 3,
+    "medium": 4,
+    "low": 1,
+    "informational": 0
+  },
+  "statusSummary": {
+    "highFixed": 2,
+    "highOpen": 1,
+    "mediumOpen": 4,
+    "closedThisPassByThirdParty": ["F5-002", "F5-003", "F5-004"]
+  },
+  "findings": [
+    {
+      "id": "F5-001",
+      "title": "Stateful invariant campaign is vacuous over the entire post-allocation state space",
+      "severity": "High",
+      "category": "false-assurance / test-coverage",
+      "status": "fixed",
+      "scopeArea": "1 - Core FWA and liability conservation",
+      "exploitationScenario": "Not an on-chain exploit; a failure of the evidence the release relies on. The gate presents three stateful invariants as proof that the core always custodies unsettled NFTs and that its native balance covers enumerated liabilities. The campaign never enters the Allocated state, so those invariants only ever evaluate staged and active listings.",
+      "rootCause": [
+        "test/FWAStatefulInvariant.t.sol:59-63 - fulfill() can only target provider.lastRequestId(), so any non-newest request can never receive its word.",
+        "FWA.sol processAcquisitions - strict FIFO that break's while its head is Pending and block.number <= meta.wordDeadlineBlock.",
+        "No handler advances block height or timestamp, and Foundry advances neither, so the wordDeadlineBlock expiry escape hatch can never fire."
+      ],
+      "evidence": {
+        "method": "Byte-for-byte replica of the shipped setUp targeting the shipped handler, instrumented with an afterInvariant probe. 256 runs x 64 depth = 16384 calls.",
+        "observed": {
+          "nextSequenceToProcess": 1,
+          "listingsAllocated": 0,
+          "listingsSettled": 0,
+          "acquisitionsPending": 6,
+          "acquisitionsReady": 3,
+          "blockNumberAtSetup": 1,
+          "blockNumberAtEnd": 1
+        }
+      },
+      "impact": "Every settlement branch, purchaser liability accounting, refund credit and stuck-NFT custody were outside the tested state space.",
+      "minimalFix": "Repair harness reachability without weakening any protocol check; assert reachability deterministically.",
+      "securityPropertyAfterFix": "Every settlement branch is provably reached with custody and solvency asserted at each; out-of-order callbacks provably cannot jump the FIFO; an unfulfilled acquisition provably expires and refunds.",
+      "regressionTests": ["test/FWASettlementBranches.t.sol", "test/FWASettlementInvariant.t.sol"],
+      "independentCorroboration": "A separate cross-check derived the same defect independently."
+    },
+    {
+      "id": "F5-005",
+      "title": "Project X mainnet launch price had no echo, no FDV band and no confirmation gate; the advertised safeguards were dead or lived only in the legacy Nest path",
+      "severity": "High",
+      "category": "deployment safety / irreversible mispricing",
+      "status": "fixed",
+      "scopeArea": "5 - deployment and release scripts",
+      "correctsPriorClaim": "Revision 1 of this audit stated this area was 'genuinely closed'. That was WRONG. It was concluded from the contents of .env.mainnet.example without checking that any code on the active path reads those variables.",
+      "exploitationScenario": "Mainnet launch day. The operator fills .env.mainnet.example from the signed launch-price worksheet, which instructs 'fill all four fields', and sets the two PROJECTX_*_CONFIRMED flags. DeployProjectXToken.s.sol reads only FWA_INITIAL_SQRT_PRICE_X96 and validates nothing beyond a uint160 bound and a tick-width sanity check. FWA_INITIAL_SQRT_PRICE_X96 is a ~29-digit decimal transcribed by hand; a single dropped or transposed digit passes silently into an atomic deploy + pool-create + LP-mint + permanent-lock call. The market opens permanently mispriced by orders of magnitude, with the launch LP locked at that price.",
+      "preconditions": ["Operator error in a hand-transcribed 29-digit value, or a wrong worksheet."],
+      "evidence": [
+        "script/DeployProjectXToken.s.sol:64-68 (pre-fix) - the entire price validation was a uint160 overflow bound plus a tick-width check.",
+        "FWA_INITIAL_SQRT_PRICE_X96_ECHO - defined in .env.mainnet.example:91, read by ZERO files repo-wide.",
+        "PROJECTX_MARKET_PRICE_CONFIRMED / PROJECTX_LP_LOCK_CONFIRMED - defined in .env.mainnet.example:18-19, read by ZERO files repo-wide.",
+        "script/InitializeNestMarket.s.sol:52-67 - the echo and FDV guards DO exist, but on the legacy Nest path and under different names (MAINNET_FWA_INITIAL_SQRT_PRICE_X96_ECHO, NEST_MARKET_PRICE_CONFIRMED), which the mainnet template does not define.",
+        "script/ActivateProjectXMarket.s.sol - the only other Project X script; gates on E2E and public-trading bools only, so no later price guard exists."
+      ],
+      "impact": "Irreversible mispriced mainnet launch of $HWA with real value at stake, while the operator believes five safety controls are enforcing the worksheet.",
+      "minimalFix": "Add to DeployProjectXToken.s.sol, using the template's own variable names: mainnet-only PROJECTX_MARKET_PRICE_CONFIRMED and PROJECTX_LP_LOCK_CONFIRMED gates and an FWA_INITIAL_SQRT_PRICE_X96_ECHO double-entry check before broadcast, plus an FDV band check against MAINNET_FWA_MIN/MAX_INITIAL_FDV_HYPE_WEI after the factory deploys the token (token/wHYPE ordering is unknown before that; forge simulates run() fully before broadcasting, so a revert there aborts the launch).",
+      "securityPropertyAfterFix": "On chain 999 the launch reverts unless both confirmations are true, the echo matches the price exactly, and the resulting fully-diluted valuation falls inside the signed band.",
+      "regressionTests": ["test/DeployProjectXTokenGuards.t.sol"]
+    },
+    {
+      "id": "F5-006",
+      "title": "Token settlement signs an unbounded-slippage pool trade: minimum-out defaults to zero in both settlement surfaces",
+      "severity": "High",
+      "category": "user funds / MEV",
+      "status": "fixed",
+      "scopeArea": "6 - frontend and indexer",
+      "exploitationScenario": "A purchaser chooses 'accept the bid, settled as HWA'. acceptBidAsTokens spends the entire settlement payout buying HWA from the public Project X V3 pool. Both surfaces initialise the slippage guard to 0n and nothing re-seeds it from a quote, so unless the user manually types a minimum, the signed transaction accepts any output. A sandwich bot front-runs the swap, drains nearly the whole payout, and back-runs it.",
+      "preconditions": ["User selects the token-settlement option and leaves the minimum at its default."],
+      "evidence": [
+        "frontend/src/components/positions/SettlementDrawer.tsx:41 - const [minTokensOut, setMinTokensOut] = useState<bigint>(0n)",
+        "frontend/src/components/positions/InlineSettlementPanel.tsx:30 - identical default on the second surface",
+        "frontend/src/protocol/viem/ViemProtocolClient.ts - the value flowed unchanged into acceptBidAsTokens(listingId, minTokensOut)",
+        "SettlementDrawer.tsx:87 - the UI describes the option as 'minOut protected', which the default contradicts"
+      ],
+      "impact": "Direct, avoidable loss of a user's settlement proceeds on a public AMM.",
+      "minimalFix": "Reject minTokensOut <= 0 for acceptBidTokens as invalid input at the head of ViemProtocolClient.settle(), before a wallet is prompted, so no such transaction can be signed from any surface.",
+      "securityPropertyAfterFix": "No settlement transaction spending the payout on the pool can be signed without a non-zero slippage floor.",
+      "regressionTests": ["frontend/src/protocol/viem/ViemProtocolClient.test.ts - settlement slippage guard"],
+      "correction": "An earlier draft of this finding stated the mock engine already rejected a zero minimum and that production was weaker than the mock. That is false: the mock test in question covers an inactive rewards module. Neither surface guarded zero before this fix."
+    },
+    {
+      "id": "F5-007",
+      "title": "Indexer-independent position discovery queries 250,000-block log windows against an RPC documented to allow 50",
+      "severity": "High",
+      "category": "availability / user exit",
+      "status": "open - infrastructure decision required",
+      "scopeArea": "6 - frontend and indexer",
+      "exploitationScenario": "No attacker required. When the indexer is unavailable, getUserPositions falls back to on-chain log discovery so users can still find and exit their positions. That fallback issues eth_getLogs with 250,000-block windows. The project's own documentation states the official HyperEVM RPC caps eth_getLogs at 50 blocks and four topics. Every request in the fallback is therefore rejected, so the emergency exit path fails precisely in the situation it exists for.",
+      "preconditions": ["Indexer unavailable and the user is on the official HyperEVM RPC."],
+      "evidence": [
+        "frontend/src/protocol/viem/ViemProtocolClient.ts:63 - const LOG_DISCOVERY_CHUNK_BLOCKS = 250_000n, used unmodified at :961-993",
+        "FWA_PARITY_MANIFEST.md:37 - 'Le RPC officiel ... limite eth_getLogs a 50 blocs et quatre topics'",
+        "indexer/README.md:10 - 'RPC limits eth_getLogs to 50 blocks'",
+        "FWA_TESTNET_AUDIT_2026-07-25.md:68 - same 50-block constraint recorded as a prior audit finding"
+      ],
+      "impact": "The mandated property 'user exits possible without the indexer' does not hold against the documented production RPC.",
+      "minimalFix": "Not a constant change: 50-block windows over millions of blocks is not viable. The fallback needs a declared archival or log-capable RPC endpoint, with the window size driven by that endpoint's documented limit and an explicit, surfaced error when discovery cannot complete.",
+      "securityPropertyAfterFix": "Either the fallback completes against the configured endpoint, or the user is told unambiguously that indexer-independent discovery is unavailable - never a silent failure.",
+      "notFixedReason": "The fix requires choosing and provisioning an RPC endpoint, which is an infrastructure decision outside an auditor's remit. Escalated rather than guessed."
+    },
+    {
+      "id": "F5-008",
+      "title": "The immutable Ethereum reference bundle was modified and no gate can detect it; the parity manifest records none of the divergences",
+      "severity": "Medium",
+      "category": "provenance / attestation chain",
+      "status": "open",
+      "scopeArea": "5 - deployment and release scripts",
+      "exploitationScenario": "No direct exploit. FWA_ETHEREUM_REFERENCE/ is documented as the raw Etherscan-verified reference that must never receive HyperEVM adaptations, and remappings.txt maps fwa-reference/ to it, so it is the code compiled for chain 999. Two of its 65 sources diverge from the bundle's own etherscan-standard-input.json. reference-index.json holds the ground truth and detects it, but no gate step ever runs that check, and release/audit-manifest.json hashes the tree against itself so it structurally cannot.",
+      "preconditions": [],
+      "evidence": [
+        "Recomputed all 65 unique reference sources against reference-index.json: 63 match, 2 mismatch - src/FWA.sol (expected b69064937419b995, actual df47b803b2f49125) and src/FWAConfigKeys.sol (expected 2e3121ea35b49f6e, actual 4651a9e4cda55ddd).",
+        "Divergences: eight internal->public visibility promotions; new storage bool rewardsRequiredForActivation; new storage uint activeBackingTotal; new DepositorTimeoutResolved event; a new setBool(ACQUISITIONS_ENABLED) branch requiring launchReady() and revenueReady(); a new one-way latch key.",
+        "grep of FWA_PARITY_MANIFEST.md for all five delta names returns zero hits.",
+        "No script references reference-index.json."
+      ],
+      "assessedNotAVulnerability": "The code delta itself is hardening, not a weakness: the new staticcall gate FAILS CLOSED (reverts unless both selectors return true), the latch is genuinely one-way, activeBackingTotal is maintained symmetrically on all three mutation sites, the contract is a direct deploy (all EIP-1967 slots zero) so inserted storage carries no collision risk, and the behaviour is covered by test/FWAHyperEVMCore.t.sol and disclosed in release/REMEDIATION_REPORT_2026-07-26.md:25.",
+      "impact": "The assurance chain is broken rather than the code: the folder's stated invariant is false, the document whose purpose is to record divergences records none, and the only artefact that could detect drift is never executed. A future, less benign edit would be equally invisible.",
+      "minimalFix": "Add a gate step that walks reference-index.json, rehashes every referenced source and fails on any mismatch; and record the five deltas in FWA_PARITY_MANIFEST.md.",
+      "securityPropertyAfterFix": "Every file under FWA_ETHEREUM_REFERENCE/ either hash-matches the verified Etherscan bundle or is an explicitly documented, gate-enforced divergence."
+    },
+    {
+      "id": "F5-009",
+      "title": "Pre-open buy gate is keyed on the transfer recipient, so third parties can buy on the canonical pool before public trading opens",
+      "severity": "Medium",
+      "category": "launch control",
+      "status": "open",
+      "scopeArea": "3 - Project X and $HWA",
+      "exploitationScenario": "While externalBuysEnabled == false, the gate in _afterTokenTransfer is keyed only on the from/to addresses of the ERC20 transfer, never on the swap initiator or route. Any third party can call the public Project X SwapRouter directly with wHYPE and receive HWA from the canonical pool before public trading is meant to be open. No privilege or race is required.",
+      "preconditions": ["launch() has run, externalBuysEnabled == false, attacker holds wHYPE."],
+      "evidence": ["src/hyperevm/FWATokenHyperEVM.sol - gate lives entirely in _afterTokenTransfer and inspects only from/to."],
+      "impact": "The pre-open window is not actually closed; early buyers can accumulate before the intended public open.",
+      "minimalFix": "Gate on the pool/route interaction rather than the recipient, or hold the launch LP in a state that cannot be traded against until the open."
+    },
+    {
+      "id": "F5-010",
+      "title": "Mainnet deployer, drand submitter and publish keys are exported into the process environment inherited by npm ci, next build, vitest and playwright",
+      "severity": "Medium",
+      "category": "secret handling / supply chain",
+      "status": "open",
+      "scopeArea": "5 - deployment and release scripts",
+      "exploitationScenario": "scripts/ImportEnvFile.ps1 validates only that a variable NAME matches ^[A-Z_][A-Z0-9_]*$ and exports every entry, so PRIVATE_KEY, OWNER_PRIVATE_KEY, FWA_DRAND_SUBMITTER_PRIVATE_KEY and the Goldsky publish key enter the process environment of the whole gate run. Any package in the frontend or indexer transitive dependency tree - thousands of packages - can harvest them from a postinstall or test-time hook, the dominant real-world npm attack pattern.",
+      "preconditions": ["A gate run performed with a populated mainnet env file (-MainnetEnvPath)."],
+      "evidence": ["scripts/ImportEnvFile.ps1:14 - name-syntax regex is the only validation.", "scripts/TestReleaseCandidate.ps1 - npm and node toolchain steps inherit the environment."],
+      "impact": "Compromise of the mainnet deployer key would be catastrophic and silent.",
+      "minimalFix": "Filter secret-bearing names out of the environment handed to the npm/node steps, or run those steps in a separate process environment that never receives them."
+    },
+    {
+      "id": "F5-011",
+      "title": "VRF purchaser fee scales with tx.gasprice while fulfilment coverage and the relay bounty are fixed wei",
+      "severity": "Medium",
+      "category": "economic / liveness",
+      "status": "open",
+      "scopeArea": "2 - drand randomness",
+      "exploitationScenario": "Not adversarially exploitable - the network enforces tx.gasprice >= block.basefee, so no purchaser can deliberately underpay. The realistic trigger is a sustained low-gas-price market: requestFee() is linear in tx.gasprice while the per-request coverage reservation and the relayer bounty debited on every fulfilment are fixed wei amounts. Below roughly 0.1 gwei each acquisition reserves less than it costs and the reserve drains.",
+      "preconditions": ["Sustained low gas prices on HyperEVM."],
+      "impact": "Reserve exhaustion halts acquire() protocol-wide. No loss of user funds.",
+      "minimalFix": "Index the coverage reservation and bounty to the same gas-price basis as the fee, or add a monitored floor with an explicit top-up procedure."
+    },
+    {
+      "id": "F5-012",
+      "title": "Gate steps omitted via -SkipFork / -SkipE2E are not counted in skippedSteps",
+      "severity": "Low",
+      "category": "release gate integrity",
+      "status": "open",
+      "scopeArea": "5 - deployment and release scripts",
+      "correctsPriorClaim": "Revision 1 of this audit stated that status is 'prepared rather than passed whenever any step is skipped'. That is imprecise: it holds only for steps explicitly added with status 'skipped'.",
+      "exploitationScenario": "scripts/TestReleaseCandidate.ps1:120 and :142 wrap the fork and E2E steps in if (-not $Skip...) with no else branch, so omitted steps never enter the results array and never increment the skippedSteps count that drives the overall status. In the current tree a pre-declared skipped step keeps the status at 'prepared' regardless, and invocation.skipFork / selection.forkExecuted do record the truth - so the report is not actually misleading today. It would become so if that pre-declared skip ever disappeared.",
+      "preconditions": ["-SkipFork or -SkipE2E used, and no other step reporting status 'skipped'."],
+      "impact": "Latent report-fidelity defect; no current misreporting.",
+      "minimalFix": "Record an explicit skipped entry for each omitted step instead of omitting it silently.",
+      "verificationNote": "An independent adversarial check refuted the stronger form of this claim (that status is currently reported as 'passed'); only the counting mechanism defect is upheld."
+    }
+  ],
+  "closedThisPass": [
+    {
+      "id": "F5-002",
+      "title": "Randomness round-delay floor leaves no margin against chain-clock skew",
+      "priorSeverity": "Medium",
+      "status": "closed by product decision, independently verified",
+      "verification": "src/hyperevm/DrandBN254Coordinator.sol:29 now reads MIN_DELAY_SECONDS = 30 (was DRAND_PERIOD_SECONDS = 3) and .env.mainnet.example:34 now reads FWA_RANDOMNESS_MIN_ROUND_DELAY_SECONDS=30 (was 12). Verified directly, not accepted on report.",
+      "note": "Closed by a third party during this audit, not by this auditor."
+    },
+    {
+      "id": "F5-003",
+      "title": "broadcastCapableSteps was a hardcoded literal",
+      "priorSeverity": "Low",
+      "status": "closed, independently verified",
+      "verification": "scripts/TestReleaseCandidate.ps1:20 initialises the counter, :33 increments it where a --broadcast argument is detected and rejected, :214 emits the measured value."
+    },
+    {
+      "id": "F5-004",
+      "title": "Two files inside audited roots were absent from the manifest",
+      "priorSeverity": "Informational",
+      "status": "closed, independently verified",
+      "verification": "release/audit-manifest.json now contains fork-test/FWAEthereumDifferential.t.sol and indexer/subgraph.yaml."
+    }
+  ],
+  "refutedByAdversarialVerification": [
+    {
+      "claim": "Requester can obtain costless atomic re-rolls of the drand draw",
+      "verdict": "refuted",
+      "reason": "The target round is fixed at request time and fulfilment is bound to it; there is no same-transaction abort of a revealed outcome. The genuine residual risk is transaction WITHHOLDING under clock skew, which is F5-002 and is now closed at a 30s floor."
+    },
+    {
+      "claim": "A Staged listing is locked until some third party activates it",
+      "verdict": "refuted",
+      "reason": "activateListings is unrestricted and the depositor can call it themselves; listNFT, _acquire and _acquireBatch all self-drain staging; reserved batches release on all three terminal branches of the permissionless processAcquisitions, whose Pending expiry depends on block number alone. Moreover withdrawListing's first statement is _requireExitUnlocked(), so during the only window in which staging cannot drain, Active depositors are equally blocked - Staged adds no incremental lock."
+    }
+  ],
+  "verifiedNoTransaction": {
+    "broadcastRequested": false,
+    "broadcastPerformed": false,
+    "chain999Deployments": 0,
+    "testnetAcquisitionsOpened": false,
+    "testnetPublicBuysOpened": false
+  }
+}

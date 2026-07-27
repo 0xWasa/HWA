@@ -1,0 +1,14 @@
+{
+    "schemaVersion":  1,
+    "testedAtUtc":  "2026-07-27T18:08:40.8820274Z",
+    "sourceArtAggregateSha256":  "96b80e5c8a06b07407d92b58dbf7865aab242439bdfdb5d8436e370cd2915648",
+    "hostedMetadataAggregateSha256":  "b708168ae49ac4df5732eb7319babf7dd66c37686e31b4c048460195cf40d43e",
+    "publicOrigin":  "https://assets.example.invalid",
+    "tokenBaseUri":  "https://assets.example.invalid/hwa-genesis/v3/96b80e5c8a06b07407d92b58dbf7865aab242439bdfdb5d8436e370cd2915648/metadata/",
+    "supply":  333,
+    "localResourcesVerified":  666,
+    "remoteResourcesVerified":  0,
+    "remoteVerificationPassed":  false,
+    "result":  "local-only",
+    "deploymentAllowed":  false
+}

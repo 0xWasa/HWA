@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "observedAtUtc": "2026-07-26T15:05:48Z",
+  "chainId": 998,
+  "rpc": "https://rpc.hyperliquid-testnet.xyz/evm",
+  "broadcast": false,
+  "results": [
+    {
+      "name": "core",
+      "command": "forge script script/VerifyHyperEVMCore.s.sol:VerifyHyperEVMCore --rpc-url hyperevm_testnet -vv",
+      "status": "passed"
+    },
+    {
+      "name": "drand-relay",
+      "command": "forge script script/VerifyDrandRelayCoordinator.s.sol:VerifyDrandRelayCoordinator --rpc-url hyperevm_testnet -vv",
+      "status": "passed"
+    },
+    {
+      "name": "nest",
+      "command": "forge script script/VerifyNestModules.s.sol:VerifyNestModules --rpc-url hyperevm_testnet -vv",
+      "status": "failed-stale-deployment",
+      "token": "0x41514C9043D7382088F3EEE5A6344dBc55879C5B",
+      "feeRecipient": "0x681f4829b500b30fcc461cf523D8E213320Da574",
+      "failedInvariant": "token.isDistributor(feeRecipient) == true",
+      "observedValue": false,
+      "remediationInCurrentDeploymentScript": "script/DeployNestToken.s.sol calls token.setDistributor(feeRecipient, true)",
+      "note": "The existing 998 deployment predates the hardened Nest deployment path. The verifier intentionally fails closed; no transaction was sent to mutate or redeploy it."
+    }
+  ]
+}

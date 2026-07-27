@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="c077-t">
+  <title id="c077-t">HWA Genesis 077 — simulated short position</title>
+  <defs>
+    <radialGradient id="c077-bg" cx="50%" cy="44%" r="78%">
+      <stop offset="0" stop-color="#0A2B21"/>
+      <stop offset="0.55" stop-color="#061A14"/>
+      <stop offset="1" stop-color="#030C09"/>
+    </radialGradient>
+    <linearGradient id="c077-mass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFC9D7"/>
+      <stop offset="1" stop-color="#E85579"/>
+    </linearGradient>
+    <radialGradient id="c077-core" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FF7E9B" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FF7E9B" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#c077-bg)"/>
+  
+  <g transform="translate(6.88 -41.05)">
+    
+    <circle cx="600" cy="585" r="102.7" fill="none" stroke="#E9F5EF" stroke-opacity="0.05" stroke-width="1.2"/>
+    <circle cx="600" cy="585" r="197.5" fill="none" stroke="#E9F5EF" stroke-opacity="0.05" stroke-width="1.2"/>
+    <circle cx="797.5" cy="585" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="771.04" cy="683.75" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="698.75" cy="756.04" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="600" cy="782.5" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="501.25" cy="756.04" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="428.96" cy="683.75" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="402.5" cy="585" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="428.96" cy="486.25" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="501.25" cy="413.96" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="600" cy="387.5" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="698.75" cy="413.96" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="771.04" cy="486.25" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="600" cy="585" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    
+    <path d="M 548.65 496.06 A 102.7 102.7 0 0 0 497.3 585" fill="none" stroke="#FF7E9B" stroke-width="14.44" stroke-linecap="round"/>
+    <path d="M 497.3 585 A 102.7 102.7 0 0 0 688.94 636.35" fill="none" stroke="#FF7E9B" stroke-width="14.44" stroke-linecap="round"/>
+    <path d="M 688.94 636.35 A 102.7 102.7 0 0 1 548.65 673.94" fill="none" stroke="#FF7E9B" stroke-width="14.44" stroke-linecap="round" stroke-dasharray="0.1 27.44"/>
+    <path d="M 548.65 673.94 L 512.37 736.78" fill="none" stroke="#FF7E9B" stroke-width="14.44" stroke-linecap="round"/>
+    
+    <circle cx="548.65" cy="496.06" r="12.42" fill="#FFD9E2"/>
+    <circle cx="501.25" cy="756.04" r="16.17" fill="none" stroke="#FF7E9B" stroke-width="7.22"/>
+    <rect x="678.54" y="625.95" width="20.79" height="20.79" transform="rotate(45 688.94 636.35)" fill="#FFD9E2"/>
+  </g>
+  
+  <g font-family="ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace" font-size="19" letter-spacing="2.5">
+    <text x="72" y="1150" fill="#7E9A8F" fill-opacity="0.85">HWA 077/333 · SCALP</text>
+    <text x="1128" y="1150" text-anchor="end" fill="#FF7E9B" fill-opacity="0.62">SHORT 8X · -34.2% · SIM</text>
+  </g>
+</svg>

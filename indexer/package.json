@@ -1,0 +1,18 @@
+{
+  "name": "hwa-hyperevm-indexer",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "sync-abi": "node scripts/sync-abi.mjs",
+    "render:testnet": "node scripts/render-manifest.mjs ../frontend/public/deployments/hyperevm-testnet-998.json hyperevm-testnet",
+    "render:mainnet": "node scripts/render-manifest.mjs ../frontend/public/deployments/hyperevm-mainnet-999.json hyperevm",
+    "codegen": "graph codegen subgraph.yaml",
+    "build": "npm run sync-abi && graph codegen subgraph.yaml && graph build subgraph.yaml",
+    "check": "npm run render:testnet && npm run build",
+    "check:mainnet": "npm run render:mainnet && npm run build"
+  },
+  "devDependencies": {
+    "@graphprotocol/graph-cli": "0.98.1",
+    "@graphprotocol/graph-ts": "0.38.2"
+  }
+}

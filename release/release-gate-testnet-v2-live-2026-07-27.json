@@ -1,0 +1,266 @@
+{
+    "schemaVersion":  2,
+    "generatedAtUtc":  "2026-07-27T15:09:01.1950825Z",
+    "status":  "prepared",
+    "chainTarget":  999,
+    "invocation":  {
+                       "cleanInstall":  false,
+                       "skipFork":  true,
+                       "skipE2E":  true,
+                       "verifyLiveTestnet":  true,
+                       "mainnetMode":  false,
+                       "mainnetEnvPathProvided":  false
+                   },
+    "selection":  {
+                      "forkExecuted":  false,
+                      "e2eExecuted":  false,
+                      "liveTestnetAttestationsExecuted":  true,
+                      "liveMainnetAttestationsExecuted":  false,
+                      "minimumCounts":  {
+                                            "solidity":  121,
+                                            "fork":  2,
+                                            "compatibilityFork":  4,
+                                            "vitest":  46,
+                                            "playwright":  32
+                                        }
+                  },
+    "broadcastPolicy":  "forbidden",
+    "broadcastRequested":  false,
+    "broadcastCapableSteps":  0,
+    "broadcastPerformed":  false,
+    "secretsScrubbedBeforeChildProcesses":  [
+
+                                            ],
+    "skippedSteps":  4,
+    "steps":  [
+                  {
+                      "name":  "Solidity formatting",
+                      "status":  "passed",
+                      "exitCode":  0,
+                      "durationSeconds":  0.08,
+                      "command":  "forge.exe",
+                      "arguments":  [
+                                        "fmt",
+                                        "--check"
+                                    ]
+                  },
+                  {
+                      "name":  "Solidity full build",
+                      "status":  "passed",
+                      "exitCode":  0,
+                      "durationSeconds":  1.9,
+                      "command":  "forge.exe",
+                      "arguments":  [
+                                        "build"
+                                    ]
+                  },
+                  {
+                      "name":  "Solidity production contract sizes",
+                      "status":  "passed",
+                      "exitCode":  0,
+                      "durationSeconds":  1.82,
+                      "command":  "forge.exe",
+                      "arguments":  [
+                                        "build",
+                                        "--sizes",
+                                        "--skip",
+                                        "script",
+                                        "test"
+                                    ]
+                  },
+                  {
+                      "name":  "Solidity full tests",
+                      "status":  "passed",
+                      "exitCode":  0,
+                      "durationSeconds":  5.69,
+                      "command":  "forge.exe",
+                      "arguments":  [
+                                        "test",
+                                        "-vv"
+                                    ],
+                      "minimumExpectedCount":  121,
+                      "observedCount":  165
+                  },
+                  {
+                      "name":  "Release helper self-tests",
+                      "status":  "passed",
+                      "exitCode":  0,
+                      "durationSeconds":  0.86,
+                      "command":  "powershell.exe",
+                      "arguments":  [
+                                        "-NoProfile",
+                                        "-ExecutionPolicy",
+                                        "Bypass",
+                                        "-File",
+                                        "C:\\Users\\eliot\\Documents\\FWA FORK\\scripts\\TestReleaseScripts.ps1"
+                                    ]
+                  },
+                  {
+                      "name":  "Project X mainnet fork simulation",
+                      "status":  "skipped",
+                      "reason":  "-SkipFork was requested; chain-999 compatibility is unverified in this run",
+                      "durationSeconds":  0
+                  },
+                  {
+                      "name":  "V3 testnet compatibility fork simulation",
+                      "status":  "skipped",
+                      "reason":  "-SkipFork was requested; chain-998 venue compatibility is unverified in this run",
+                      "durationSeconds":  0
+                  },
+                  {
+                      "name":  "Frontend dependency audit",
+                      "status":  "passed",
+                      "exitCode":  0,
+                      "durationSeconds":  1.59,
+                      "command":  "npm.cmd",
+                      "arguments":  [
+                                        "audit",
+                                        "--audit-level=high"
+                                    ]
+                  },
+                  {
+                      "name":  "Frontend typecheck",
+                      "status":  "passed",
+                      "exitCode":  0,
+                      "durationSeconds":  6.48,
+                      "command":  "npm.cmd",
+                      "arguments":  [
+                                        "run",
+                                        "typecheck"
+                                    ]
+                  },
+                  {
+                      "name":  "Frontend lint",
+                      "status":  "passed",
+                      "exitCode":  0,
+                      "durationSeconds":  8.08,
+                      "command":  "npm.cmd",
+                      "arguments":  [
+                                        "run",
+                                        "lint"
+                                    ]
+                  },
+                  {
+                      "name":  "Frontend unit tests",
+                      "status":  "passed",
+                      "exitCode":  0,
+                      "durationSeconds":  2.65,
+                      "command":  "npm.cmd",
+                      "arguments":  [
+                                        "test"
+                                    ],
+                      "minimumExpectedCount":  46,
+                      "observedCount":  74
+                  },
+                  {
+                      "name":  "Frontend production build",
+                      "status":  "passed",
+                      "exitCode":  0,
+                      "durationSeconds":  11.04,
+                      "command":  "npm.cmd",
+                      "arguments":  [
+                                        "run",
+                                        "build"
+                                    ]
+                  },
+                  {
+                      "name":  "Frontend Playwright E2E",
+                      "status":  "skipped",
+                      "reason":  "-SkipE2E was requested; end-to-end flows are unverified in this run",
+                      "durationSeconds":  0
+                  },
+                  {
+                      "name":  "Indexer production dependency audit",
+                      "status":  "passed",
+                      "exitCode":  0,
+                      "durationSeconds":  0.87,
+                      "command":  "npm.cmd",
+                      "arguments":  [
+                                        "audit",
+                                        "--omit=dev",
+                                        "--audit-level=high"
+                                    ]
+                  },
+                  {
+                      "name":  "Indexer deterministic build",
+                      "status":  "passed",
+                      "exitCode":  0,
+                      "durationSeconds":  6.57,
+                      "command":  "npm.cmd",
+                      "arguments":  [
+                                        "run",
+                                        "check"
+                                    ]
+                  },
+                  {
+                      "name":  "Indexer mainnet deterministic build",
+                      "status":  "skipped",
+                      "reason":  "pre-deployment: no chain-999 addresses or manifest exist yet",
+                      "durationSeconds":  0
+                  },
+                  {
+                      "name":  "Live 998 core attestation",
+                      "status":  "passed",
+                      "exitCode":  0,
+                      "durationSeconds":  11.49,
+                      "command":  "forge.exe",
+                      "arguments":  [
+                                        "script",
+                                        "script/VerifyHyperEVMCore.s.sol:VerifyHyperEVMCore",
+                                        "--rpc-url",
+                                        "hyperevm_testnet",
+                                        "--fork-block-number",
+                                        "59976446",
+                                        "-vv"
+                                    ]
+                  },
+                  {
+                      "name":  "Live 998 drand BN254 attestation",
+                      "status":  "passed",
+                      "exitCode":  0,
+                      "durationSeconds":  3.7,
+                      "command":  "forge.exe",
+                      "arguments":  [
+                                        "script",
+                                        "script/VerifyDrandBN254Coordinator.s.sol:VerifyDrandBN254Coordinator",
+                                        "--rpc-url",
+                                        "hyperevm_testnet",
+                                        "--fork-block-number",
+                                        "59976446",
+                                        "-vv"
+                                    ]
+                  },
+                  {
+                      "name":  "Live 998 Project X-compatible attestation",
+                      "status":  "passed",
+                      "exitCode":  0,
+                      "durationSeconds":  14.56,
+                      "command":  "forge.exe",
+                      "arguments":  [
+                                        "script",
+                                        "script/VerifyProjectXModules.s.sol:VerifyProjectXModules",
+                                        "--rpc-url",
+                                        "hyperevm_testnet",
+                                        "--fork-block-number",
+                                        "59976446",
+                                        "-vv"
+                                    ]
+                  },
+                  {
+                      "name":  "Live 998 v2 post-E2E attestation",
+                      "status":  "passed",
+                      "exitCode":  0,
+                      "durationSeconds":  8.81,
+                      "command":  "forge.exe",
+                      "arguments":  [
+                                        "script",
+                                        "script/VerifyProjectXTestnetV2Release.s.sol:VerifyProjectXTestnetV2Release",
+                                        "--rpc-url",
+                                        "hyperevm_testnet",
+                                        "--fork-block-number",
+                                        "59976446",
+                                        "-vv"
+                                    ]
+                  }
+              ]
+}

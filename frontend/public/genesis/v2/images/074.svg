@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="hwa-074-title hwa-074-desc">
+  <title id="hwa-074-title">HWA Genesis Position #074</title>
+  <desc id="hwa-074-desc">An abstract deterministic liquidity footprint for a simulated short HWA position in the whale visual class.</desc>
+  <defs>
+    <linearGradient id="hwa-074-wash" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9A7BFF" stop-opacity="0.13"/>
+      <stop offset="0.55" stop-color="#07100F" stop-opacity="0"/>
+      <stop offset="1" stop-color="#58E6C1" stop-opacity="0.12"/>
+    </linearGradient>
+    <radialGradient id="hwa-074-pulse" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#9A7BFF" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#9A7BFF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="hwa-074-glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="1200" fill="#07100F"/>
+  <rect width="1200" height="1200" fill="url(#hwa-074-wash)"/>
+  <g><path d="M -80 282.1 L 90 302.7 L 260 311.7 L 430 299.2 L 600 282.9 L 770 253.0 L 940 248.2 L 1110 256.7 L 1280 283.1" fill="none" stroke="#9A7BFF" stroke-opacity="0.050" stroke-width="1.5"/>
+<path d="M -80 462.2 L 90 464.2 L 260 450.5 L 430 418.8 L 600 390.2 L 770 385.2 L 940 407.5 L 1110 430.6 L 1280 460.8" fill="none" stroke="#58E6C1" stroke-opacity="0.062" stroke-width="1.5"/>
+<path d="M -80 614.0 L 90 592.5 L 260 558.0 L 430 522.4 L 600 523.8 L 770 548.9 L 940 600.3 L 1110 614.8 L 1280 612.2" fill="none" stroke="#9A7BFF" stroke-opacity="0.074" stroke-width="1.5"/>
+<path d="M -80 712.2 L 90 671.0 L 260 659.1 L 430 665.2 L 600 719.5 L 770 747.9 L 940 770.4 L 1110 758.7 L 1280 720.8" fill="none" stroke="#58E6C1" stroke-opacity="0.086" stroke-width="1.5"/>
+<path d="M -80 815.7 L 90 796.5 L 260 816.7 L 430 875.6 L 600 904.6 L 770 922.6 L 940 905.5 L 1110 859.5 L 1280 817.2" fill="none" stroke="#9A7BFF" stroke-opacity="0.098" stroke-width="1.5"/></g>
+  <g stroke="#A9C0BA" stroke-opacity="0.055" stroke-width="1">
+    <path d="M 80 0 V 1200 M 280 0 V 1200 M 480 0 V 1200 M 680 0 V 1200 M 880 0 V 1200 M 1080 0 V 1200"/>
+    <path d="M 0 250 H 1200 M 0 450 H 1200 M 0 650 H 1200 M 0 850 H 1200 M 0 1050 H 1200"/>
+  </g>
+  <rect x="42" y="42" width="1116" height="1116" rx="26" fill="none" stroke="#9EB3AE" stroke-opacity="0.16"/>
+  
+
+  <text x="82" y="105" fill="#F1F7F5" font-family="Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="2">HWA</text>
+  <text x="153" y="105" fill="#718580" font-family="monospace" font-size="15" letter-spacing="2.4">GENESIS / SIM</text>
+  <text x="1118" y="105" text-anchor="end" fill="#718580" font-family="monospace" font-size="16">#074</text>
+
+  <text x="82" y="178" fill="#718580" font-family="monospace" font-size="16" letter-spacing="2">HWA/HYPE · 5M · 17X</text>
+  <text x="82" y="276" fill="#9A7BFF" font-family="Arial, sans-serif" font-size="94" font-weight="300" letter-spacing="-5">+137.8%</text>
+  <text x="1118" y="250" text-anchor="end" fill="#9A7BFF" font-family="monospace" font-size="20" font-weight="700" letter-spacing="2">SHORT</text>
+  <text x="1118" y="280" text-anchor="end" fill="#718580" font-family="monospace" font-size="14">BREAKOUT</text>
+
+  <g><rect x="159.5" y="383.9" width="881.0" height="518.2" rx="64" fill="none" stroke="#9A7BFF" stroke-opacity="0.20" stroke-width="1.5"/>
+<rect x="184.5" y="400.1" width="831.0" height="485.7" rx="57" fill="none" stroke="#58E6C1" stroke-opacity="0.18" stroke-width="1.5"/>
+<rect x="209.5" y="416.4" width="781.0" height="453.2" rx="50" fill="none" stroke="#9A7BFF" stroke-opacity="0.16" stroke-width="1.5"/><line x1="143.5" y1="802.5" x2="143.5" y2="839.2" stroke="#58E6C1" stroke-opacity="0.16" stroke-width="2"/>
+<line x1="197.2" y1="451.0" x2="197.2" y2="479.3" stroke="#9A7BFF" stroke-opacity="0.30" stroke-width="2"/>
+<line x1="250.9" y1="798.6" x2="250.9" y2="843.1" stroke="#9A7BFF" stroke-opacity="0.13" stroke-width="2"/>
+<line x1="304.6" y1="438.2" x2="304.6" y2="492.1" stroke="#58E6C1" stroke-opacity="0.23" stroke-width="2"/>
+<line x1="358.3" y1="807.3" x2="358.3" y2="834.5" stroke="#9A7BFF" stroke-opacity="0.31" stroke-width="2"/>
+<line x1="412.0" y1="458.9" x2="412.0" y2="471.3" stroke="#9A7BFF" stroke-opacity="0.23" stroke-width="2"/>
+<line x1="465.7" y1="792.1" x2="465.7" y2="849.7" stroke="#58E6C1" stroke-opacity="0.34" stroke-width="2"/>
+<line x1="519.4" y1="451.0" x2="519.4" y2="479.2" stroke="#9A7BFF" stroke-opacity="0.32" stroke-width="2"/>
+<line x1="573.1" y1="788.6" x2="573.1" y2="853.2" stroke="#9A7BFF" stroke-opacity="0.13" stroke-width="2"/>
+<line x1="626.9" y1="447.1" x2="626.9" y2="483.2" stroke="#58E6C1" stroke-opacity="0.17" stroke-width="2"/>
+<line x1="680.6" y1="789.6" x2="680.6" y2="852.1" stroke="#9A7BFF" stroke-opacity="0.27" stroke-width="2"/>
+<line x1="734.3" y1="453.1" x2="734.3" y2="477.2" stroke="#9A7BFF" stroke-opacity="0.23" stroke-width="2"/>
+<line x1="788.0" y1="798.6" x2="788.0" y2="843.1" stroke="#58E6C1" stroke-opacity="0.33" stroke-width="2"/>
+<line x1="841.7" y1="441.7" x2="841.7" y2="488.5" stroke="#9A7BFF" stroke-opacity="0.18" stroke-width="2"/>
+<line x1="895.4" y1="809.1" x2="895.4" y2="832.6" stroke="#9A7BFF" stroke-opacity="0.31" stroke-width="2"/>
+<line x1="949.1" y1="452.6" x2="949.1" y2="477.6" stroke="#58E6C1" stroke-opacity="0.14" stroke-width="2"/>
+<line x1="1002.8" y1="799.5" x2="1002.8" y2="842.2" stroke="#9A7BFF" stroke-opacity="0.26" stroke-width="2"/>
+<line x1="1056.5" y1="435.9" x2="1056.5" y2="494.4" stroke="#9A7BFF" stroke-opacity="0.33" stroke-width="2"/><rect x="459.1" y="410.5" width="117.9" height="3" rx="1.5" fill="#50E3C2" fill-opacity="0.26"/>
+      <rect x="623" y="410.5" width="77.3" height="3" rx="1.5" fill="#FF6685" fill-opacity="0.26"/>
+<rect x="460.7" y="449.0" width="116.3" height="3" rx="1.5" fill="#50E3C2" fill-opacity="0.30"/>
+      <rect x="623" y="449.0" width="194.8" height="3" rx="1.5" fill="#FF6685" fill-opacity="0.30"/>
+<rect x="316.5" y="487.5" width="260.5" height="3" rx="1.5" fill="#50E3C2" fill-opacity="0.33"/>
+      <rect x="623" y="487.5" width="261.4" height="3" rx="1.5" fill="#FF6685" fill-opacity="0.33"/>
+<rect x="396.0" y="526.0" width="181.0" height="3" rx="1.5" fill="#50E3C2" fill-opacity="0.36"/>
+      <rect x="623" y="526.0" width="181.7" height="3" rx="1.5" fill="#FF6685" fill-opacity="0.36"/>
+<rect x="234.6" y="564.5" width="342.4" height="3" rx="1.5" fill="#50E3C2" fill-opacity="0.39"/>
+      <rect x="623" y="564.5" width="330.6" height="3" rx="1.5" fill="#FF6685" fill-opacity="0.39"/>
+<rect x="374.0" y="603.0" width="203.0" height="3" rx="1.5" fill="#50E3C2" fill-opacity="0.40"/>
+      <rect x="623" y="603.0" width="309.4" height="3" rx="1.5" fill="#FF6685" fill-opacity="0.40"/>
+<rect x="377.4" y="639.5" width="199.6" height="7" rx="3.5" fill="#50E3C2" fill-opacity="0.86"/>
+      <rect x="623" y="639.5" width="324.5" height="7" rx="3.5" fill="#FF6685" fill-opacity="0.86"/>
+<rect x="355.6" y="680.0" width="221.4" height="3" rx="1.5" fill="#50E3C2" fill-opacity="0.40"/>
+      <rect x="623" y="680.0" width="200.5" height="3" rx="1.5" fill="#FF6685" fill-opacity="0.40"/>
+<rect x="394.3" y="718.5" width="182.7" height="3" rx="1.5" fill="#50E3C2" fill-opacity="0.39"/>
+      <rect x="623" y="718.5" width="153.8" height="3" rx="1.5" fill="#FF6685" fill-opacity="0.39"/>
+<rect x="326.3" y="757.0" width="250.7" height="3" rx="1.5" fill="#50E3C2" fill-opacity="0.36"/>
+      <rect x="623" y="757.0" width="195.8" height="3" rx="1.5" fill="#FF6685" fill-opacity="0.36"/>
+<rect x="401.3" y="795.5" width="175.7" height="3" rx="1.5" fill="#50E3C2" fill-opacity="0.33"/>
+      <rect x="623" y="795.5" width="226.5" height="3" rx="1.5" fill="#FF6685" fill-opacity="0.33"/>
+<rect x="398.9" y="834.0" width="178.1" height="3" rx="1.5" fill="#50E3C2" fill-opacity="0.30"/>
+      <rect x="623" y="834.0" width="105.8" height="3" rx="1.5" fill="#FF6685" fill-opacity="0.30"/>
+<rect x="454.6" y="872.5" width="122.4" height="3" rx="1.5" fill="#50E3C2" fill-opacity="0.26"/>
+      <rect x="623" y="872.5" width="114.8" height="3" rx="1.5" fill="#FF6685" fill-opacity="0.26"/></g>
+  <line x1="143.5" y1="622.5" x2="1056.5" y2="622.5" stroke="#B4C7C2" stroke-opacity="0.18" stroke-dasharray="5 12"/>
+  <path d="M 175.5 622.5 L 236.1 623.1 L 296.8 619.3 L 357.4 658.9 L 418.1 647.8 L 478.7 634.3 L 539.4 638.6 L 600.0 666.1 L 660.6 694.1 L 721.3 624.6 L 781.9 694.9 L 842.6 675.3 L 903.2 676.0 L 963.9 668.8 L 1024.5 680.4" fill="none" stroke="#9A7BFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="143.5" cy="622.5" r="6" fill="#07100F" stroke="#B4C7C2" stroke-width="2"/>
+  <circle cx="1056.5" cy="680.4" r="8" fill="#9A7BFF" filter="url(#hwa-074-glow)"/>
+  <circle cx="399.1" cy="643.0" r="92.5" fill="url(#hwa-074-pulse)"/>
+  <rect x="364.9" y="608.8" width="68.5" height="68.5" rx="7" fill="#07100F" stroke="#9A7BFF" stroke-width="2"/><rect x="394.1" y="638.0" width="10" height="10" rx="2" fill="#9A7BFF"/>
+  <text x="151.5" y="609.5" fill="#718580" font-family="monospace" font-size="12">ENTRY</text>
+  <text x="1048.5" y="666.4" text-anchor="end" fill="#9A7BFF" font-family="monospace" font-size="12">MARK</text>
+
+  <path d="M 82 976 H 1118" stroke="#9EB3AE" stroke-opacity="0.15"/>
+  <g font-family="monospace">
+    <text x="82" y="1020" fill="#647873" font-size="14" letter-spacing="2">SIZE</text>
+    <text x="82" y="1053" fill="#E3ECE9" font-size="21">17.47 HYPE</text>
+    <text x="355" y="1020" fill="#647873" font-size="14" letter-spacing="2">ENTRY</text>
+    <text x="355" y="1053" fill="#E3ECE9" font-size="21">0.024741</text>
+    <text x="600" y="1020" fill="#647873" font-size="14" letter-spacing="2">MARK</text>
+    <text x="600" y="1053" fill="#E3ECE9" font-size="21">0.022736</text>
+    <text x="1118" y="1020" text-anchor="end" fill="#9A7BFF" font-size="16" font-weight="700" letter-spacing="2">WHALE</text>
+    <text x="1118" y="1053" text-anchor="end" fill="#647873" font-size="13">1 / 333 EQUAL UNIT</text>
+    <text x="82" y="1114" fill="#536660" font-size="12" letter-spacing="1.5">ABSTRACT LIQUIDITY FOOTPRINT · HWA-GEN-2.0.0</text>
+  </g>
+</svg>

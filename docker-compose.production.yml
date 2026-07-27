@@ -1,0 +1,37 @@
+services:
+  hwa-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_APP_ENV: ${NEXT_PUBLIC_APP_ENV:-production}
+        NEXT_PUBLIC_DATA_MODE: ${NEXT_PUBLIC_DATA_MODE:-mainnet}
+        NEXT_PUBLIC_HYPEREVM_CHAIN_ID: ${NEXT_PUBLIC_HYPEREVM_CHAIN_ID:-999}
+        NEXT_PUBLIC_HYPEREVM_RPC_URL: ${NEXT_PUBLIC_HYPEREVM_RPC_URL:?required}
+        NEXT_PUBLIC_HYPEREVM_LOG_RPC_URL: ${NEXT_PUBLIC_HYPEREVM_LOG_RPC_URL:-/api/rpc/logs}
+        NEXT_PUBLIC_HYPEREVM_LOG_RPC_MAX_BLOCK_RANGE: ${NEXT_PUBLIC_HYPEREVM_LOG_RPC_MAX_BLOCK_RANGE:?required}
+        NEXT_PUBLIC_INDEXER_URL: ${NEXT_PUBLIC_INDEXER_URL:?required}
+        NEXT_PUBLIC_EXPLORER_URL: ${NEXT_PUBLIC_EXPLORER_URL:-https://hyperevmscan.io}
+        NEXT_PUBLIC_DEPLOYMENT_MANIFEST_URL: ${NEXT_PUBLIC_DEPLOYMENT_MANIFEST_URL:-/deployments/hyperevm-mainnet-999.json}
+    env_file:
+      - ./frontend/.env.production.local
+    environment:
+      NODE_ENV: production
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    ports:
+      - "127.0.0.1:3900:3900"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3900/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+

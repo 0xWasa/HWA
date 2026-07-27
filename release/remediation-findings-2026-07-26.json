@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "sourceAudit": "release/audit-findings-2026-07-26.json",
+  "generatedAtUtc": "2026-07-26T15:10:00Z",
+  "broadcastPerformed": false,
+  "summary": {
+    "sourceFindings": 86,
+    "fixedOrSuperseded": 77,
+    "externalPreBroadcastBlockers": 2,
+    "acceptedOrAuditorRecheck": 4,
+    "mainnetInapplicableLegacy": 3
+  },
+  "groups": [
+    {
+      "disposition": "fixed-or-superseded",
+      "ids": [
+        "HWA-001", "HWA-002", "HWA-003", "HWA-004", "HWA-005", "HWA-006", "HWA-007", "HWA-008",
+        "HWA-009", "HWA-010", "HWA-011", "HWA-012", "HWA-013", "HWA-014", "HWA-016", "HWA-017",
+        "HWA-018", "HWA-019", "HWA-020", "HWA-021", "HWA-022", "HWA-023", "HWA-024", "HWA-025",
+        "HWA-026", "HWA-027", "HWA-028", "HWA-029", "HWA-030", "HWA-031", "HWA-032", "HWA-033",
+        "HWA-034", "HWA-035", "HWA-036", "HWA-037", "HWA-038", "HWA-040", "HWA-041", "HWA-042",
+        "HWA-043", "HWA-044", "HWA-045", "HWA-046", "HWA-047", "HWA-048", "HWA-049", "HWA-050",
+        "HWA-051", "HWA-052", "HWA-054", "HWA-055", "HWA-056", "HWA-057", "HWA-058", "HWA-059",
+        "HWA-060", "HWA-061", "HWA-062", "HWA-063", "HWA-064", "HWA-065", "HWA-066", "HWA-068",
+        "HWA-070", "HWA-072", "HWA-073", "HWA-074", "HWA-075", "HWA-076", "HWA-077", "HWA-081",
+        "HWA-078", "HWA-082", "HWA-083", "HWA-084", "HWA-085"
+      ]
+    },
+    {
+      "disposition": "external-pre-broadcast-blocker",
+      "ids": ["HWA-015", "HWA-039"],
+      "reason": "Nest/Algebra administrator behavior and atomic pool creation + plugin installation must be confirmed with Nest or performed through a reviewed atomic factory. Current contracts fail closed and include a delayed pinned rescue, but code cannot remove this external dependency."
+    },
+    {
+      "disposition": "accepted-design-or-independent-auditor-recheck",
+      "ids": ["HWA-053", "HWA-069", "HWA-071", "HWA-086"],
+      "reason": "Inputs are constrained to internal GraphQL enums/numbers; direct buyer recipient is an intentional Nest route limitation; one-shot rewards wiring and persistent launch latch are intentional immutability adaptations. Recheck assumptions rather than treating these as silently closed."
+    },
+    {
+      "disposition": "mainnet-inapplicable-legacy-testnet-code",
+      "ids": ["HWA-067", "HWA-079", "HWA-080"],
+      "reason": "The legacy relay/Gelato/HyperSwap paths are testnet-only and constructors or deploy scripts reject chain 999. The mainnet release path uses DrandBN254Coordinator and Nest."
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+type Listing @entity(immutable: false) {
+  id: ID!
+  listingId: BigInt!
+  status: String!
+  collection: Bytes!
+  tokenId: BigInt!
+  tokenURI: String
+  depositor: Bytes!
+  purchaser: Bytes
+  backing: BigInt!
+  weight: BigInt!
+  listedAt: BigInt!
+  allocatedAt: BigInt
+  acquiredFor: BigInt
+  settlement: String
+  isCrown: Boolean!
+  updatedAt: BigInt!
+  updatedBlock: BigInt!
+  updatedTx: Bytes!
+}
+
+type AcquisitionTransaction @entity(immutable: false) {
+  id: ID!
+  txHash: Bytes!
+  purchaser: Bytes!
+  serviceFeeTotal: BigInt!
+  requestCount: Int!
+  acquisitions: [Acquisition!]! @derivedFrom(field: "context")
+}
+
+type Acquisition @entity(immutable: false) {
+  id: ID!
+  requestId: BigInt!
+  purchaser: Bytes!
+  acquisitionFee: BigInt!
+  totalWeight: BigInt!
+  sequence: BigInt
+  wordDeadlineBlock: BigInt
+  status: String!
+  listingId: BigInt
+  refund: BigInt
+  requestedAt: BigInt!
+  requestedBlock: BigInt!
+  txHash: Bytes!
+  context: AcquisitionTransaction!
+}
+
+type Activity @entity(immutable: true) {
+  id: ID!
+  type: String!
+  txHash: Bytes!
+  logIndex: BigInt!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  address: Bytes
+  listingId: BigInt
+  collection: Bytes
+  tokenId: BigInt
+  amount: BigInt
+  tokenAmount: BigInt
+}
+
+type ProtocolState @entity(immutable: false) {
+  id: ID!
+  currentTopListing: String
+  totalListings: Int!
+  activeListingCount: Int!
+  stagedListingCount: Int!
+  totalBacking: BigInt!
+  totalWeight: BigInt!
+  lastEventBlock: BigInt!
+  lastEventTimestamp: BigInt!
+}
+
+type OwnedToken @entity(immutable: false) {
+  id: ID!
+  collection: Bytes!
+  tokenId: BigInt!
+  owner: Bytes!
+  tokenURI: String
+  burned: Boolean!
+  updatedAt: BigInt!
+  updatedBlock: BigInt!
+  updatedTx: Bytes!
+}

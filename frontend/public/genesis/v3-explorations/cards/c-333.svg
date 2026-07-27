@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="c333-t">
+  <title id="c333-t">HWA Genesis 333 — simulated short position</title>
+  <defs>
+    <radialGradient id="c333-bg" cx="50%" cy="44%" r="78%">
+      <stop offset="0" stop-color="#0A2B21"/>
+      <stop offset="0.55" stop-color="#061A14"/>
+      <stop offset="1" stop-color="#030C09"/>
+    </radialGradient>
+    <linearGradient id="c333-mass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFC9D7"/>
+      <stop offset="1" stop-color="#E85579"/>
+    </linearGradient>
+    <radialGradient id="c333-core" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FF7E9B" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FF7E9B" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#c333-bg)"/>
+  
+  <g transform="translate(28.3 -116.12)">
+    
+    <circle cx="600" cy="585" r="219.7" fill="none" stroke="#E9F5EF" stroke-opacity="0.05" stroke-width="1.2"/>
+    <circle cx="600" cy="585" r="422.5" fill="none" stroke="#E9F5EF" stroke-opacity="0.05" stroke-width="1.2"/>
+    <circle cx="1022.5" cy="585" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="965.9" cy="796.25" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="811.25" cy="950.9" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="600" cy="1007.5" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="388.75" cy="950.9" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="234.1" cy="796.25" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="177.5" cy="585" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="234.1" cy="373.75" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="388.75" cy="219.1" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="600" cy="162.5" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="811.25" cy="219.1" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="965.9" cy="373.75" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="600" cy="585" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <g transform="translate(571.7 701.12) scale(1.15) translate(-571.7 -701.12)" opacity="0.07">
+        <path d="M 709.85 394.73 L 409.73 694.85" fill="none" stroke="#FF7E9B" stroke-width="9.62" stroke-linecap="round"/>
+        <path d="M 409.73 694.85 L 790.27 475.15" fill="none" stroke="#FF7E9B" stroke-width="9.62" stroke-linecap="round"/>
+        <path d="M 790.27 475.15 L 409.73 475.15" fill="none" stroke="#FF7E9B" stroke-width="9.62" stroke-linecap="round"/>
+        <path d="M 409.73 475.15 L 790.27 475.15" fill="none" stroke="#FF7E9B" stroke-width="9.62" stroke-linecap="round"/>
+        <path d="M 790.27 475.15 L 600 804.7" fill="none" stroke="#FF7E9B" stroke-width="9.62" stroke-linecap="round"/>
+        <path d="M 600 804.7 L 600 1007.5" fill="none" stroke="#FF7E9B" stroke-width="9.62" stroke-linecap="round"/>
+        <path d="M 600 1007.5 L 177.5 585" fill="none" stroke="#FF7E9B" stroke-width="9.62" stroke-linecap="round"/>
+        <path d="M 177.5 585 L 930.14 786.67" fill="none" stroke="#FF7E9B" stroke-width="9.62" stroke-linecap="round"/>
+      </g>
+    <path d="M 709.85 394.73 L 409.73 694.85" fill="none" stroke="#FF7E9B" stroke-width="24.04" stroke-linecap="round"/>
+    <path d="M 409.73 694.85 L 790.27 475.15" fill="none" stroke="#FF7E9B" stroke-width="24.04" stroke-linecap="round"/>
+    <path d="M 790.27 475.15 L 409.73 475.15" fill="none" stroke="#FF7E9B" stroke-width="24.04" stroke-linecap="round"/>
+    <path d="M 409.73 475.15 L 790.27 475.15" fill="none" stroke="#FF7E9B" stroke-width="24.04" stroke-linecap="round"/>
+    <path d="M 790.27 475.15 L 600 804.7" fill="none" stroke="#FF7E9B" stroke-width="24.04" stroke-linecap="round" stroke-dasharray="0.1 45.68"/>
+    <path d="M 600 804.7 L 600 1007.5" fill="none" stroke="#FF7E9B" stroke-width="24.04" stroke-linecap="round"/>
+    <path d="M 600 1007.5 L 177.5 585" fill="none" stroke="#FF7E9B" stroke-width="24.04" stroke-linecap="round"/>
+    <path d="M 177.5 585 L 930.14 786.67" fill="none" stroke="#FF7E9B" stroke-width="24.04" stroke-linecap="round"/>
+    
+    <circle cx="709.85" cy="394.73" r="20.67" fill="#FFD9E2"/>
+    <circle cx="965.9" cy="796.25" r="26.92" fill="none" stroke="#FF7E9B" stroke-width="12.02"/>
+    <rect x="772.96" y="457.84" width="34.62" height="34.62" transform="rotate(45 790.27 475.15)" fill="#FFD9E2"/>
+  </g>
+  
+  <g font-family="ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace" font-size="19" letter-spacing="2.5">
+    <text x="72" y="1150" fill="#7E9A8F" fill-opacity="0.85">HWA 333/333 · CROWN</text>
+    <text x="1128" y="1150" text-anchor="end" fill="#FF7E9B" fill-opacity="0.62">SHORT 50X · -93.4% · SIM</text>
+  </g>
+</svg>

@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-27",
+  "chainId": 998,
+  "status": "passed-with-external-gates",
+  "officialProjectXDeployment": false,
+  "venue": "HyperSwap V3 used only as an ABI-compatible Project X test venue",
+  "deploymentBlock": 59973043,
+  "deployer": "0x681f4829b500b30fcc461cf523D8E213320Da574",
+  "contracts": {
+    "genesis": "0x4023E79861D53bD82F9c4Eed6f994218a5067a62",
+    "gameplayNft": "0x82a4ebE1495dA7F59c189e0a0810C0e9D585eac2",
+    "hostileNft": "0xFae055F6c3B181ba05a7cEfEcf97854E4A563F69",
+    "splitter": "0x0d67daA431Db6AD54C4CC68f55BCB3d884392997",
+    "randomnessRegistry": "0xb6Eac59c08e0C8138aF917Ee77fD011Aa87CDc34",
+    "randomnessCoordinator": "0xFf9f4a730BC31a3b6C04CcFEcC6174027E66E078",
+    "vrfService": "0x5F60Bb3Dd8ba0EAA9954516F85F77A3F37C3029A",
+    "fwa": "0xC37f752aa37Aa697e3997394442fAA93C382cAC0",
+    "whitelist": "0x1A23Cff53751DDdbe91eD0C6aC3a4281F4D8BD76",
+    "token": "0x663321C8b5C8DeB97013A9752b6af68B365d05dE",
+    "pool": "0x06EA042adA62A01aD25554EE72C3d2aBF12bF5Db",
+    "liquidityLocker": "0x23AfC70f47f05504932fC64e3b2eDC324AC6d401",
+    "adapter": "0x7B724C01bb47b3bAf982305A99fF996b751d11a2",
+    "rewards": "0x16BBa592c24803089360bbF211bD02dE9b6988F0"
+  },
+  "market": {
+    "fee": 10000,
+    "tickSpacing": 200,
+    "lpTokenId": 21298,
+    "externalBuysEnabled": false,
+    "acquisitionsEnabled": false,
+    "atomicLaunchFactory": "0x93EfDA188f9C7f3aFDc2ba2247C1f323B0a79939"
+  },
+  "tokenAllocation": {
+    "lockedLiquidity": "500000000 HWA",
+    "rewards": "300000000 HWA",
+    "legacyRecipient": "200000000 HWA"
+  },
+  "randomness": {
+    "mode": "drand-bn254",
+    "onchainBlsVerification": true,
+    "targetRound": 19214148,
+    "requestId": "37048324755718835718626442381585318985017849012663041600115933379370109256045",
+    "fulfillmentTransaction": "0x87036ced37f7682084cf9a3ad43af350eb05c440d972919870fc280b45545b39",
+    "freshHeartbeatRound": 19214541
+  },
+  "gameplayE2E": {
+    "listingId": 1,
+    "collection": "0x82a4ebE1495dA7F59c189e0a0810C0e9D585eac2",
+    "tokenId": 1,
+    "purchaser": "0x6B3248cf1b82E6BD4c2AB955FF01f99c0ea03290",
+    "outcome": "keepNFT",
+    "processorTransaction": "0x16df80f883c101ab7722f08ceab9602449a9b051a9ca307aaff3b7be3e5a4efe",
+    "settlementTransaction": "0x3880acce6107a80570f2cce9f3ad65f2a720a17bdc9584a16bd4ce1e8b5cd96a"
+  },
+  "checks": {
+    "core": "passed",
+    "randomness": "passed",
+    "projectXCompatibleModules": "passed after 30-minute TWAP maturity",
+    "liveVerificationBlock": 59976261,
+    "postE2ESafeState": "passed",
+    "solidity": "165/165 passed",
+    "frontendUnit": "74/74 passed",
+    "frontendProductionBuild": "passed",
+    "indexerDeterministicBuild": "passed",
+    "liveGameplay": "passed"
+  },
+  "externalGates": [
+    "Dedicated production archive/log RPC qualification requires a provider API key",
+    "Mainnet Safe, recipients, Genesis metadata and launch price require signed owner inputs",
+    "Independent audit must close all High/Critical findings"
+  ]
+}

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="c300-t">
+  <title id="c300-t">HWA Genesis 300 — simulated long position</title>
+  <defs>
+    <radialGradient id="c300-bg" cx="50%" cy="44%" r="78%">
+      <stop offset="0" stop-color="#0A2B21"/>
+      <stop offset="0.55" stop-color="#061A14"/>
+      <stop offset="1" stop-color="#030C09"/>
+    </radialGradient>
+    <linearGradient id="c300-mass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BFFFE7"/>
+      <stop offset="1" stop-color="#2FBE92"/>
+    </linearGradient>
+    <radialGradient id="c300-core" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#6FEFC6" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#6FEFC6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#c300-bg)"/>
+  
+  <g transform="translate(-97.57 -64.97)">
+    
+    <circle cx="600" cy="585" r="184.6" fill="none" stroke="#E9F5EF" stroke-opacity="0.05" stroke-width="1.2"/>
+    <circle cx="600" cy="585" r="355" fill="none" stroke="#E9F5EF" stroke-opacity="0.05" stroke-width="1.2"/>
+    <circle cx="955" cy="585" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="907.44" cy="762.5" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="777.5" cy="892.44" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="600" cy="940" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="422.5" cy="892.44" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="292.56" cy="762.5" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="245" cy="585" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="292.56" cy="407.5" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="422.5" cy="277.56" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="600" cy="230" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="777.5" cy="277.56" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="907.44" cy="407.5" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <circle cx="600" cy="585" r="2" fill="#7E9A8F" fill-opacity="0.13"/>
+    <g transform="translate(697.57 649.97) scale(1.15) translate(-697.57 -649.97)" opacity="0.07">
+        <path d="M 777.5 892.44 A 355 355 0 0 0 907.44 407.5" fill="none" stroke="#6FEFC6" stroke-width="8.46" stroke-linecap="round"/>
+        <path d="M 907.44 407.5 A 355 355 0 0 1 777.5 892.44" fill="none" stroke="#6FEFC6" stroke-width="8.46" stroke-linecap="round"/>
+        <path d="M 777.5 892.44 L 692.3 744.87" fill="none" stroke="#6FEFC6" stroke-width="8.46" stroke-linecap="round"/>
+        <path d="M 692.3 744.87 A 184.6 184.6 0 0 0 692.3 425.13" fill="none" stroke="#6FEFC6" stroke-width="8.46" stroke-linecap="round"/>
+        <path d="M 692.3 425.13 L 600 769.6" fill="none" stroke="#6FEFC6" stroke-width="8.46" stroke-linecap="round"/>
+        <path d="M 600 769.6 A 184.6 184.6 0 0 0 784.6 585" fill="none" stroke="#6FEFC6" stroke-width="8.46" stroke-linecap="round"/>
+        <path d="M 784.6 585 L 471.61 668.87" fill="none" stroke="#6FEFC6" stroke-width="8.46" stroke-linecap="round"/>
+      </g>
+    <path d="M 777.5 892.44 A 355 355 0 0 0 907.44 407.5" fill="none" stroke="#6FEFC6" stroke-width="21.16" stroke-linecap="round"/>
+    <path d="M 907.44 407.5 A 355 355 0 0 1 777.5 892.44" fill="none" stroke="#6FEFC6" stroke-width="21.16" stroke-linecap="round"/>
+    <path d="M 777.5 892.44 L 692.3 744.87" fill="none" stroke="#6FEFC6" stroke-width="21.16" stroke-linecap="round"/>
+    <path d="M 692.3 744.87 A 184.6 184.6 0 0 0 692.3 425.13" fill="none" stroke="#6FEFC6" stroke-width="21.16" stroke-linecap="round"/>
+    <path d="M 692.3 425.13 L 600 769.6" fill="none" stroke="#6FEFC6" stroke-width="21.16" stroke-linecap="round"/>
+    <path d="M 600 769.6 A 184.6 184.6 0 0 0 784.6 585" fill="none" stroke="#6FEFC6" stroke-width="21.16" stroke-linecap="round"/>
+    <path d="M 784.6 585 L 471.61 668.87" fill="none" stroke="#6FEFC6" stroke-width="21.16" stroke-linecap="round"/>
+    
+    <circle cx="777.5" cy="892.44" r="18.2" fill="#D9FFF1"/>
+    <circle cx="440.13" cy="677.3" r="23.7" fill="none" stroke="#6FEFC6" stroke-width="10.58"/>
+    <rect x="677.06" y="729.63" width="30.47" height="30.47" transform="rotate(45 692.3 744.87)" fill="#D9FFF1"/>
+  </g>
+  
+  <g font-family="ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace" font-size="19" letter-spacing="2.5">
+    <text x="72" y="1150" fill="#7E9A8F" fill-opacity="0.85">HWA 300/333 · COLOSSAL</text>
+    <text x="1128" y="1150" text-anchor="end" fill="#6FEFC6" fill-opacity="0.62">LONG 40X · +388.0% · SIM</text>
+  </g>
+</svg>

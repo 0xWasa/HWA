@@ -1,0 +1,89 @@
+{
+    "generatedAtUtc":  "2026-07-26T11:35:49.9812544Z",
+    "chainId":  998,
+    "manifest":  ".\\frontend\\public\\deployments\\hyperevm-testnet-998.json",
+    "verifier":  "Sourcify",
+    "compiler":  "0.8.30",
+    "optimizerRuns":  1,
+    "viaIr":  true,
+    "evmVersion":  "cancun",
+    "submissions":  [
+                        {
+                            "name":  "fwa",
+                            "address":  "0xeE5D51211422606815A71B7b2aD73f732ee6630F",
+                            "contract":  "FWA_ETHEREUM_REFERENCE/FWA/sources/src/FWA.sol:FWA",
+                            "standardJson":  "standard-json/fwa.json",
+                            "status":  "prepared-not-submitted"
+                        },
+                        {
+                            "name":  "whitelist",
+                            "address":  "0x6c74EE11F680Ef1503bc26115b85F44fDCA6F805",
+                            "contract":  "FWA_ETHEREUM_REFERENCE/FWAWhitelist/sources/src/FWAWhitelist.sol:FWAWhitelist",
+                            "standardJson":  "standard-json/whitelist.json",
+                            "status":  "prepared-not-submitted"
+                        },
+                        {
+                            "name":  "vrfService",
+                            "address":  "0x982A8CbafD79FbF36262873124830873e166Aa62",
+                            "contract":  "FWA_ETHEREUM_REFERENCE/FWAVRFService/sources/src/FWAVRFService.sol:FWAVRFService",
+                            "standardJson":  "standard-json/vrfService.json",
+                            "status":  "prepared-not-submitted"
+                        },
+                        {
+                            "name":  "randomnessCoordinator",
+                            "address":  "0xC33993a5f27Ea62bca91D59D1a55E386cF1272CF",
+                            "contract":  "src/hyperevm/DrandRelayCoordinator.sol:DrandRelayCoordinator",
+                            "standardJson":  "standard-json/randomnessCoordinator.json",
+                            "status":  "prepared-not-submitted"
+                        },
+                        {
+                            "name":  "splitter",
+                            "address":  "0x2c79f69877254BC78bBFD9d6be07bB528985452c",
+                            "contract":  "src/hyperevm/SplitterHyperEVM.sol:SplitterHyperEVM",
+                            "standardJson":  "standard-json/splitter.json",
+                            "status":  "prepared-not-submitted"
+                        },
+                        {
+                            "name":  "rewards",
+                            "address":  "0x0abA952fC5abD9fdb67e57AE36F6C0E905FD7a3e",
+                            "contract":  "src/hyperevm/FWARewardsHyperEVM.sol:FWARewardsHyperEVM",
+                            "standardJson":  "standard-json/rewards.json",
+                            "status":  "prepared-not-submitted"
+                        },
+                        {
+                            "name":  "token",
+                            "address":  "0x41514C9043D7382088F3EEE5A6344dBc55879C5B",
+                            "contract":  "src/hyperevm/FWATokenNest.sol:FWATokenNest",
+                            "standardJson":  "standard-json/token.json",
+                            "status":  "prepared-not-submitted"
+                        },
+                        {
+                            "name":  "nestAdapter",
+                            "address":  "0xC7D0B6640cDe80816e43eF8a6D29d3F87e18A167",
+                            "contract":  "src/hyperevm/FWANestSwapAdapter.sol:FWANestSwapAdapter",
+                            "standardJson":  "standard-json/nestAdapter.json",
+                            "status":  "prepared-not-submitted"
+                        },
+                        {
+                            "name":  "nestPlugin",
+                            "address":  "0xa651d0569D80c7810dbe404faF6b4387E3a9f98D",
+                            "contract":  "src/hyperevm/FWANestPlugin.sol:FWANestPlugin",
+                            "standardJson":  "standard-json/nestPlugin.json",
+                            "status":  "prepared-not-submitted"
+                        },
+                        {
+                            "name":  "nestLiquidityLocker",
+                            "address":  "0xF4b86F1BA485bE25F322df3eDF5E41d3a22e35b4",
+                            "contract":  "src/hyperevm/FWANestLiquidityLocker.sol:FWANestLiquidityLocker",
+                            "standardJson":  "standard-json/nestLiquidityLocker.json",
+                            "status":  "prepared-not-submitted"
+                        }
+                    ],
+    "externalContracts":  [
+                              {
+                                  "name":  "nestPool",
+                                  "address":  "0x2A8aa2976EDc75d7248E04e69049Bfbb874f6e0f",
+                                  "reason":  "Deployed by the Nest factory, not by this repository"
+                              }
+                          ]
+}

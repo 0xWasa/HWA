@@ -1,0 +1,69 @@
+{
+  "snapshotBlock": "0x186c51e",
+  "balanceWei": "357029022298477936561",
+  "views": {
+    "BPS": {
+      "0": "10000"
+    },
+    "INITIAL_OWNER_SHARE_BPS": {
+      "0": "7000"
+    },
+    "MAX_TOKEN_ID": {
+      "0": "324"
+    },
+    "NFT": {
+      "0": "0xb33d806a94b6770c9d309e0842a75f8e6edcd5a6"
+    },
+    "NFT_ADDRESS": {
+      "0": "0xb33d806a94b6770c9d309e0842a75f8e6edcd5a6"
+    },
+    "SECONDARY_OWNER": {
+      "0": "0x8e5963f8219789e90d8712609b216c31263317a3"
+    },
+    "SECONDARY_OWNER_DIVISOR": {
+      "0": "10"
+    },
+    "SNAPSHOT_SUPPLY": {
+      "0": "264"
+    },
+    "SWEEP_AVAILABLE_AT": {
+      "0": "1815759815"
+    },
+    "SWEEP_DELAY": {
+      "0": "31536000"
+    },
+    "claimablePerToken": {
+      "0": "652954586925172557"
+    },
+    "claimsClosed": {
+      "0": false
+    },
+    "nftAllocated": {
+      "0": "172380010948245555124"
+    },
+    "nftShareBps": {
+      "0": "3000"
+    },
+    "owner": {
+      "result": "0x019817ad02a31b990433542097be29d97613e8cb"
+    },
+    "ownerAllocated": {
+      "0": "402220025545906295493"
+    },
+    "ownerClaimed": {
+      "0": "176594034981685150143"
+    },
+    "ownerShareBps": {
+      "0": "7000"
+    },
+    "pendingOwner": {
+      "0": "203063391507799030815"
+    },
+    "pendingSecondaryOwner": {
+      "0": "22562599056422114535"
+    },
+    "totalReceived": {
+      "0": "574600036494151850617"
+    }
+  }
+}

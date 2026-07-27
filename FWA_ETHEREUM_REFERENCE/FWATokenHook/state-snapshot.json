@@ -1,0 +1,42 @@
+{
+  "snapshotBlock": "0x186c51e",
+  "balanceWei": "0",
+  "views": {
+    "deploymentBlock": {
+      "0": "25546799"
+    },
+    "externalBuysEnabled": {
+      "0": false
+    },
+    "feeAddress": {
+      "0": "0x019817ad02a31b990433542097be29d97613e8cb"
+    },
+    "getHookPermissions": {
+      "0": {
+        "beforeInitialize": true,
+        "afterInitialize": false,
+        "beforeAddLiquidity": false,
+        "afterAddLiquidity": true,
+        "beforeRemoveLiquidity": false,
+        "afterRemoveLiquidity": false,
+        "beforeSwap": false,
+        "afterSwap": true,
+        "beforeDonate": false,
+        "afterDonate": false,
+        "beforeSwapReturnDelta": false,
+        "afterSwapReturnDelta": true,
+        "afterAddLiquidityReturnDelta": false,
+        "afterRemoveLiquidityReturnDelta": false
+      }
+    },
+    "owner": {
+      "result": "0x019817ad02a31b990433542097be29d97613e8cb"
+    },
+    "poolManager": {
+      "0": "0x000000000004444c5dc75cb358380d2e3de08a90"
+    },
+    "token": {
+      "0": "0xa0df17b5ac76ababa36e1450e2cbcd18a620c845"
+    }
+  }
+}
