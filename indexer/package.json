@@ -9,9 +9,11 @@
     "codegen": "graph codegen subgraph.yaml",
     "build": "npm run sync-abi && graph codegen subgraph.yaml && graph build subgraph.yaml",
     "check": "npm run render:testnet && npm run build",
-    "check:mainnet": "npm run render:mainnet && npm run build"
+    "check:mainnet": "npm run render:mainnet && npm run build",
+    "publish:mainnet": "node --env-file-if-exists=../.env.mainnet.local scripts/publish-mainnet.mjs"
   },
   "devDependencies": {
+    "@goldskycom/cli": "13.6.0",
     "@graphprotocol/graph-cli": "0.98.1",
     "@graphprotocol/graph-ts": "0.38.2"
   }

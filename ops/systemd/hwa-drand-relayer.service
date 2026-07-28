@@ -1,0 +1,42 @@
+[Unit]
+Description=HWA permissionless drand BN254 relayer
+Documentation=https://docs.drand.love/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hwa-drand
+Group=hwa-drand
+WorkingDirectory=/opt/hwa-drand
+EnvironmentFile=/etc/hwa/drand-relayer.env
+ExecStartPre=/usr/bin/test -x /usr/local/bin/forge
+ExecStartPre=/usr/bin/test -x /usr/local/bin/cast
+ExecStart=/usr/bin/node /opt/hwa-drand/.tools/drand_bn254_relayer.mjs
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+UMask=0077
+
+# The relayer needs network access and a writable Foundry workspace, but no home,
+# devices, elevated capabilities or access to the frontend/deployer secrets.
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectHome=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=full
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=true
+RestrictRealtime=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+StateDirectory=hwa-drand
+StateDirectoryMode=0700
+
+[Install]
+WantedBy=multi-user.target

@@ -12,6 +12,14 @@ const REQUEST_TOPIC = "0xcfb07f565f3053ec143b78e29bea8c1283aad4c48e2ad8ed65af0e1
 const REQUEST_STATE_SELECTOR = "e9a3c97d";
 const root = resolve(import.meta.dirname, "..");
 
+function foundryBinary(name, overrideName) {
+  const override = process.env[overrideName]?.trim();
+  if (override) return override;
+  const localName = process.platform === "win32" ? `${name}.exe` : name;
+  const localPath = resolve(root, ".tools", "foundry", localName);
+  return existsSync(localPath) ? localPath : name;
+}
+
 function loadExplicitEnv() {
   const argument = process.argv.find((item) => item.startsWith("--env-file="));
   if (!argument) return;
@@ -52,7 +60,9 @@ function assertAddress(value, name) {
 loadExplicitEnv();
 const CHAIN_ID = positiveBigInt("HYPEREVM_CHAIN_ID", "999");
 if (CHAIN_ID !== 998n && CHAIN_ID !== 999n) throw new Error("HYPEREVM_CHAIN_ID must be 998 or 999");
-const statePath = resolve(root, `.drand-bn254-relayer-state-${CHAIN_ID}.json`);
+const statePath = process.env.FWA_DRAND_STATE_PATH?.trim()
+  ? resolve(process.env.FWA_DRAND_STATE_PATH.trim())
+  : resolve(root, `.drand-bn254-relayer-state-${CHAIN_ID}.json`);
 const temporaryStatePath = `${statePath}.tmp`;
 const coordinator = required("FWA_DRAND_BN254_COORDINATOR_ADDRESS");
 const registry = required("FWA_DRAND_REGISTRY_ADDRESS");
@@ -74,15 +84,31 @@ const logRpcApiKeyHeader = process.env.HYPEREVM_LOG_RPC_API_KEY_HEADER?.trim().t
 if (!/^[a-z0-9-]{1,64}$/u.test(logRpcApiKeyHeader)) throw new Error("Invalid HYPEREVM_LOG_RPC_API_KEY_HEADER");
 const fairnessAlertBlocks = positiveBigInt("FWA_DRAND_FAIRNESS_ALERT_BLOCKS", "120");
 const submitterKey = required("FWA_DRAND_SUBMITTER_PRIVATE_KEY");
-const forge = resolve(root, ".tools", "foundry", "forge.exe");
-const cast = resolve(root, ".tools", "foundry", "cast.exe");
+const forge = foundryBinary("forge", "FOUNDRY_FORGE");
+const cast = foundryBinary("cast", "FOUNDRY_CAST");
 const derived = spawnSync(cast, ["wallet", "address", "--private-key", submitterKey], { cwd: root, encoding: "utf8" });
+if (derived.error?.code === "ENOENT") throw new Error(`Foundry cast not found: ${cast}`);
 if (derived.status !== 0) throw new Error("Invalid FWA_DRAND_SUBMITTER_PRIVATE_KEY");
 
 const once = process.argv.includes("--once");
 const proveLatest = process.argv.includes("--prove-latest");
+const validateConfig = process.argv.includes("--validate-config");
 let stopping = false;
 let rpcId = 0;
+
+if (validateConfig) {
+  console.log(JSON.stringify({
+    chainId: CHAIN_ID.toString(),
+    coordinator,
+    registry,
+    deploymentBlock: deploymentBlock.toString(),
+    submitter: derived.stdout.trim(),
+    statePath,
+    forge,
+    cast,
+  }, null, 2));
+  process.exit(0);
+}
 
 function initialState() {
   return { version: 1, chainId: CHAIN_ID.toString(), coordinator: coordinator.toLowerCase(), nextBlock: deploymentBlock.toString(), pending: {} };
@@ -184,6 +210,7 @@ function broadcast(scriptTarget, environment) {
     encoding: "utf8",
     maxBuffer: 10 * 1024 * 1024,
   });
+  if (result.error?.code === "ENOENT") throw new Error(`Foundry forge not found: ${forge}`);
   if (result.status !== 0) throw new Error(`${scriptTarget} failed: ${`${result.stdout || ""}\n${result.stderr || ""}`.trim()}`);
 }
 
