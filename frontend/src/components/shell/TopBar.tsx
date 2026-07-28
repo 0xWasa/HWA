@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { env } from "@/config/env";
@@ -52,12 +53,15 @@ export function TopBar() {
             className="flex shrink-0 items-center gap-2 rounded-xl px-1.5 py-1"
             aria-label="Hyper World Assets — home"
           >
-            <span
-              aria-hidden
-              className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent font-display text-[11px] font-extrabold tracking-tight text-accent-fg"
-              style={{ boxShadow: "0 6px 16px color-mix(in srgb, var(--hwa-accent) 32%, transparent)" }}
-            >
-              HW
+            <span aria-hidden className="grid h-8 w-[66px] shrink-0 place-items-center">
+              <Image
+                src="/brand/hwa-wordmark.png"
+                alt=""
+                width={132}
+                height={58}
+                priority
+                className="h-8 w-auto object-contain drop-shadow-[0_5px_12px_color-mix(in_srgb,var(--hwa-accent)_22%,transparent)]"
+              />
             </span>
             <span className="hidden font-display text-sm font-bold tracking-tight text-ink xl:inline 2xl:text-base">
               Hyper<span className="text-accent">World</span><span className="text-secondary-readable">Assets</span>

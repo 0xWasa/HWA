@@ -16,7 +16,7 @@ $projectRoot = [System.IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
 $roots = @(
     "src", "test", "script", "scripts", "hyperevm-fork-test", "fork-test",
     "frontend/src", "frontend/e2e", "frontend/public/genesis/v1", "frontend/public/genesis/v2",
-    "frontend/public/genesis/v3", "frontend/public/genesis/v3-explorations",
+    "frontend/public/genesis/v3", "frontend/public/genesis/v3-explorations", "frontend/public/brand",
     "indexer/src", "indexer/scripts", "indexer/abis",
     "vendor/fwa-reference-union",
     "FWA_ETHEREUM_REFERENCE/FWA/sources", "FWA_ETHEREUM_REFERENCE/FWAVRFService/sources",
@@ -77,7 +77,7 @@ $rootFiles = @(
     "release/release-gate-testnet-v2-live-2026-07-27.json",
     "release/testnet-attestation-998.json", "release/testnet-attestation-projectx-998.json"
 )
-$extensions = @(".sol", ".ts", ".tsx", ".mjs", ".ps1", ".json", ".graphql", ".yaml", ".toml", ".md", ".svg", ".html", ".png")
+$extensions = @(".sol", ".ts", ".tsx", ".mjs", ".py", ".ps1", ".json", ".graphql", ".yaml", ".toml", ".md", ".svg", ".html", ".png", ".ico")
 $files = New-Object System.Collections.Generic.List[System.IO.FileInfo]
 foreach ($root in $roots) {
     $resolved = Join-Path $projectRoot $root
