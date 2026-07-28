@@ -26,7 +26,7 @@ Sources primaires : [API HTTP drand](https://docs.drand.love/developer/API-v1/dr
 - utilise un espace d'IDs dérivé du déploiement, donc une rotation ne réutilise pas les anciens request IDs;
 - rémunère le submitter depuis une réserve plafonnée, sans confier la sélection du mot au relayer.
 
-Le relayer ne peut pas inventer un mot ni modifier le round verrouillé, mais sa **liveness est un contrôle de fairness** : si tous les opérateurs sont arrêtés, un acquéreur peut soumettre lui-même une preuve favorable et laisser expirer une preuve défavorable. Deux opérateurs réellement indépendants doivent donc surveiller chaque requête et soumettre avant la deadline; tout tiers financé peut également transporter la preuve publique.
+Le relayer ne peut pas inventer un mot ni modifier le round verrouillé, mais sa **liveness est un contrôle de fairness** : si tous les opérateurs sont arrêtés, un acquéreur peut soumettre lui-même une preuve favorable et laisser expirer une preuve défavorable. Deux opérateurs réellement indépendants restent le mode recommandé; tout tiers financé peut également transporter la preuve publique. Un lancement avec un seul relayer est autorisé uniquement par l'acceptation explicite et traçable du risque décrite ci-dessous.
 
 ## 2. Limite à auditer explicitement
 
@@ -69,7 +69,12 @@ Le watcher :
 - utilise `HYPEREVM_LOG_RPC_URL` et une plage explicitement bornée par `HYPEREVM_LOG_RPC_MAX_BLOCK_RANGE` pour la découverte ;
 - émet `FAIRNESS_ALERT` lorsqu'une requête approche de sa deadline (`FWA_DRAND_FAIRNESS_ALERT_BLOCKS`).
 
-Exploitation requise : deux instances indépendantes, clés, hôtes et RPC distincts, alertes sur âge du dernier round prouvé, pending requests, seuil fairness, expirations, réserve et callbacks échoués. `DRAND_RELAYER_REDUNDANCY_CONFIRMED=true` ne vaut qu'après observation de ces deux instances sur une acquisition réelle.
+Deux modes opérationnels sont reconnus par l'attestation de lancement :
+
+1. **Redondance confirmée** : deux instances indépendantes, clés, hôtes et RPC distincts, puis `DRAND_RELAYER_REDUNDANCY_CONFIRMED=true` après observation du failover sur une acquisition réelle.
+2. **Risque single-relayer accepté** : une seule instance supervisée, avec alertes sur âge du dernier round prouvé, pending requests, seuil fairness, expirations, réserve et callbacks échoués, puis `DRAND_SINGLE_RELAYER_RISK_ACCEPTED=true`.
+
+Le second flag reconnaît uniquement un risque de disponibilité/fairness plus élevé. Il ne désactive aucune vérification cryptographique, ne donne aucun privilège au submitter et ne doit jamais être présenté comme de la redondance. Une panne ou un retard au seuil fairness impose la fermeture des acquisitions via le Safe jusqu'au rétablissement du relayer.
 
 ## 5. Canary et incident
 

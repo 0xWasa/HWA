@@ -44,6 +44,8 @@ interface ProtocolContextValue {
   writesEnabled: boolean;
   /** Emergency-safe exits remain available when risk-increasing writes are disabled. */
   exitWritesEnabled: boolean;
+  /** Mainnet has intentionally not published a deployable contract manifest yet. */
+  prelaunch: boolean;
 }
 
 const ProtocolContext = createContext<ProtocolContextValue | null>(null);
@@ -170,6 +172,7 @@ function MockProtocolRoot({ children }: { children: ReactNode }) {
       account,
       writesEnabled: true,
       exitWritesEnabled: true,
+      prelaunch: false,
     }),
     [ready, scenario, account],
   );
@@ -249,6 +252,7 @@ function ViemProtocolRoot({ children }: { children: ReactNode }) {
       account,
       writesEnabled: manifestState.status === "ready" && manifestState.manifest.features.writesEnabled,
       exitWritesEnabled: manifestState.status === "ready",
+      prelaunch: env.dataMode === "mainnet" && manifestState.status === "absent",
     }),
     [client, manifestState, account],
   );

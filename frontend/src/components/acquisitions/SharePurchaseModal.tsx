@@ -75,7 +75,7 @@ export function SharePurchaseModal({
     const file = await imageFile();
     if (!file) return;
     const payload: ShareData = {
-      title: "Hyper World Assets acquisition",
+      title: "HWA acquisition",
       text: `I drew ${sanitizeLabel(listing.nft.name, `NFT #${listing.tokenId}`)} on HyperEVM testnet.`,
       files: [file],
     };
@@ -84,7 +84,7 @@ export function SharePurchaseModal({
         await navigator.share(payload);
         setStatus("Shared.");
       } else {
-        await navigator.clipboard.writeText(payload.text ?? "Hyper World Assets acquisition");
+        await navigator.clipboard.writeText(payload.text ?? "HWA acquisition");
         setStatus("Share text copied. Download the image to attach it.");
       }
     } catch (error) {

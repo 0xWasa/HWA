@@ -25,9 +25,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* pb clears the fixed ActivityTicker strip (h-9, lg only). */}
       <footer className="border-t border-line-subtle lg:pb-9">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-6 py-6 text-sm text-mute sm:flex-row sm:items-center sm:justify-between">
-          <span className="font-display font-semibold text-dim">
-            HyperWorldAssets<span className="align-super text-[8px]">™</span>
-          </span>
+          <span className="font-display font-semibold text-dim">HWA</span>
           <nav aria-label="Footer" className="flex flex-wrap items-center gap-5">
             {FOOTER_LINKS.map((l) => (
               <Link key={l.href} href={l.href} className="hover:text-ink">

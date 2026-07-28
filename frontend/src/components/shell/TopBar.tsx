@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { env } from "@/config/env";
 import { chainLabel } from "@/config/chains";
 import { useConnectionHealth } from "@/state/queries";
+import { useProtocol } from "@/protocol/provider";
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "./ThemeToggle";
 import { WalletButton } from "./WalletButton";
@@ -26,9 +27,11 @@ const NAV = [
  */
 export function TopBar() {
   const pathname = usePathname();
+  const { prelaunch } = useProtocol();
   const { data: health } = useConnectionHealth();
 
   const sync = (() => {
+    if (prelaunch) return { dot: "bg-amber", label: "Pre-launch", tone: "text-amber" };
     if (!health) return { dot: "bg-mute", label: "Syncing…", tone: "text-mute" };
     if (health.rpc === "down") return { dot: "bg-red", label: "RPC down", tone: "text-red" };
     if (health.indexer.status === "down") return { dot: "bg-red", label: "Indexer down", tone: "text-red" };
@@ -51,7 +54,7 @@ export function TopBar() {
           <Link
             href="/"
             className="flex shrink-0 items-center gap-2 rounded-xl px-1.5 py-1"
-            aria-label="Hyper World Assets — home"
+            aria-label="HWA — home"
           >
             <span aria-hidden className="grid h-8 w-[66px] shrink-0 place-items-center">
               <Image
@@ -62,9 +65,6 @@ export function TopBar() {
                 priority
                 className="h-8 w-auto object-contain drop-shadow-[0_5px_12px_color-mix(in_srgb,var(--hwa-accent)_22%,transparent)]"
               />
-            </span>
-            <span className="hidden font-display text-sm font-bold tracking-tight text-ink xl:inline 2xl:text-base">
-              Hyper<span className="text-accent">World</span><span className="text-secondary-readable">Assets</span>
             </span>
           </Link>
 

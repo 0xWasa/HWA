@@ -103,6 +103,17 @@ function Add-GateSkip([string]$Name, [string]$Reason) {
     Write-Host "SKIPPED: $Reason" -ForegroundColor Yellow
 }
 
+function Get-StableForkBlock([string]$Name, [string]$RpcUrl) {
+    # HyperEVM providers may briefly advertise a head whose block body is not
+    # readable yet. Pin forks behind the advertised head so a provider race
+    # cannot turn a deterministic compatibility test into a false failure.
+    $headOutput = @(& $cast block-number --rpc-url $RpcUrl 2>&1)
+    if ($LASTEXITCODE -ne 0) { throw "Unable to resolve a stable $Name fork block" }
+    [long]$head = ($headOutput | Select-Object -Last 1).ToString().Trim()
+    if ($head -le 20) { throw "$Name head is too low for a stable fork snapshot" }
+    return $head - 20
+}
+
 try {
     if ($MainnetMode) {
         if (-not $MainnetEnvPath) { throw "-MainnetMode requires -MainnetEnvPath" }
@@ -226,11 +237,20 @@ try {
         $previousProfile = $env:FOUNDRY_PROFILE
         $env:FOUNDRY_PROFILE = "hyperevm"
         try {
+            # The same-origin read proxy terminates the production provider
+            # credential on the VPS; no Alchemy secret is copied into this
+            # report or passed on the command line.
+            $mainnetForkRpc = "https://hwa.fun/api/rpc/read"
+            $testnetForkRpc = "https://rpc.hyperliquid-testnet.xyz/evm"
+            $mainnetForkBlock = Get-StableForkBlock "chain-999" $mainnetForkRpc
+            $testnetForkBlock = Get-StableForkBlock "chain-998" $testnetForkRpc
             Invoke-GateStep "Project X mainnet fork simulation" $projectRoot $forge @(
-                "test", "--fork-url", "https://rpc.hyperliquid.xyz/evm", "--match-contract", "ProjectXDeploymentTest", "-vv"
+                "test", "--fork-url", $mainnetForkRpc, "--fork-block-number", "$mainnetForkBlock",
+                "--match-contract", "ProjectXDeploymentTest", "-vv"
             ) '(\d+) tests passed' $minimumCounts.fork
             Invoke-GateStep "V3 testnet compatibility fork simulation" $projectRoot $forge @(
-                "test", "--fork-url", "https://rpc.hyperliquid-testnet.xyz/evm", "--match-contract", "HyperSwapDeploymentTest", "-vv"
+                "test", "--fork-url", $testnetForkRpc, "--fork-block-number", "$testnetForkBlock",
+                "--match-contract", "HyperSwapDeploymentTest", "-vv"
             ) '(\d+) tests passed' $minimumCounts.compatibilityFork
         } finally {
             if ($null -eq $previousProfile) { Remove-Item Env:FOUNDRY_PROFILE -ErrorAction SilentlyContinue }
@@ -342,7 +362,8 @@ try {
     $resolvedReport = Join-Path $projectRoot $ReportPath
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $resolvedReport) | Out-Null
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllText($resolvedReport, ($report | ConvertTo-Json -Depth 8), $utf8NoBom)
+    $reportJson = ($report | ConvertTo-Json -Depth 8).Replace("`r`n", "`n")
+    [System.IO.File]::WriteAllText($resolvedReport, $reportJson, $utf8NoBom)
     Write-Host "Release gate report: $resolvedReport"
 }
 

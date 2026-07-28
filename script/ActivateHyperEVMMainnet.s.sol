@@ -31,11 +31,25 @@ contract ActivateHyperEVMMainnet {
     error ReleaseGateNotConfirmed();
     error InvalidWiring();
 
+    /// @dev Redundancy remains the preferred operating mode. A single relayer
+    ///      may only pass the release attestation through an explicit,
+    ///      separately named acknowledgement of its liveness/fairness risk.
+    function _drandOperationsAccepted(bool redundancyConfirmed, bool singleRelayerRiskAccepted)
+        internal
+        pure
+        returns (bool)
+    {
+        return redundancyConfirmed || singleRelayerRiskAccepted;
+    }
+
     function run() external view {
         if (block.chainid != HYPEREVM_MAINNET_CHAIN_ID) revert WrongChain(block.chainid);
+        bool drandOperationsAccepted = _drandOperationsAccepted(
+            vm.envBool("DRAND_RELAYER_REDUNDANCY_CONFIRMED"), vm.envBool("DRAND_SINGLE_RELAYER_RISK_ACCEPTED")
+        );
         if (
             !vm.envBool("MAINNET_ACTIVATION_CONFIRMED") || !vm.envBool("MAINNET_SOURCE_VERIFICATION_CONFIRMED")
-                || !vm.envBool("DRAND_RELAYER_REDUNDANCY_CONFIRMED") || !vm.envBool("PROJECTX_E2E_CONFIRMED")
+                || !drandOperationsAccepted || !vm.envBool("PROJECTX_E2E_CONFIRMED")
                 || !vm.envBool("INDEXER_DEPLOYMENT_CONFIRMED")
         ) revert ReleaseGateNotConfirmed();
 

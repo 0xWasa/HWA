@@ -99,14 +99,17 @@ function waiting(tone: SparkTone, caption: string): StatSpark {
 export function PoolStatCards({
   snapshot: provided,
   className = "",
+  prelaunch: providedPrelaunch,
 }: {
   /** Optional: the caller's already-fetched snapshot (same query key). */
   snapshot?: PoolSnapshot;
   className?: string;
+  prelaunch?: boolean;
 }) {
   const { data: fetched } = usePoolSnapshot();
   const snapshot = provided ?? fetched;
-  const { scenario } = useProtocol();
+  const { scenario, prelaunch: contextPrelaunch } = useProtocol();
+  const prelaunch = providedPrelaunch ?? contextPrelaunch;
   const history = useSnapshotHistory(snapshot, scenario?.id ?? "live");
 
   const series = useMemo(
@@ -122,6 +125,26 @@ export function PoolStatCards({
   const enough = history.length >= MIN_POINTS;
   const caption = `Since page load · ${history.length} samples`;
   const pending = `Collecting samples · ${history.length}/${MIN_POINTS}`;
+
+  if (prelaunch) {
+    return (
+      <div
+        className={`grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-4 ${className}`}
+        data-testid="pool-stat-cards"
+      >
+        {["Total backing", "Pool price", "Crown pot", "Active NFTs"].map((label, index) => (
+          <StatCard
+            key={label}
+            label={label}
+            tone={index === 2 ? "amber" : index === 3 ? "blue" : "accent"}
+            value="—"
+            sub="Available after mainnet launch"
+            spark={waiting(index === 2 ? "amber" : index === 3 ? "blue" : "accent", "No live samples")}
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div

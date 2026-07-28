@@ -142,7 +142,7 @@ export function TermsGate() {
 
         <div className="space-y-3 p-4">
           <p id={descId} className="text-xs leading-relaxed text-dim">
-            Hyper World Assets is an interface to public smart contracts on HyperEVM. Before you continue, confirm you
+            HWA is an interface to public smart contracts on HyperEVM. Before you continue, confirm you
             have read the terms.
           </p>
 

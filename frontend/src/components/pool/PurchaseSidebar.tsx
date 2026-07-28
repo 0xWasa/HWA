@@ -40,6 +40,7 @@ export function PurchaseSidebar({
   const [view, setView] = useState<FeedView>("recent");
   const [sort, setSort] = useState<SortKey>("date");
   const [dir, setDir] = useState<"asc" | "desc">("desc");
+  const { prelaunch } = useProtocol();
 
   // "Recent" is the acquisition feed (what was bought and how it settled);
   // the other tabs are listing feeds.
@@ -123,7 +124,14 @@ export function PurchaseSidebar({
           WebkitMaskImage: "linear-gradient(to bottom, black calc(100% - 2.5rem), transparent 100%)",
         }}
       >
-        {isLoading && !feed ? (
+        {prelaunch ? (
+          <div className="px-5 py-8 text-center">
+            <div className="mlabel text-amber">PRE-LAUNCH TAPE</div>
+            <p className="mt-2 text-xs leading-relaxed text-mute">
+              Verified deposits and draws will stream here after the mainnet manifest is published.
+            </p>
+          </div>
+        ) : isLoading && !feed ? (
           Array.from({ length: 7 }).map((_, i) => <SkeletonRow key={i} cols={2} />)
         ) : !feed || feed.items.length === 0 ? (
           <p className="px-4 py-6 text-center text-xs text-mute">Nothing in this feed yet.</p>
@@ -149,7 +157,7 @@ export function PurchaseSidebar({
 const DRIFT_PRESETS = [500, 1_000, 2_000] as const;
 
 export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
-  const { writesEnabled } = useProtocol();
+  const { writesEnabled, prelaunch } = useProtocol();
   const account = useAccountState();
   const [quantity, setQuantity] = useState(1);
   const [driftBps, setDriftBps] = useState<number>(FWA_PARAMS.defaultDriftBps);
@@ -175,6 +183,7 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
   }, [positions]);
 
   const blocker = ((): { label: string; sub?: string } | null => {
+    if (prelaunch) return { label: "Launch pending", sub: "Mainnet contracts are not deployed." };
     if (!snapshot) return { label: "Loading pool…" };
     if (!acquisitionsOpen)
       return {
@@ -187,7 +196,12 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
   })();
 
   const ticketStatus = blocker
-    ? { label: "MARKET CLOSED", shell: "border-amber/25 bg-amber/8", dot: "bg-amber", text: "text-amber" }
+    ? {
+        label: prelaunch ? "PRE-LAUNCH" : "MARKET CLOSED",
+        shell: "border-amber/25 bg-amber/8",
+        dot: "bg-amber",
+        text: "text-amber",
+      }
     : quote.isError
       ? { label: "QUOTE OFFLINE", shell: "border-red/25 bg-red/8", dot: "bg-red", text: "text-red" }
       : quote.freshness === "refreshing"

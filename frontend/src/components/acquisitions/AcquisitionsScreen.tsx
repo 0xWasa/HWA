@@ -2,7 +2,7 @@
 
 import { useId, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { useAccountState } from "@/protocol/provider";
+import { useAccountState, useProtocol } from "@/protocol/provider";
 import type { AcquisitionPhase } from "@/protocol/types";
 import { usePositions, usePurchaseStats } from "@/state/queries";
 import { Button } from "@/components/ui/Button";
@@ -13,6 +13,7 @@ import { Panel } from "@/components/ui/Panel";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton, SkeletonRow } from "@/components/ui/Skeleton";
 import { PurchaseHistoryTable } from "./PurchaseHistoryTable";
+import { ProtocolPrelaunch } from "@/components/ui/ProtocolPrelaunch";
 
 const IN_FLIGHT_PHASES: readonly AcquisitionPhase[] = [
   "requested",
@@ -32,10 +33,23 @@ function isIndexerMissing(err: unknown): boolean {
 
 export function AcquisitionsScreen() {
   const account = useAccountState();
+  const { prelaunch } = useProtocol();
   const { data: stats, isLoading, isError, error, refetch } = usePurchaseStats();
   const { data: positions } = usePositions();
   const [open, setOpen] = useState(true);
   const historyId = useId();
+
+  if (prelaunch) {
+    return (
+      <Shell>
+        <ProtocolPrelaunch
+          title="Acquisitions open after mainnet activation."
+          detail="Your verified draw history will appear here after contracts, drand delivery and the indexer pass the launch canary."
+          compact
+        />
+      </Shell>
+    );
+  }
 
   if (account.status !== "connected") {
     return (

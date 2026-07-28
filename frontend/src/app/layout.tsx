@@ -9,8 +9,8 @@ import { AppShell } from "@/components/shell/AppShell";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://hwa.fun"),
   title: {
-    default: "Hyper World Assets",
-    template: "%s | Hyper World Assets",
+    default: "HWA",
+    template: "%s | HWA",
   },
   description:
     "Randomized NFT acquisition protocol on HyperEVM — deposit NFTs with HYPE backing, acquire random positions, settle on your terms.",
@@ -23,21 +23,21 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    siteName: "Hyper World Assets",
-    title: "Hyper World Assets",
+    siteName: "HWA",
+    title: "HWA",
     description: "NFT liquidity, drawn on HyperEVM.",
     images: [
       {
         url: "/brand/hwa-banner.png",
         width: 1500,
         height: 500,
-        alt: "HWA — Hyper World Assets",
+        alt: "HWA",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Hyper World Assets",
+    title: "HWA",
     description: "NFT liquidity, drawn on HyperEVM.",
     images: ["/brand/hwa-banner.png"],
   },

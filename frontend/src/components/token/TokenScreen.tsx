@@ -1,6 +1,7 @@
 "use client";
 
 import { NNBSP, WEI, formatHwa } from "@/lib/units";
+import { useProtocol } from "@/protocol/provider";
 import { useTokenMarket } from "@/state/queries";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { HashLink } from "@/components/ui/HashLink";
@@ -9,6 +10,7 @@ import { Panel, Stat } from "@/components/ui/Panel";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Tag } from "@/components/ui/Tag";
+import { ProtocolPrelaunch } from "@/components/ui/ProtocolPrelaunch";
 import { PriceChart } from "./PriceChart";
 import { SwapPanel } from "./SwapPanel";
 
@@ -18,7 +20,21 @@ import { SwapPanel } from "./SwapPanel";
  * of this screen is an honest "not live yet" — never a placeholder market.
  */
 export function TokenScreen() {
+  const { prelaunch } = useProtocol();
   const { data: market, isLoading, isError, error, refetch } = useTokenMarket();
+
+  if (prelaunch) {
+    return (
+      <Shell>
+        <ProtocolPrelaunch
+          title="$HWA is not live yet."
+          detail="The token, Project X pool and price feed will appear only after the reviewed mainnet contracts are deployed and the public manifest is promoted. No placeholder price or simulated liquidity is shown."
+        >
+          <span className="text-2xs text-mute">Launch configuration: HWA / wHYPE · Project X · manual market opening</span>
+        </ProtocolPrelaunch>
+      </Shell>
+    );
+  }
 
   if (isLoading || (!market && !isError)) {
     return (
@@ -165,7 +181,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <PageHeader
         eyebrow="PROTOCOL TOKEN"
         title="$HWA"
-        description="The reward and settlement token for Hyper World Assets, routed through the configured Project X liquidity market."
+        description="The HWA reward and settlement token, routed through the configured Project X liquidity market."
         meta="No guaranteed value · market data stays hidden until it is verifiable"
       />
       {children}

@@ -21,6 +21,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { NFTImage } from "@/components/nft/NFTImage";
 import { DepositLaunchSequence } from "@/components/deposit/DepositLaunchSequence";
+import { ProtocolPrelaunch } from "@/components/ui/ProtocolPrelaunch";
 
 type DepositIntent = {
   collection: Address;
@@ -37,7 +38,7 @@ type DepositIntent = {
  */
 export function DepositFlow() {
   const account = useAccountState();
-  const { writesEnabled } = useProtocol();
+  const { writesEnabled, prelaunch } = useProtocol();
   const { data: snapshot } = usePoolSnapshot();
   const { data: owned, isLoading: loadingNfts } = useOwnedNfts();
   const { data: balance } = useNativeBalance();
@@ -122,6 +123,17 @@ export function DepositFlow() {
           : null;
 
   // ------------------------------------------------------------ gates
+  if (prelaunch) {
+    return (
+      <Shell>
+        <ProtocolPrelaunch
+          title="Deposits are locked until launch."
+          detail="The allowlist, pool custody and settlement contracts are not deployed on HyperEVM mainnet yet. Deposit controls will unlock only after the public manifest passes the final canary."
+          compact
+        />
+      </Shell>
+    );
+  }
   if (account.status !== "connected") {
     return (
       <Shell>

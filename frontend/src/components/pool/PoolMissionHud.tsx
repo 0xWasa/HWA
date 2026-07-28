@@ -1,9 +1,10 @@
 import { formatHype } from "@/lib/units";
 import type { PoolSnapshot } from "@/protocol/types";
 
-type MarketMode = "syncing" | "genesis" | "live" | "drawing" | "paused";
+type MarketMode = "prelaunch" | "syncing" | "genesis" | "live" | "drawing" | "paused";
 
-function marketMode(snapshot: PoolSnapshot | undefined, inFlightCount: number): MarketMode {
+function marketMode(snapshot: PoolSnapshot | undefined, inFlightCount: number, prelaunch: boolean): MarketMode {
+  if (prelaunch) return "prelaunch";
   if (!snapshot) return "syncing";
   if (snapshot.activeListingCount === 0) return "genesis";
   if (inFlightCount > 0) return "drawing";
@@ -12,6 +13,7 @@ function marketMode(snapshot: PoolSnapshot | undefined, inFlightCount: number): 
 }
 
 const MODE_COPY: Record<MarketMode, { label: string; detail: string; tone: string }> = {
+  prelaunch: { label: "PRE-LAUNCH", detail: "Contracts not deployed", tone: "text-amber" },
   syncing: { label: "SYNCING", detail: "Reading HyperEVM", tone: "text-mute" },
   genesis: { label: "GENESIS", detail: "First position needed", tone: "text-accent" },
   live: { label: "MARKET LIVE", detail: "Random draw open", tone: "text-green" },
@@ -22,12 +24,14 @@ const MODE_COPY: Record<MarketMode, { label: string; detail: string; tone: strin
 export function PoolMissionHud({
   snapshot,
   inFlightCount,
+  prelaunch = false,
 }: {
   snapshot?: PoolSnapshot;
   inFlightCount: number;
+  prelaunch?: boolean;
 }) {
-  const mode = marketMode(snapshot, inFlightCount);
-  const activeStep = mode === "genesis" ? 0 : mode === "drawing" ? 2 : 1;
+  const mode = marketMode(snapshot, inFlightCount, prelaunch);
+  const activeStep = mode === "prelaunch" ? -1 : mode === "genesis" ? 0 : mode === "drawing" ? 2 : 1;
   const copy = MODE_COPY[mode];
 
   return (
@@ -37,7 +41,9 @@ export function PoolMissionHud({
           <span
             aria-hidden
             className={`relative size-2 rounded-full ${
-              mode === "live"
+              mode === "prelaunch"
+                ? "bg-amber"
+                : mode === "live"
                 ? "anim-ping bg-green text-green"
                 : mode === "drawing"
                   ? "anim-ping bg-chain text-chain"

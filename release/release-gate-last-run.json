@@ -1,6 +1,6 @@
 {
     "schemaVersion":  2,
-    "generatedAtUtc":  "2026-07-28T20:30:41.0118902Z",
+    "generatedAtUtc":  "2026-07-28T23:46:54.5265849Z",
     "status":  "prepared",
     "chainTarget":  999,
     "invocation":  {
@@ -37,7 +37,7 @@
                       "name":  "Solidity formatting",
                       "status":  "passed",
                       "exitCode":  0,
-                      "durationSeconds":  0.06,
+                      "durationSeconds":  0.08,
                       "command":  "forge.exe",
                       "arguments":  [
                                         "fmt",
@@ -48,7 +48,7 @@
                       "name":  "Solidity full build",
                       "status":  "passed",
                       "exitCode":  0,
-                      "durationSeconds":  101.91,
+                      "durationSeconds":  154.26,
                       "command":  "forge.exe",
                       "arguments":  [
                                         "build"
@@ -58,7 +58,7 @@
                       "name":  "Solidity production contract sizes",
                       "status":  "passed",
                       "exitCode":  0,
-                      "durationSeconds":  1.73,
+                      "durationSeconds":  1.98,
                       "command":  "forge.exe",
                       "arguments":  [
                                         "build",
@@ -72,39 +72,41 @@
                       "name":  "Solidity full tests",
                       "status":  "passed",
                       "exitCode":  0,
-                      "durationSeconds":  5.49,
+                      "durationSeconds":  7.46,
                       "command":  "forge.exe",
                       "arguments":  [
                                         "test",
                                         "-vv"
                                     ],
                       "minimumExpectedCount":  121,
-                      "observedCount":  169
+                      "observedCount":  173
                   },
                   {
                       "name":  "Release helper self-tests",
                       "status":  "passed",
                       "exitCode":  0,
-                      "durationSeconds":  4.99,
+                      "durationSeconds":  1.31,
                       "command":  "powershell.exe",
                       "arguments":  [
                                         "-NoProfile",
                                         "-ExecutionPolicy",
                                         "Bypass",
                                         "-File",
-                                        "C:\\Users\\eliot\\Documents\\HWA-mainnet-prep\\scripts\\TestReleaseScripts.ps1"
+                                        "C:\\Users\\eliot\\Documents\\HWA-rpc-proxy\\scripts\\TestReleaseScripts.ps1"
                                     ]
                   },
                   {
                       "name":  "Project X mainnet fork simulation",
                       "status":  "passed",
                       "exitCode":  0,
-                      "durationSeconds":  25.13,
+                      "durationSeconds":  21.52,
                       "command":  "forge.exe",
                       "arguments":  [
                                         "test",
                                         "--fork-url",
-                                        "https://rpc.hyperliquid.xyz/evm",
+                                        "https://hwa.fun/api/rpc/read",
+                                        "--fork-block-number",
+                                        "41710090",
                                         "--match-contract",
                                         "ProjectXDeploymentTest",
                                         "-vv"
@@ -116,12 +118,14 @@
                       "name":  "V3 testnet compatibility fork simulation",
                       "status":  "passed",
                       "exitCode":  0,
-                      "durationSeconds":  17.8,
+                      "durationSeconds":  19.12,
                       "command":  "forge.exe",
                       "arguments":  [
                                         "test",
                                         "--fork-url",
                                         "https://rpc.hyperliquid-testnet.xyz/evm",
+                                        "--fork-block-number",
+                                        "60095414",
                                         "--match-contract",
                                         "HyperSwapDeploymentTest",
                                         "-vv"
@@ -133,7 +137,7 @@
                       "name":  "Frontend dependency audit",
                       "status":  "passed",
                       "exitCode":  0,
-                      "durationSeconds":  1.59,
+                      "durationSeconds":  1.69,
                       "command":  "npm.cmd",
                       "arguments":  [
                                         "audit",
@@ -144,7 +148,7 @@
                       "name":  "Frontend typecheck",
                       "status":  "passed",
                       "exitCode":  0,
-                      "durationSeconds":  9.85,
+                      "durationSeconds":  10.68,
                       "command":  "npm.cmd",
                       "arguments":  [
                                         "run",
@@ -155,7 +159,7 @@
                       "name":  "Frontend lint",
                       "status":  "passed",
                       "exitCode":  0,
-                      "durationSeconds":  16.56,
+                      "durationSeconds":  13.27,
                       "command":  "npm.cmd",
                       "arguments":  [
                                         "run",
@@ -166,19 +170,19 @@
                       "name":  "Frontend unit tests",
                       "status":  "passed",
                       "exitCode":  0,
-                      "durationSeconds":  5.28,
+                      "durationSeconds":  5.95,
                       "command":  "npm.cmd",
                       "arguments":  [
                                         "test"
                                     ],
                       "minimumExpectedCount":  46,
-                      "observedCount":  74
+                      "observedCount":  80
                   },
                   {
                       "name":  "Frontend production build",
                       "status":  "passed",
                       "exitCode":  0,
-                      "durationSeconds":  13.63,
+                      "durationSeconds":  19.57,
                       "command":  "npm.cmd",
                       "arguments":  [
                                         "run",
@@ -189,7 +193,7 @@
                       "name":  "Frontend Playwright E2E",
                       "status":  "passed",
                       "exitCode":  0,
-                      "durationSeconds":  43.86,
+                      "durationSeconds":  55.9,
                       "command":  "npm.cmd",
                       "arguments":  [
                                         "run",
@@ -202,7 +206,7 @@
                       "name":  "Indexer production dependency audit",
                       "status":  "passed",
                       "exitCode":  0,
-                      "durationSeconds":  1.14,
+                      "durationSeconds":  1.86,
                       "command":  "npm.cmd",
                       "arguments":  [
                                         "audit",
@@ -214,7 +218,7 @@
                       "name":  "Indexer deterministic build",
                       "status":  "passed",
                       "exitCode":  0,
-                      "durationSeconds":  10.56,
+                      "durationSeconds":  12.45,
                       "command":  "npm.cmd",
                       "arguments":  [
                                         "run",

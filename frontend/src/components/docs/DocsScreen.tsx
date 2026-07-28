@@ -10,7 +10,7 @@ export function DocsScreen() {
     <div className="mx-auto w-full max-w-[1280px] px-3 pb-24 pt-6 sm:px-6">
       <header className="max-w-[68ch] space-y-3">
         <div className="mlabel text-secondary-readable">Documentation</div>
-        <h1 className="text-2xl font-semibold text-ink">How Hyper World Assets works</h1>
+        <h1 className="text-2xl font-semibold text-ink">How HWA works</h1>
         <p className="text-md leading-relaxed text-dim">
           NFTs deposited with HYPE backing, priced as one pool, allocated at random. This page describes the mechanics
           the contracts actually implement — the parameters below are the ones the app prices and settles with.
