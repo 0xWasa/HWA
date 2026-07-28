@@ -1,10 +1,10 @@
 {
     "schemaVersion":  2,
-    "generatedAtUtc":  "2026-07-28T20:46:42.9876745Z",
+    "generatedAtUtc":  "2026-07-28T21:25:46.1235104Z",
     "containsSecrets":  false,
-    "regenerationReason":  "Finalize the 2026-07-28 mainnet readiness anchor",
-    "previousManifestSha256":  "6e8d9d3c5228601187629a1902997b4c6c5e57a552221ff6419b8681b9c2f4e7",
-    "fileCount":  2547,
+    "regenerationReason":  "Production hosting activation: hwa.fun TLS, verified Genesis HTTPS attestation, cross-platform verifier fix",
+    "previousManifestSha256":  "50f02b177b5b490730d0e2f1d1735a41da0fab397cf07b76d1d8a222fb98d77e",
+    "fileCount":  2548,
     "files":  [
                   {
                       "path":  ".env.mainnet.example",
@@ -11537,6 +11537,11 @@
                       "sha256":  "aebddcde23c795b4a599329b54d13bb30c9aebd3920614afc71de52805727179"
                   },
                   {
+                      "path":  "ops/nginx/hwa-production.conf",
+                      "bytes":  4336,
+                      "sha256":  "0ab01afa62c0054c32378eca02dbd1523a1f3a92cc6156a126d1b63b42b076d6"
+                  },
+                  {
                       "path":  "PROJECTX_DEPLOYMENT_RUNBOOK.md",
                       "bytes":  3154,
                       "sha256":  "2c5beb8962b1e8cfcfdddd444b9d4d684c0f90d25e746cb3a05e3a8ef27ad01c"
@@ -11643,8 +11648,8 @@
                   },
                   {
                       "path":  "release/hwa-genesis-canonical.json",
-                      "bytes":  2554,
-                      "sha256":  "24b65357757a1807ccfa35985a42db0fb7e2f1e805cc1762829e9913b3b14d95"
+                      "bytes":  2478,
+                      "sha256":  "b240462835026876412f5333ed0689f4a7029226e9de0e707cae8739303758b3"
                   },
                   {
                       "path":  "release/hwa-genesis-custody-recipients.json",
@@ -11653,8 +11658,8 @@
                   },
                   {
                       "path":  "release/hwa-genesis-hosting-attestation.json",
-                      "bytes":  679,
-                      "sha256":  "066fc53a26bbf249c54d5d2172445191dc5655533ce3549da81d419e888a7ed8"
+                      "bytes":  624,
+                      "sha256":  "d00cdfc89b96ce363767d10ae4aa9d8c204136aff3b640b22b60830b057d73ae"
                   },
                   {
                       "path":  "release/hwa-genesis-safe-actions.json",
@@ -12013,8 +12018,8 @@
                   },
                   {
                       "path":  "scripts/CreateAuditManifest.ps1",
-                      "bytes":  7148,
-                      "sha256":  "2e7118802fa891938e59bd65fb09c8997ac04beae9b0c635252c7647c2b0a1a2"
+                      "bytes":  7226,
+                      "sha256":  "9cd0f8c223486101b478ef7a3e91581476f982e9c1fbc41794f4eeeb539a544b"
                   },
                   {
                       "path":  "scripts/generate-hwa-genesis.mjs",
@@ -12043,8 +12048,8 @@
                   },
                   {
                       "path":  "scripts/PrepareHWAGenesisHosting.ps1",
-                      "bytes":  10533,
-                      "sha256":  "31eb765a84ff0c5b96b99456c9be26e022d236308b8edff5843b280fb1f2807a"
+                      "bytes":  10671,
+                      "sha256":  "17eed46ec5d02949e5efd5be3e255f4f89990d7e2bec34d3728ea699dd172f61"
                   },
                   {
                       "path":  "scripts/PrepareHWAGenesisIpfs.ps1",
@@ -12118,13 +12123,13 @@
                   },
                   {
                       "path":  "scripts/TestReleaseScripts.ps1",
-                      "bytes":  12269,
-                      "sha256":  "3145c1e56824de58f2b5a32f5ae9d0e772d6fd729d16718c1b2ddf245b0fcc49"
+                      "bytes":  12715,
+                      "sha256":  "3927bbe075a14c3e75faf5531aa6a83deff97af0944c7f4be286757a69c354b7"
                   },
                   {
                       "path":  "scripts/VerifyHWAGenesisHosting.ps1",
-                      "bytes":  6254,
-                      "sha256":  "4b6315fe8b9f39886c236f7f2b79c9a206276c9bcd5bb351d49b14cbaffc1eab"
+                      "bytes":  6405,
+                      "sha256":  "2cd2322a0530360d90929787fcb358b6a7d980898491944c9e5fb122a7e938cb"
                   },
                   {
                       "path":  "scripts/VerifyHWAGenesisOnchain.ps1",

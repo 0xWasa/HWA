@@ -34,7 +34,7 @@ $rootFiles = @(
     "HWA_VPS_HOSTING_RUNBOOK_2026-07-27.md",
     "HWA_VPS_APP_RUNBOOK_2026-07-27.md",
     "ops/nginx/hwa-genesis-v3.conf.example",
-    "ops/nginx/hwa-app.conf.example", "docker-compose.production.yml",
+    "ops/nginx/hwa-app.conf.example", "ops/nginx/hwa-production.conf", "docker-compose.production.yml",
     "frontend/public/genesis/concepts/hwa-genesis-colossal-v1.png",
     "release/hwa-safe-mainnet-preparation.json",
     "release/hwa-safe-mainnet-deployment.json",
@@ -126,5 +126,6 @@ $payload = [ordered]@{
 }
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $resolvedOutput) | Out-Null
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-[System.IO.File]::WriteAllText($resolvedOutput, ($payload | ConvertTo-Json -Depth 6), $utf8NoBom)
+$json = (($payload | ConvertTo-Json -Depth 6) -replace "`r`n", "`n") + "`n"
+[System.IO.File]::WriteAllText($resolvedOutput, $json, $utf8NoBom)
 Write-Host "Wrote audit manifest for $($payload.fileCount) files to $resolvedOutput"

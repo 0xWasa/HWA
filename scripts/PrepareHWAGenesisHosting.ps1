@@ -153,7 +153,8 @@ $deploymentManifest = [ordered]@{
 }
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 $deploymentManifestPath = Join-Path $publicVersionPath "deployment-manifest.json"
-[System.IO.File]::WriteAllText($deploymentManifestPath, ($deploymentManifest | ConvertTo-Json -Depth 7), $utf8NoBom)
+$deploymentManifestJson = (($deploymentManifest | ConvertTo-Json -Depth 7) -replace "`r`n", "`n") + "`n"
+[System.IO.File]::WriteAllText($deploymentManifestPath, $deploymentManifestJson, $utf8NoBom)
 
 $checksumLines = Get-ChildItem -LiteralPath $publicVersionPath -File -Recurse | Sort-Object FullName | ForEach-Object {
     $relative = $_.FullName.Substring($publicVersionPath.Length + 1).Replace("\", "/")
@@ -204,7 +205,8 @@ $report = [ordered]@{
     blockers = @($blockers)
 }
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $reportFile) | Out-Null
-[System.IO.File]::WriteAllText($reportFile, ($report | ConvertTo-Json -Depth 8), $utf8NoBom)
+$reportJson = (($report | ConvertTo-Json -Depth 8) -replace "`r`n", "`n") + "`n"
+[System.IO.File]::WriteAllText($reportFile, $reportJson, $utf8NoBom)
 
 Write-Host "Prepared HWA Genesis v3 VPS package at $outputPath"
 Write-Host "Contract base URI candidate: $metadataBaseUri"

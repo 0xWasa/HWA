@@ -173,10 +173,17 @@ if (
         -or $genesisCanonical.deploymentAllowed
 ) { throw "Genesis canonical hosting report is missing or no longer fail-closed" }
 $genesisLocalAttestation = Get-Content -LiteralPath $genesisHostingAttestationPath -Raw | ConvertFrom-Json
+$genesisPreVpsState = $genesisLocalAttestation.result -eq "local-only" `
+    -and -not $genesisLocalAttestation.deploymentAllowed `
+    -and $genesisLocalAttestation.remoteResourcesVerified -eq 0
+$genesisHostedState = $genesisLocalAttestation.result -eq "passed" `
+    -and $genesisLocalAttestation.deploymentAllowed `
+    -and $genesisLocalAttestation.remoteResourcesVerified -eq 666 `
+    -and $genesisLocalAttestation.publicOrigin -eq "https://assets.hwa.fun"
 if (
     $genesisLocalAttestation.supply -ne 333 -or $genesisLocalAttestation.localResourcesVerified -ne 666 `
-        -or $genesisLocalAttestation.result -ne "local-only" -or $genesisLocalAttestation.deploymentAllowed
-) { throw "Genesis local hosting attestation is not the expected pre-VPS fail-closed record" }
+        -or (-not $genesisPreVpsState -and -not $genesisHostedState)
+) { throw "Genesis hosting attestation is neither the fail-closed pre-VPS state nor the verified production state" }
 $nginxPolicy = Get-Content -LiteralPath $genesisNginxPath -Raw
 if ($nginxPolicy -notmatch 'max-age=31536000, immutable' -or $nginxPolicy -notmatch 'application/json' `
     -or $nginxPolicy -notmatch 'image/svg\+xml' -or $nginxPolicy -notmatch 'limit_except GET HEAD') {
