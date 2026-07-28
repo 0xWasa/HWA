@@ -1,10 +1,10 @@
 {
     "schemaVersion":  2,
-    "generatedAtUtc":  "2026-07-28T22:06:26.7440192Z",
+    "generatedAtUtc":  "2026-07-28T22:38:41.3203464Z",
     "containsSecrets":  false,
-    "regenerationReason":  "Add approved HWA brand assets, favicon, social banner, and navigation integration",
-    "previousManifestSha256":  "33d3a10e1f8b9383d4b96cd5d9cd588d1d0fd602276b26d56b4dd81cb12855e7",
-    "fileCount":  2489,
+    "regenerationReason":  "Add server-side read-only HyperEVM RPC proxy and verified Alchemy PAYG attestation",
+    "previousManifestSha256":  "9b4c0e60c0ed5bfca573295a314cae4d54643b5bf6d58720c8dc244f2bdb575c",
+    "fileCount":  2557,
     "files":  [
                   {
                       "path":  ".env.mainnet.example",
@@ -48,8 +48,8 @@
                   },
                   {
                       "path":  "frontend/.env.production.example",
-                      "bytes":  974,
-                      "sha256":  "fabf95d400f685e159e83fc7d0c70996b9fa5740077b995155ad7c9764f8b25f"
+                      "bytes":  1014,
+                      "sha256":  "0ef2fecf51a3210881e3ba58df8952c4e4601d6d4743c1e84aaeeb08010a3895"
                   },
                   {
                       "path":  "frontend/Dockerfile",
@@ -10392,6 +10392,16 @@
                       "sha256":  "ff6056e3b580ce98f06375e5d3cb8810e4ddef39aeeaa4f55d58a41e9ad04676"
                   },
                   {
+                      "path":  "frontend/src/app/api/rpc/read/route.test.ts",
+                      "bytes":  2886,
+                      "sha256":  "df644c1e82a68710d6de0ffdb80381c8ae86bc6ed4e1074971946e261cc056d8"
+                  },
+                  {
+                      "path":  "frontend/src/app/api/rpc/read/route.ts",
+                      "bytes":  9006,
+                      "sha256":  "5383f8e415752fc54c9a7db9614bc1a717464cbec170af08a1079213d3ac3fe7"
+                  },
+                  {
                       "path":  "frontend/src/app/apple-icon.png",
                       "bytes":  24404,
                       "sha256":  "03f4565855ce8fb15f92c1c5bde49bf902a4a0c5060f2975e7dbf2a9da8e74ab"
@@ -11717,6 +11727,11 @@
                       "sha256":  "782c97cb01fda34a1c148a8625343eae59c4fe1778ff70974515ae1b498d8441"
                   },
                   {
+                      "path":  "release/log-rpc-probe-999.json",
+                      "bytes":  735,
+                      "sha256":  "ffed3b2c9714ce7465c2c085f359be3e0a4c98634659bc0741449dd4edf02a74"
+                  },
+                  {
                       "path":  "release/release-gate-last-run.json",
                       "bytes":  9791,
                       "sha256":  "4b5d634aa6e52854a730836493f296e8731a1dfe734a20068135e9bded51d3e3"
@@ -12048,8 +12063,8 @@
                   },
                   {
                       "path":  "scripts/CreateAuditManifest.ps1",
-                      "bytes":  7266,
-                      "sha256":  "ba6f1025b0ee59877d98e068875e8081882fda04304845e3253c1c8055acf8e1"
+                      "bytes":  7304,
+                      "sha256":  "6d52d2566503340c6f343d1cca12862d625aab537585030c53b1eebc2535332e"
                   },
                   {
                       "path":  "scripts/generate-hwa-genesis.mjs",
@@ -12450,6 +12465,331 @@
                       "path":  "TESTNET_998_DEPLOYMENTS.md",
                       "bytes":  19881,
                       "sha256":  "b27dbb8f2eddafc1ac21fb5f79c62b8ff8c90c83668221238ac7f0f5b82f5cde"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/chainlink-evm/contracts/src/v0.8/vrf/dev/interfaces/IVRFCoordinatorV2Plus.sol",
+                      "bytes":  2141,
+                      "sha256":  "b09dc6442316ff371ed04bd1c36a877a071e10d76d0270b6b7a732b38a9114cc"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/chainlink-evm/contracts/src/v0.8/vrf/dev/interfaces/IVRFSubscriptionV2Plus.sol",
+                      "bytes":  3952,
+                      "sha256":  "88fd9e9250d8131d9adf8af753ac2f2e51babec3fe9ba4d5c564a13b91b0933f"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/chainlink-evm/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol",
+                      "bytes":  650,
+                      "sha256":  "f3b89bb466c2a79b10c1816d342fbfbec49fe82695cba92bd46e7d31af698011"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/solady/src/auth/Ownable.sol",
+                      "bytes":  12551,
+                      "sha256":  "a74625ee15f4872b773cd4730c9b578db57455eb1005ea35f120b5e01e49f753"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/solady/src/tokens/ERC20.sol",
+                      "bytes":  31116,
+                      "sha256":  "0b96ce470f2ab3facccaa56c7aa9dd244dffb967ac9331f0747b5ad1c68f203d"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/solady/src/tokens/ERC721.sol",
+                      "bytes":  40004,
+                      "sha256":  "e6e83b87598b230481b1ec764c440f1443cfc6e50f9b2b37a16dc894715b0676"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/solady/src/utils/FixedPointMathLib.sol",
+                      "bytes":  55635,
+                      "sha256":  "8b04fa29bffdc73e1f4ae72dfc7bd7eb7cbf97767e1b84ee4e50a1b9ca0b5ab6"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/solady/src/utils/MerkleProofLib.sol",
+                      "bytes":  14664,
+                      "sha256":  "8cc40c8c1044d336a6aaf00903666dc4fa3a1447c103a86566c2a50308f12fac"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/solady/src/utils/ReentrancyGuard.sol",
+                      "bytes":  2333,
+                      "sha256":  "aeeda18221419e3409255c6505e0eb78fe13e3bd8329663cfa56a0316a970eaf"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/solady/src/utils/SafeTransferLib.sol",
+                      "bytes":  32803,
+                      "sha256":  "395cd7802ab0a7efaf0d7ad33c980bbe45ebf571de660938739fa2d4c6078458"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/interfaces/callback/IUnlockCallback.sol",
+                      "bytes":  488,
+                      "sha256":  "2e4a514730654da2e08a82eff5b3eabae12dc1c6198951396e1d466d4c0e223e"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/interfaces/external/IERC20Minimal.sol",
+                      "bytes":  3041,
+                      "sha256":  "5e966a2d22b3b234a56af4b17e36bf7be90f9b29b1ddb6a15bfefc0b6dab4282"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/interfaces/external/IERC6909Claims.sol",
+                      "bytes":  3162,
+                      "sha256":  "1cd65496c829036bc6aee67bc71363ab5fb6989c65e793087d0e1e2379f7d7d8"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/interfaces/IExtsload.sol",
+                      "bytes":  1023,
+                      "sha256":  "9421ef4ba198d94058cd9a4c9fd2d663c61fc682f7dafa449a873456853f0025"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/interfaces/IExttload.sol",
+                      "bytes":  699,
+                      "sha256":  "c21643d2c7f48d2d2407438a64a3ff0f376324cf6a0c62608977713652308c9e"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/interfaces/IHooks.sol",
+                      "bytes":  8229,
+                      "sha256":  "6eb35c9c598eb932e963219f1ff180748bc4c30ac6a02d924893b3c29abb1d73"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/interfaces/IPoolManager.sol",
+                      "bytes":  12835,
+                      "sha256":  "a98405333567e4ab344489728014795721cf0071c151536377d2fcc986e0600c"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/interfaces/IProtocolFees.sol",
+                      "bytes":  2489,
+                      "sha256":  "807d68adea106ec2aa51a8009155de09ebfe09e1ee7053d5a5ae448d7e840654"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/libraries/BitMath.sol",
+                      "bytes":  2609,
+                      "sha256":  "e8a45eb3d57f9427fc47bbb2543c1a6a5f394113b378123ac7ca9f113a7502b4"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/libraries/CustomRevert.sol",
+                      "bytes":  5174,
+                      "sha256":  "9d3dbe6b742cb1ac30f57df89d879ade9649389de1165fc637114bd062d39fca"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/libraries/FixedPoint128.sol",
+                      "bytes":  297,
+                      "sha256":  "1ca2f55160697b73bd66fd27c8724d79a57108121ce1e8a0ab8b79f38bb58fbb"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/libraries/FixedPoint96.sol",
+                      "bytes":  366,
+                      "sha256":  "66ee26d4fb3ac639124bdfa27d3256d196970997fa127c09e9bf7154e30d4590"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/libraries/FullMath.sol",
+                      "bytes":  5463,
+                      "sha256":  "a9607255a6fd604d9c92f6b7416811c38b9d86e5dfdb0c345a494ebd35f7a4a3"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/libraries/Hooks.sol",
+                      "bytes":  16511,
+                      "sha256":  "297d577998cdede64d48b47b12f15e4f442eea032fbb9676bb3c2f89da89b83c"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/libraries/LiquidityMath.sol",
+                      "bytes":  742,
+                      "sha256":  "67a39e58732340af4870342ba9230691f35501d89ed8725ca1b338deaa0eb26a"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/libraries/LPFeeLibrary.sol",
+                      "bytes":  3596,
+                      "sha256":  "e96c3fa7deac991dc09b6c5e560a340d01d6c68ccba483d4b29f8a66e5aa44e0"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/libraries/ParseBytes.sol",
+                      "bytes":  1200,
+                      "sha256":  "6a6f3d1cec0143fd70ea68c34e6dce3bde72f368b213f1a225ada23dbfd99bb8"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/libraries/Position.sol",
+                      "bytes":  4813,
+                      "sha256":  "3dc4e2ad1564fa94eddf3ff06ce9ac592c9d578ea64ca194050382da454c8fcb"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/libraries/SafeCast.sol",
+                      "bytes":  2269,
+                      "sha256":  "c1a815a41607be5b4c86ca588a951f368156da8ee21bdfc18b5d51b58a0f27be"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/libraries/StateLibrary.sol",
+                      "bytes":  16027,
+                      "sha256":  "eebdbc1b6e431072ce5521b9e1b603d43831e3b6e062743e6665e070d5cf8a1a"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/libraries/TickMath.sol",
+                      "bytes":  12382,
+                      "sha256":  "272d4f6d3ff9ae33596ebcdb84a71a3c2d4542ae8fb5c88ddf1aca8043f5d06b"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/types/BalanceDelta.sol",
+                      "bytes":  2339,
+                      "sha256":  "320d9c13dec135c3903729e66d3a1040fe86d537a7ee53728915012ca183af32"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/types/BeforeSwapDelta.sol",
+                      "bytes":  1466,
+                      "sha256":  "6aee06f1553e879f5909e8f4c0eac26ec23dd4821a7e56e4d5077db39a227e12"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/types/Currency.sol",
+                      "bytes":  5458,
+                      "sha256":  "ba6726fd24fbc66848208dfbb2899116c10729c505e6e5552316ac2444f1dfc3"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/types/PoolId.sol",
+                      "bytes":  539,
+                      "sha256":  "548424ac50ad58212545da70207283fb8990731578c115c85d5acbcb0e1d3c9f"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/types/PoolKey.sol",
+                      "bytes":  805,
+                      "sha256":  "99e1afe285b5c614ebc9586ab5196db9d24a63fd924a449f5d99f490a6a6d6a9"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/src/types/PoolOperation.sol",
+                      "bytes":  907,
+                      "sha256":  "cf72ad0c3e5e91662029e862acd841fabce8753040b0d4e802dee64ef1157232"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-core/test/utils/CurrencySettler.sol",
+                      "bytes":  2406,
+                      "sha256":  "afe4d7de04f55f35f25bae046a96baa4137709b9df13d90b76c643a1317df6b8"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/lib/permit2/src/interfaces/IAllowanceTransfer.sol",
+                      "bytes":  7703,
+                      "sha256":  "a31c712c5cc8d171818a4225c09011f9ba86b2d5edf6045ac812bab93b6bbb87"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/lib/permit2/src/interfaces/IEIP712.sol",
+                      "bytes":  144,
+                      "sha256":  "e386407da496dbe874c10a81801c55744fb2922a51389a51c79001422e81e0cd"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/src/base/ImmutableState.sol",
+                      "bytes":  818,
+                      "sha256":  "d3ef34f9c00fae08ec1eb24aa341d5d916c4d6d62e6c2118ef4afe9c7470fde5"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/src/interfaces/IEIP712_v4.sol",
+                      "bytes":  328,
+                      "sha256":  "ee4cc46349cc7f1f894197f368ddea0f71f2564c2962822eead755714f3ba57d"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/src/interfaces/IERC721Permit_v4.sol",
+                      "bytes":  2137,
+                      "sha256":  "80680771bccd7bf47641417d5a656f950746072766e24703f354e58c2ee0875c"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/src/interfaces/IImmutableState.sol",
+                      "bytes":  365,
+                      "sha256":  "86f06a1f388f91ee0185495cb5d2912d564f73fabb163b3767e9c292c5069276"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/src/interfaces/IMulticall_v4.sol",
+                      "bytes":  774,
+                      "sha256":  "0c0f4f1cccb7cf63c1ee3dc53e8d48cf867cbff08f5a8f85dd820873277e9481"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/src/interfaces/INotifier.sol",
+                      "bytes":  3200,
+                      "sha256":  "7fadc8550f73d9ae57925bb27f5ab3a134d4c020972a13683e1121fc11691249"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/src/interfaces/IPermit2Forwarder.sol",
+                      "bytes":  1435,
+                      "sha256":  "3b28167d65673e7de2bbed1e6f3508350cf889f8439e8680da23ad7586f4cc57"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/src/interfaces/IPoolInitializer_v4.sol",
+                      "bytes":  782,
+                      "sha256":  "ca6ecf95cfbc647d49b774801d84c49c8213010771b44555b056118102d644fc"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/src/interfaces/IPositionManager.sol",
+                      "bytes":  3501,
+                      "sha256":  "b7aa2a13c92f5f2e5612948359120d1b92263e575ce8d134b4576227f8629569"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/src/interfaces/ISubscriber.sol",
+                      "bytes":  2270,
+                      "sha256":  "9672e03c964da7cd484df290ad3395b6beacd90adcdd8ea2236f835407fb8e2e"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/src/interfaces/IUnorderedNonce.sol",
+                      "bytes":  799,
+                      "sha256":  "12e02d4e7e03a668fc1d493840315b4f2aaee2f366ca677574d37d3811d45701"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/src/libraries/Actions.sol",
+                      "bytes":  2031,
+                      "sha256":  "404b842f30a05783b20eb37b20cc86e7a0df2730f6a7399229b46ae77f63e63a"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/src/libraries/LiquidityAmounts.sol",
+                      "bytes":  3774,
+                      "sha256":  "dbfbef7aed94a6a56885124f0802b42adf7ee7bdd658f11fed40ffbb93fe6ba5"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/src/libraries/PositionInfoLibrary.sol",
+                      "bytes":  3945,
+                      "sha256":  "5c889e1d5f259291045413e28069101eba1e7b8b72df6586bf54e4de5e525099"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/lib/v4-periphery/src/utils/BaseHook.sol",
+                      "bytes":  7103,
+                      "sha256":  "11b5cf3845e6f34974ce0a51eae87ba5f2aa9aa6ddbe8e7b42a86f578038dda5"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/settings.json",
+                      "bytes":  1075,
+                      "sha256":  "f361f136da5c96511ef921133336a2626894ef184629cadad272e3f742df1fc7"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/src/FWA.sol",
+                      "bytes":  125878,
+                      "sha256":  "3d8672cbf6596b3f4f465215038f007210eab762d8bdf87ad021e83db93cd2d5"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/src/FWAClaim.sol",
+                      "bytes":  4169,
+                      "sha256":  "d4123dc31072341bf33c529122a305794eb06f2ab4aeecc4ef16b26b2da764c7"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/src/FWAConfigKeys.sol",
+                      "bytes":  3140,
+                      "sha256":  "4651a9e4cda55dddf37a8e6763005603cec23bbc3f519e17b9c9f3b82b2a3400"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/src/FWARewards.sol",
+                      "bytes":  30635,
+                      "sha256":  "506fb7685c91d7f0dfff1b3ccb2da9fdc071c94ba93d4fe8fe9471406c7752b0"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/src/FWAToken.sol",
+                      "bytes":  22654,
+                      "sha256":  "8a918815a8a1e4e66abc52d9018e6995ea5c310187c7372ee8d606d2587d5532"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/src/FWATokenHook.sol",
+                      "bytes":  15695,
+                      "sha256":  "3e4997bd9d5987e487bf7a142c8e537ef8e0ded554f5409c5054dc1a1ea5f8a6"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/src/FWAVRFService.sol",
+                      "bytes":  19780,
+                      "sha256":  "f51b343ac40742cf8557ed0af231db12b38d2735dd9246592bbcfa513f81738d"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/src/FWAWhitelist.sol",
+                      "bytes":  6639,
+                      "sha256":  "4055df9e2b1975cb26280578937839e32e5beba1921fb81324460c90c01025b8"
+                  },
+                  {
+                      "path":  "vendor/fwa-reference-union/src/Splitter.sol",
+                      "bytes":  12245,
+                      "sha256":  "9a07e7ad26ddaec75e6a1106d2523e30417a3154488b80ca6179e8c736542de9"
                   }
               ]
 }

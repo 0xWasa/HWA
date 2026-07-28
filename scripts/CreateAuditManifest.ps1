@@ -56,6 +56,7 @@ $rootFiles = @(
     "frontend/eslint.config.mjs", "frontend/playwright.config.ts", "frontend/tsconfig.json",
     "indexer/package.json", "indexer/package-lock.json", "indexer/schema.graphql",
     "indexer/subgraph.template.yaml", "release/release-gate-last-run.json",
+    "release/log-rpc-probe-999.json",
     "release/AUDIT_REPORT_2026-07-26.md",
     "release/audit-findings-2026-07-26.json",
     "release/REMEDIATION_REPORT_2026-07-26.md",
