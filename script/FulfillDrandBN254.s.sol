@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
-import {DrandBN254Coordinator} from "../src/hyperevm/DrandBN254Coordinator.sol";
+interface IDrandBN254Coordinator {
+    function fulfillRandomness(uint256 requestId, uint64 round, bytes calldata signature) external;
+}
 
 interface VmFulfillDrandBN254 {
     function envUint(string calldata name) external returns (uint256 value);
@@ -34,7 +36,7 @@ contract FulfillDrandBN254 {
         bytes memory signature = vm.envBytes("FWA_DRAND_SIGNATURE");
 
         vm.startBroadcast(privateKey);
-        DrandBN254Coordinator(payable(coordinatorAddress)).fulfillRandomness(requestId, uint64(round), signature);
+        IDrandBN254Coordinator(coordinatorAddress).fulfillRandomness(requestId, uint64(round), signature);
         vm.stopBroadcast();
     }
 }

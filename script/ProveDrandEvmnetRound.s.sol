@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
-import {DrandEvmnetRegistry} from "../src/hyperevm/DrandEvmnetRegistry.sol";
+interface IDrandEvmnetRegistry {
+    function proveRound(bytes calldata signature, uint64 round) external returns (bytes32 randomness);
+}
 
 interface VmProveDrandRound {
     function envUint(string calldata name) external returns (uint256 value);
@@ -32,7 +34,7 @@ contract ProveDrandEvmnetRound {
         bytes memory signature = vm.envBytes("FWA_DRAND_SIGNATURE");
 
         vm.startBroadcast(privateKey);
-        DrandEvmnetRegistry(registryAddress).proveRound(signature, uint64(round));
+        IDrandEvmnetRegistry(registryAddress).proveRound(signature, uint64(round));
         vm.stopBroadcast();
     }
 }
