@@ -1,10 +1,10 @@
 {
     "schemaVersion":  2,
-    "generatedAtUtc":  "2026-07-27T18:53:21.9488648Z",
+    "generatedAtUtc":  "2026-07-28T20:46:42.9876745Z",
     "containsSecrets":  false,
-    "regenerationReason":  "CI reproducibility hardening: tracked Chainlink interfaces, active invariant helper, production-bundle E2E",
-    "previousManifestSha256":  "07f229b925ca8a0e9d52579b549c8444f3ad932a2f8bcaa488b597fef494c109",
-    "fileCount":  2546,
+    "regenerationReason":  "Finalize the 2026-07-28 mainnet readiness anchor",
+    "previousManifestSha256":  "6e8d9d3c5228601187629a1902997b4c6c5e57a552221ff6419b8681b9c2f4e7",
+    "fileCount":  2547,
     "files":  [
                   {
                       "path":  ".env.mainnet.example",
@@ -10863,8 +10863,8 @@
                   },
                   {
                       "path":  "frontend/tsconfig.json",
-                      "bytes":  1097,
-                      "sha256":  "13756876a6c9808a88e13b6c4d7e382ced7d98fb55eba42d5c18d5ba0aa63ead"
+                      "bytes":  1096,
+                      "sha256":  "8121b4f366b67871f52dcc47decfe064a4038b82940b0c9591c930e68e420ac1"
                   },
                   {
                       "path":  "FWA_ETHEREUM_REFERENCE/FWA/sources/lib/chainlink-evm/contracts/src/v0.8/vrf/dev/interfaces/IVRFCoordinatorV2Plus.sol",
@@ -11433,8 +11433,8 @@
                   },
                   {
                       "path":  "HWA_MAINNET_CONFIGURATION_FREEZE_2026-07-27.md",
-                      "bytes":  12237,
-                      "sha256":  "ab21026673b82602f925765486432b087bd4783ecda58db8d8bd5805ab8eaaa5"
+                      "bytes":  13033,
+                      "sha256":  "3dcd0238355168f8ba8f9df5ee5c03066acb2735f3a3d9cf8b1da17f22a01250"
                   },
                   {
                       "path":  "HWA_VPS_APP_RUNBOOK_2026-07-27.md",
@@ -11563,8 +11563,8 @@
                   },
                   {
                       "path":  "release/audit-findings-2026-07-26.json",
-                      "bytes":  560353,
-                      "sha256":  "6115d5fa76bf6f6f0348ac47baa589f0ad9370021755a83c6d265fa151d5113f"
+                      "bytes":  557670,
+                      "sha256":  "6a84c490b00888cfb0ca050b98f7a642c533a1589ac960999fac73028e0a141c"
                   },
                   {
                       "path":  "release/CODEX_FABLE5_FOLLOWUP_REMEDIATION_2026-07-27.md",
@@ -11623,13 +11623,13 @@
                   },
                   {
                       "path":  "release/gate-fable5-followup-phaseA.json",
-                      "bytes":  11966,
-                      "sha256":  "84a87cc581de2098b31c00ba2ed326e910cd925962953ed1ef5c5f0f71729a92"
+                      "bytes":  11697,
+                      "sha256":  "3a08f3193dff3d38914cfa92e3c72abb8b11a7b067e3dec8bff91402f93762de"
                   },
                   {
                       "path":  "release/gate-fable5-followup-phaseC.json",
-                      "bytes":  12059,
-                      "sha256":  "f2b8b8fcf3096343cec9490772d2b8912a5dc95be512ac8d768ecc00975a4580"
+                      "bytes":  11787,
+                      "sha256":  "8fd1b48b464533f85cc70e09d8b4b881bca0186cb849976fb5c3b91125b75761"
                   },
                   {
                       "path":  "release/HWA_MAINNET_FREEZE_ADDENDUM_2026-07-27.md",
@@ -11638,38 +11638,43 @@
                   },
                   {
                       "path":  "release/HWA_PRELAUNCH_READINESS_2026-07-27.md",
-                      "bytes":  5230,
-                      "sha256":  "67a8c409202990ae5f7907064b2df63572ede029f1c8ddd4f6037da3b4eabfd1"
+                      "bytes":  6427,
+                      "sha256":  "1f799441cea83020023348c99514e48dcb2b6bd60b82893e777d0882ac221c6c"
                   },
                   {
                       "path":  "release/hwa-genesis-canonical.json",
-                      "bytes":  2594,
-                      "sha256":  "8d92ed37742f75f4e9678aa589d25c7593f23404d226769fe36726f3b98d6ed7"
+                      "bytes":  2554,
+                      "sha256":  "24b65357757a1807ccfa35985a42db0fb7e2f1e805cc1762829e9913b3b14d95"
                   },
                   {
                       "path":  "release/hwa-genesis-custody-recipients.json",
-                      "bytes":  33741,
-                      "sha256":  "b8e170665a0344f9d1185cebc7bd4cd23dfc08989a2b7ca8e294e12709467a20"
+                      "bytes":  33353,
+                      "sha256":  "4be555ccb8771e9d56f6a010ec2b41c56b4c097f9f54c08c54e02006a6b9806d"
                   },
                   {
                       "path":  "release/hwa-genesis-hosting-attestation.json",
-                      "bytes":  692,
-                      "sha256":  "f914dd98ee5715e41a12d81bbe36788ef40e06bc4ec9b48f3cc0089e0181be62"
+                      "bytes":  679,
+                      "sha256":  "066fc53a26bbf249c54d5d2172445191dc5655533ce3549da81d419e888a7ed8"
                   },
                   {
                       "path":  "release/hwa-genesis-safe-actions.json",
-                      "bytes":  25303,
-                      "sha256":  "d8d0a093870f2ad26d06ef9d4db847cd0fef5191dcec7244f2f89e7907b49ad3"
+                      "bytes":  25232,
+                      "sha256":  "0eda6c35af8aeed457a1b44558f392afe5f8193eedf58f190816bb796e935c27"
                   },
                   {
                       "path":  "release/hwa-launch-economics-preparation.json",
-                      "bytes":  2907,
-                      "sha256":  "ed0a0244037f03751176ccdbc7a116079aeac63c14576fd115e0fc9748445abe"
+                      "bytes":  2863,
+                      "sha256":  "abf3a7d7a03d5cd18cc1bad33fbcfde9bdd1efd38c0d45e0d40522bf69946d0a"
+                  },
+                  {
+                      "path":  "release/hwa-mainnet-collections-attestation.json",
+                      "bytes":  4454,
+                      "sha256":  "fa29f3f902c578ee433cc60736a230cb9268a433fca3175293bdc44400cdf94f"
                   },
                   {
                       "path":  "release/hwa-projectx-launch-price-selection.json",
-                      "bytes":  836,
-                      "sha256":  "75ca30a70d329de2264d0870b9c3a185ccbfb1d6abd7ebe2235dbbfd672e9419"
+                      "bytes":  815,
+                      "sha256":  "01e2bcce40c51d7559383ee67402d4b29cc41d0324d231dccc0a36fcf78ea283"
                   },
                   {
                       "path":  "release/hwa-safe-mainnet-deployment.json",
@@ -11678,23 +11683,23 @@
                   },
                   {
                       "path":  "release/hwa-safe-mainnet-preparation.json",
-                      "bytes":  4145,
-                      "sha256":  "fcfb3ce604486bcc93e52619d528514182e564340efa77daf8d2b813f11a11d8"
+                      "bytes":  4089,
+                      "sha256":  "782c97cb01fda34a1c148a8625343eae59c4fe1778ff70974515ae1b498d8441"
                   },
                   {
                       "path":  "release/release-gate-last-run.json",
-                      "bytes":  10009,
-                      "sha256":  "03f1a3cf93d9adeb7816dbc20b1cb5846949a09c108ffc99802a0253a6c64e2d"
+                      "bytes":  9791,
+                      "sha256":  "4b5d634aa6e52854a730836493f296e8731a1dfe734a20068135e9bded51d3e3"
                   },
                   {
                       "path":  "release/release-gate-testnet-v2-2026-07-27.json",
-                      "bytes":  10010,
-                      "sha256":  "137b90020434718907416923430144cc6e32a08cc24cebdf834095cf6c6eafbe"
+                      "bytes":  9780,
+                      "sha256":  "8a9fcd065fd49c40fd4f058473f538a19f821512c10d28aefa1cd0eca1e570a1"
                   },
                   {
                       "path":  "release/release-gate-testnet-v2-live-2026-07-27.json",
-                      "bytes":  11958,
-                      "sha256":  "7733456fe67b6a194b2a6ab895e4a63c22053280b05b0653ce86571cdccd1907"
+                      "bytes":  11693,
+                      "sha256":  "ccd086abc2068c926afe0f06f87cb0389586c5b6c024c5f4b3b484f4891e6fd5"
                   },
                   {
                       "path":  "release/REMEDIATION_REPORT_2026-07-26.md",
@@ -12008,8 +12013,8 @@
                   },
                   {
                       "path":  "scripts/CreateAuditManifest.ps1",
-                      "bytes":  7092,
-                      "sha256":  "b2905663f64ec88f0d5d237ebfc72a205f9efbef786bb28435d1dab99b41adcf"
+                      "bytes":  7148,
+                      "sha256":  "2e7118802fa891938e59bd65fb09c8997ac04beae9b0c635252c7647c2b0a1a2"
                   },
                   {
                       "path":  "scripts/generate-hwa-genesis.mjs",

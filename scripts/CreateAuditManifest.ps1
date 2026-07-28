@@ -39,6 +39,7 @@ $rootFiles = @(
     "release/hwa-safe-mainnet-preparation.json",
     "release/hwa-safe-mainnet-deployment.json",
     "release/hwa-launch-economics-preparation.json",
+    "release/hwa-mainnet-collections-attestation.json",
     "release/hwa-projectx-launch-price-selection.json",
     "release/hwa-genesis-custody-recipients.json",
     "release/hwa-genesis-canonical.json",

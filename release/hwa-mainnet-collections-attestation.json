@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "chainId": 999,
+  "verifiedAtUtc": "2026-07-28T20:36:24.1304471Z",
+  "verifiedAtBlock": 41698655,
+  "rpc": "https://rpc.hyperliquid.xyz/evm",
+  "broadcastPerformed": false,
+  "policy": {
+    "canary": "Hypio only",
+    "postCanaryWave1": [
+      "PiP & Friends",
+      "Odd Otties"
+    ],
+    "indexedButClosed": [
+      "Hypurr"
+    ],
+    "deferred": [
+      "Catbal"
+    ]
+  },
+  "collections": [
+    {
+      "name": "Hypio",
+      "symbol": "hypio",
+      "address": "0x63eb9d77d083ca10c304e28d5191321977fd0bfb",
+      "creationTransaction": "0x439418e1c9a062c88c03bfde21cfd59ed93e0425d9d43a581e72a7b29944cd38",
+      "creationKind": "top-level-contract-creation",
+      "deploymentBlock": 390921,
+      "runtimeBytes": 14895,
+      "runtimeCodeHash": "0x5978d5f71b59d6158ddfa4ae60b367ea9a231e6d2902596be47dfc4b9c08e83a",
+      "erc721": true,
+      "observedSupply": 5405,
+      "sampleTokenId": 1,
+      "sampleTokenUri": "ipfs://bafybeifdfqw4azq6ghgs5hp6yqdxk5mjoamvru7ro7pogx7cpddnrzx5qm/1",
+      "metadataAuthority": "ipfs",
+      "manifestIndexed": true,
+      "launchPolicy": "canary"
+    },
+    {
+      "name": "PiP & Friends",
+      "symbol": "PIPF",
+      "address": "0xbc4a26ba78ce05e8bcbf069bbb87fb3e1dac8df8",
+      "creationTransaction": "0x00ce527b1ca78eda852c55c3655b0e995f3e5268f138f981240d9d8c910fedea",
+      "creationKind": "top-level-contract-creation",
+      "deploymentBlock": 3727372,
+      "runtimeBytes": 18762,
+      "runtimeCodeHash": "0xcd9a5d665afb541e76827b4250c79eac443ebaff0b8bdc9c17949b53757a6bb7",
+      "erc721": true,
+      "observedSupply": 7777,
+      "sampleTokenId": 1,
+      "sampleTokenUri": "https://static.drip.trade/hyperlaunch/pip/pip_out/1.json",
+      "metadataAuthority": "static.drip.trade",
+      "manifestIndexed": true,
+      "launchPolicy": "post-canary-wave-1"
+    },
+    {
+      "name": "Odd Otties",
+      "symbol": "ODD",
+      "address": "0x43a9652e2b3ce8970e8d33d8c34252a59a6596aa",
+      "creationTransaction": "0x9a99ed937d435a3a1921800316fe8cc4f0f3e6009a4e87a3b9b93cdc12e66841",
+      "creationKind": "top-level-contract-creation",
+      "deploymentBlock": 1835630,
+      "runtimeBytes": 18851,
+      "runtimeCodeHash": "0xa654c48670f0ac9494e891a2074f3589186aeeb40c4141d02dfbc627fed032c4",
+      "erc721": true,
+      "observedSupply": 3333,
+      "sampleTokenId": 1,
+      "sampleTokenUri": "https://otties.mypinata.cloud/ipfs/bafybeib5eicnlzj2hanhqh2tcp4vghkadoj4ulagu4k6s757ishft6qbny/1",
+      "metadataAuthority": "otties.mypinata.cloud",
+      "manifestIndexed": true,
+      "launchPolicy": "post-canary-wave-1"
+    },
+    {
+      "name": "Catbal",
+      "symbol": "cat",
+      "address": "0x8027f4306f85aa03325574879170fbca365b9f52",
+      "creationTransaction": "0x7ee3710c53327fecffcc0036bf863b270621b0693e61c0655cf2860b1b511c17",
+      "creationKind": "internal-eip1167-clone",
+      "deploymentBlock": 13231668,
+      "runtimeBytes": 45,
+      "runtimeCodeHash": "0xe3e252831cdd0c11e1327d04a57ddd9bfa11ef49d50edb524040d98bfb228bc4",
+      "eip1167Implementation": "0x09a26fc8fcef18192e267d7a6da9dfb4be81dd6a",
+      "erc721": true,
+      "observedSupply": 1755,
+      "sampleTokenId": 1,
+      "sampleTokenUri": "",
+      "metadataAuthority": null,
+      "manifestIndexed": false,
+      "launchPolicy": "deferred-empty-token-uri",
+      "note": "The exact Catbal contract exposes empty tokenURI values. It is not substituted with either Illumeownati contract without a separate product decision."
+    },
+    {
+      "name": "Hypurr",
+      "symbol": "HYPURR",
+      "address": "0x9125e2d6827a00b0f8330d6ef7bef07730bac685",
+      "creationTransaction": "0x29a7102c2b2a1f2e21ed767deb3133c873acbfe5578728c9c1e23ce6a13eff5a",
+      "creationKind": "top-level-contract-creation",
+      "deploymentBlock": 15060098,
+      "runtimeBytes": 8222,
+      "runtimeCodeHash": "0xcc91b02c2a3667c7439857f8eda7ed8068d0d5cdd19415077a32e527c8e8f441",
+      "erc721": true,
+      "observedSupply": 4600,
+      "sampleTokenId": 1,
+      "sampleTokenUri": "ipfs://bafybeigs5lojzzear4gyuizxgmdabdam7jftguarspv4rcxw665pkioxdy/1",
+      "metadataAuthority": "ipfs",
+      "manifestIndexed": true,
+      "launchPolicy": "indexed-but-closed-high-value"
+    }
+  ],
+  "launchReady": true,
+  "launchReadyReason": "The canary and wave-1 collections have code, ERC-721 support, complete deployment blocks and usable metadata. Deferred collections are not required for launch."
+}
