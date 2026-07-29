@@ -17,7 +17,7 @@
     "snapshotNft": "0x89D52133B105E9548Df16dE4d7cf59c412daf191"
   },
   "features": {
-    "writesEnabled": false,
+    "writesEnabled": true,
     "acquisitionsEnabled": false,
     "randomnessMode": "drand-bn254",
     "dexMode": "projectx"
