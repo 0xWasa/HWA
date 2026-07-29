@@ -1,13 +1,13 @@
-﻿{
+{
     "schemaVersion":  1,
-    "generatedAtUtc":  "2026-07-27T16:01:27.8165245Z",
+    "generatedAtUtc":  "2026-07-29T21:48:42.3286146Z",
     "status":  "recommended-pending-owner-confirmation",
     "chainId":  999,
     "token":  {
                   "name":  "Hyper World Assets",
                   "symbol":  "HWA",
                   "totalSupplyWei":  "1000000000000000000000000000",
-                  "oneSidedLpSupplyWei":  "500000000000000000000000000"
+                  "oneSidedLpSupplyWei":  "800000000000000000000000000"
               },
     "economics":  {
                       "targetFdvHype":  "640",

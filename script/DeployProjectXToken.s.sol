@@ -25,7 +25,7 @@ contract DeployProjectXToken {
     uint256 internal constant MAINNET = 999;
     uint256 internal constant Q96 = 1 << 96;
     uint256 internal constant TOTAL_SUPPLY = 1_000_000_000 ether;
-    uint256 internal constant LAUNCH_ALLOCATION = 500_000_000 ether;
+    uint256 internal constant LAUNCH_ALLOCATION = 800_000_000 ether;
 
     address internal constant PROJECTX_FACTORY = 0xFf7B3e8C00e57ea31477c32A5B52a58Eea47b072;
     address internal constant PROJECTX_NFPM = 0xeaD19AE861c29bBb2101E834922B2FEee69B9091;

@@ -8,7 +8,7 @@ $envFixture = Join-Path $fixtureRoot "fixture.env"
 if ($env:HWA_RELEASE_SELF_TEST -ne "loaded") { throw "ImportEnvFile self-test failed" }
 Remove-Item Env:HWA_RELEASE_SELF_TEST
 
-$addresses = 1..12 | ForEach-Object { "0x" + $_.ToString("x").PadLeft(40, "0") }
+$addresses = 1..13 | ForEach-Object { "0x" + $_.ToString("x").PadLeft(40, "0") }
 $collection = '[{"address":"0x000000000000000000000000000000000000000c","name":"Audit Fixture","symbol":"AUD","deploymentBlock":1}]'
 $manifestRelative = "release/script-self-test/mainnet.json"
 
@@ -16,14 +16,14 @@ $manifestRelative = "release/script-self-test/mainnet.json"
     -Fwa $addresses[0] -Whitelist $addresses[1] -VrfService $addresses[2] `
     -RandomnessCoordinator $addresses[3] -RandomnessRegistry $addresses[4] -Splitter $addresses[5] -Rewards $addresses[6] `
     -Token $addresses[7] -ProjectXAdapter $addresses[8] -ProjectXPool $addresses[9] `
-    -ProjectXLiquidityLocker $addresses[10] `
-    -SnapshotNft $addresses[11] -SnapshotDeploymentBlock 1 -SnapshotMaxTokenId 333 `
+    -ProjectXLiquidityLocker $addresses[10] -EcosystemVesting $addresses[11] `
+    -SnapshotNft $addresses[12] -SnapshotDeploymentBlock 1 -SnapshotMaxTokenId 333 `
     -DeployedAtBlock 1 -CollectionsJson $collection -ProjectXTradeUrl "https://example.com/projectx-fixture" `
     -OutputPath $manifestRelative
 
 $manifestPath = Join-Path $projectRoot $manifestRelative
 $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
-if ($manifest.chainId -ne 999 -or $manifest.features.writesEnabled -or $manifest.features.acquisitionsEnabled) {
+if ($manifest.chainId -ne 999 -or $manifest.features.writesEnabled -or $manifest.features.depositsEnabled -or $manifest.features.acquisitionsEnabled -or $manifest.features.rewardClaimsEnabled -or $manifest.features.externalBuysEnabled) {
     throw "Fail-closed manifest invariant failed"
 }
 
@@ -32,8 +32,8 @@ $noLinksRelative = "release/script-self-test/mainnet-no-links.json"
     -Fwa $addresses[0] -Whitelist $addresses[1] -VrfService $addresses[2] `
     -RandomnessCoordinator $addresses[3] -RandomnessRegistry $addresses[4] -Splitter $addresses[5] -Rewards $addresses[6] `
     -Token $addresses[7] -ProjectXAdapter $addresses[8] -ProjectXPool $addresses[9] `
-    -ProjectXLiquidityLocker $addresses[10] `
-    -SnapshotNft $addresses[11] -SnapshotDeploymentBlock 1 -SnapshotMaxTokenId 333 `
+    -ProjectXLiquidityLocker $addresses[10] -EcosystemVesting $addresses[11] `
+    -SnapshotNft $addresses[12] -SnapshotDeploymentBlock 1 -SnapshotMaxTokenId 333 `
     -DeployedAtBlock 1 -CollectionsJson $collection -OutputPath $noLinksRelative
 $noLinks = Get-Content -LiteralPath (Join-Path $projectRoot $noLinksRelative) -Raw | ConvertFrom-Json
 if ($noLinks.PSObject.Properties.Name -contains "links") { throw "Optional links must be omitted rather than serialized as null" }
@@ -100,7 +100,7 @@ try {
 }
 if (-not $preparedRejected) { throw "Promotion accepted a non-passed release report" }
 $stillClosed = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
-if ($stillClosed.features.writesEnabled -or $stillClosed.features.acquisitionsEnabled) {
+if ($stillClosed.features.writesEnabled -or $stillClosed.features.depositsEnabled -or $stillClosed.features.acquisitionsEnabled -or $stillClosed.features.rewardClaimsEnabled -or $stillClosed.features.externalBuysEnabled) {
     throw "Rejected promotion mutated the fail-closed manifest"
 }
 

@@ -59,7 +59,7 @@ Les valeurs ci-dessous sont des données de capture, pas des defaults à copier 
 
 | Paramètre | Valeur Ethereum observée | Parité HyperEVM attendue |
 |---|---:|---|
-| Backing minimum | `0.01 ETH` | `0.01 HYPE`, adaptation native explicite |
+| Backing minimum | `0.01 ETH` | `0.1 HYPE`, plancher technique HyperEVM ajustable par l'owner ; ce n'est pas un floor NFT |
 | Surcharge acquisition | `1 000 bps` | identique |
 | Slippage de sélection positif/default négatif | `1 000 bps` | identique |
 | Paiement du bid au purchaser | `8 500 bps` du backing | identique |

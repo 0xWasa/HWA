@@ -10,6 +10,7 @@ import {FWAHyperSwapAdapter} from "../src/hyperevm/FWAHyperSwapAdapter.sol";
 import {FWARewardsHyperEVM} from "../src/hyperevm/FWARewardsHyperEVM.sol";
 import {FWATokenHyperEVM} from "../src/hyperevm/FWATokenHyperEVM.sol";
 import {HWAProjectXLiquidityLocker} from "../src/hyperevm/HWAProjectXLiquidityLocker.sol";
+import {HWAEcosystemVesting} from "../src/hyperevm/HWAEcosystemVesting.sol";
 import {SplitterHyperEVM} from "../src/hyperevm/SplitterHyperEVM.sol";
 import {MainnetOwnerPolicy} from "./MainnetOwnerPolicy.sol";
 
@@ -25,7 +26,8 @@ contract ActivateHyperEVMMainnet {
         VmActivateHyperEVMMainnet(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     uint256 internal constant HYPEREVM_MAINNET_CHAIN_ID = 999;
-    uint256 internal constant TOTAL_EMISSION = 300_000_000 ether;
+    uint256 internal constant SEASONAL_RESERVE = 100_000_000 ether;
+    uint256 internal constant ECOSYSTEM_ALLOCATION = 100_000_000 ether;
 
     error WrongChain(uint256 actual);
     error ReleaseGateNotConfirmed();
@@ -63,6 +65,7 @@ contract ActivateHyperEVMMainnet {
         FWATokenHyperEVM token = FWATokenHyperEVM(payable(vm.envAddress("FWA_TOKEN_ADDRESS")));
         FWAHyperSwapAdapter adapter = FWAHyperSwapAdapter(payable(vm.envAddress("FWA_PROJECTX_ADAPTER_ADDRESS")));
         HWAProjectXLiquidityLocker locker = HWAProjectXLiquidityLocker(token.liquidityLocker());
+        HWAEcosystemVesting vesting = HWAEcosystemVesting(vm.envAddress("HWA_ECOSYSTEM_VESTING_ADDRESS"));
         address finalOwner = fwa.owner();
         MainnetOwnerPolicy.validateConfiguredOwner(
             finalOwner, vm.envAddress("FWA_OWNER"), vm.envBool("MAINNET_EOA_OWNER_CONFIRMED")
@@ -84,8 +87,12 @@ contract ActivateHyperEVMMainnet {
                 || rewards.token() != address(token) || address(rewards.swapAdapter()) != address(adapter)
                 || rewards.owner() != finalOwner || adapter.owner() != finalOwner || token.owner() != finalOwner
                 || locker.owner() != finalOwner || !locker.bound() || locker.tokenId() != token.lpTokenId()
-                || rewards.depositorRatePerSec() == 0 || rewards.purchaserDailyPot() == 0
-                || rewards.emissionStart() != 0 || token.balanceOf(address(rewards)) < TOTAL_EMISSION
+                || !rewards.emissionConfigured() || rewards.SEASONAL_RESERVE() != SEASONAL_RESERVE
+                || rewards.seasonalReserveRemaining() != SEASONAL_RESERVE || rewards.emissionStart() != 0
+                || rewards.claimsEnabled() || token.balanceOf(address(rewards)) != SEASONAL_RESERVE
+                || vesting.TOKEN() != address(token) || vesting.ALLOCATION() != ECOSYSTEM_ALLOCATION
+                || vesting.BENEFICIARY() != vm.envAddress("HWA_ECOSYSTEM_BENEFICIARY") || vesting.CLIFF() != 90 days
+                || vesting.DURATION() != 730 days || token.balanceOf(address(vesting)) != ECOSYSTEM_ALLOCATION
                 || token.adapter() != address(adapter) || token.rewardsPool() != address(rewards)
                 || token.externalBuysEnabled() || fwa.acquisitionsEnabled() || !fwa.rewardsRequiredForActivation()
                 || token.buybackSqrtPriceLimitX96() == 0 || !token.buybackOracleReady()

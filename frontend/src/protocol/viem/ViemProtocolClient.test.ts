@@ -16,7 +16,10 @@ const manifest: DeploymentManifest = {
   },
   features: {
     writesEnabled: false,
+    depositsEnabled: false,
     acquisitionsEnabled: false,
+    rewardClaimsEnabled: false,
+    externalBuysEnabled: false,
     randomnessMode: "drand-bn254",
     dexMode: "projectx",
   },

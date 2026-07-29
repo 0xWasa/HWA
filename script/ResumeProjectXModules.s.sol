@@ -2,10 +2,10 @@
 pragma solidity ^0.8.30;
 
 import {FWA} from "fwa-reference/src/FWA.sol";
-
 import {FWAHyperSwapAdapter} from "../src/hyperevm/FWAHyperSwapAdapter.sol";
 import {FWARewardsHyperEVM} from "../src/hyperevm/FWARewardsHyperEVM.sol";
 import {FWATokenHyperEVM} from "../src/hyperevm/FWATokenHyperEVM.sol";
+import {HWAEcosystemVesting} from "../src/hyperevm/HWAEcosystemVesting.sol";
 
 interface VmProjectXModulesResume {
     function envUint(string calldata name) external returns (uint256 value);
@@ -16,19 +16,18 @@ interface VmProjectXModulesResume {
     function stopBroadcast() external;
 }
 
-/// @notice Idempotently completes a Project X module deployment interrupted after wiring.
-/// @dev It can only fund the pre-wired rewards contract with the exact remaining allocation.
+/// @notice Idempotently funds already-wired V2 rewards and vesting contracts.
 contract ResumeProjectXModules {
     VmProjectXModulesResume internal constant vm =
         VmProjectXModulesResume(address(uint160(uint256(keccak256("hevm cheat code")))));
-
     uint256 internal constant TESTNET = 998;
     uint256 internal constant MAINNET = 999;
-    uint256 internal constant REWARDS_ALLOCATION = 300_000_000 ether;
-    uint256 internal constant LEGACY_ALLOCATION = 200_000_000 ether;
+    uint256 internal constant REWARDS_ALLOCATION = 100_000_000 ether;
+    uint256 internal constant ECOSYSTEM_ALLOCATION = 100_000_000 ether;
 
-    event ProjectXModulesResumed(address indexed token, address indexed rewards, uint256 fundedAmount);
-
+    event ProjectXModulesResumed(
+        address indexed token, address indexed rewards, address indexed vesting, uint256 funded
+    );
     error WrongChain(uint256 actual);
     error ResumeNotConfirmed();
     error MainnetNotConfirmed();
@@ -43,14 +42,13 @@ contract ResumeProjectXModules {
         if (block.chainid == MAINNET && !vm.envBool("PROJECTX_MAINNET_DEPLOYMENT_CONFIRMED")) {
             revert MainnetNotConfirmed();
         }
-
-        uint256 deployerKey = vm.envUint("PRIVATE_KEY");
-        address deployer = vm.addr(deployerKey);
+        uint256 key = vm.envUint("PRIVATE_KEY");
+        address deployer = vm.addr(key);
         FWA fwa = FWA(vm.envAddress("FWA_ADDRESS"));
         FWATokenHyperEVM token = FWATokenHyperEVM(payable(vm.envAddress("FWA_TOKEN_ADDRESS")));
         FWARewardsHyperEVM rewards = FWARewardsHyperEVM(vm.envAddress("FWA_REWARDS_ADDRESS"));
         FWAHyperSwapAdapter adapter = FWAHyperSwapAdapter(payable(vm.envAddress("FWA_PROJECTX_ADAPTER_ADDRESS")));
-
+        HWAEcosystemVesting vesting = HWAEcosystemVesting(vm.envAddress("HWA_ECOSYSTEM_VESTING_ADDRESS"));
         if (token.owner() != deployer || rewards.owner() != deployer || adapter.owner() != deployer) {
             revert UnauthorizedDeployer();
         }
@@ -58,26 +56,27 @@ contract ResumeProjectXModules {
             token.adapter() != address(adapter) || token.rewardsPool() != address(rewards)
                 || adapter.rewardsBuyer() != address(rewards) || rewards.token() != address(token)
                 || address(rewards.swapAdapter()) != address(adapter) || rewards.fwa() != address(fwa)
-                || address(fwa.rewards()) != address(0)
+                || address(fwa.rewards()) != address(0) || vesting.TOKEN() != address(token)
+                || vesting.ALLOCATION() != ECOSYSTEM_ALLOCATION || token.externalBuysEnabled()
+                || rewards.emissionStart() != 0 || rewards.claimsEnabled()
         ) revert InvalidWiring();
-
-        uint256 rewardsBalance = token.balanceOf(address(rewards));
-        uint256 deployerBalance = token.balanceOf(deployer);
-        if (rewardsBalance == REWARDS_ALLOCATION && deployerBalance == LEGACY_ALLOCATION) {
-            emit ProjectXModulesResumed(address(token), address(rewards), 0);
+        uint256 rewardBalance = token.balanceOf(address(rewards));
+        uint256 vestingBalance = token.balanceOf(address(vesting));
+        if (
+            rewardBalance == REWARDS_ALLOCATION && vestingBalance == ECOSYSTEM_ALLOCATION
+                && token.balanceOf(deployer) == 0
+        ) {
+            emit ProjectXModulesResumed(address(token), address(rewards), address(vesting), 0);
             return;
         }
-        if (rewardsBalance != 0 || deployerBalance != REWARDS_ALLOCATION + LEGACY_ALLOCATION) {
+        if (rewardBalance != 0 || vestingBalance != 0 || token.balanceOf(deployer) != 200_000_000 ether) {
             revert InvalidBalance();
         }
-
-        vm.startBroadcast(deployerKey);
+        vm.startBroadcast(key);
         if (!token.transfer(address(rewards), REWARDS_ALLOCATION)) revert TransferFailed();
+        if (!token.transfer(address(vesting), ECOSYSTEM_ALLOCATION)) revert TransferFailed();
         vm.stopBroadcast();
-
-        if (token.balanceOf(address(rewards)) != REWARDS_ALLOCATION || token.balanceOf(deployer) != LEGACY_ALLOCATION) {
-            revert InvalidBalance();
-        }
-        emit ProjectXModulesResumed(address(token), address(rewards), REWARDS_ALLOCATION);
+        if (token.balanceOf(deployer) != 0) revert InvalidBalance();
+        emit ProjectXModulesResumed(address(token), address(rewards), address(vesting), 200_000_000 ether);
     }
 }

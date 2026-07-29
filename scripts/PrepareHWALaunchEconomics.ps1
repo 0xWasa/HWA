@@ -57,7 +57,7 @@ function Get-FloorToSpacing([int]$Tick, [int]$Spacing) {
 $q96 = [System.Numerics.BigInteger]::One -shl 96
 $q192 = [System.Numerics.BigInteger]::One -shl 192
 $totalSupplyWei = [System.Numerics.BigInteger]::Parse("1000000000000000000000000000")
-$lpSupplyWei = [System.Numerics.BigInteger]::Parse("500000000000000000000000000")
+$lpSupplyWei = [System.Numerics.BigInteger]::Parse("800000000000000000000000000")
 $targetFdvWei = Convert-HypeToWei $TargetFdvHype
 $minimumFdvWei = Convert-HypeToWei $MinimumFdvHype
 $maximumFdvWei = Convert-HypeToWei $MaximumFdvHype

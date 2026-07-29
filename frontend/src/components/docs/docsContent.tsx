@@ -465,50 +465,38 @@ total       = pool price + randomness service fee`}
   {
     id: "rewards",
     title: "$HWA rewards",
-    lede: "Depositor emissions and purchaser epoch pots — a separate module that is not activated yet.",
+    lede: "A fixed 100M seasonal reserve plus revenue-funded buybacks. No minting after deployment.",
     body: (
       <>
-        <Callout tone="accent" title="Not activated">
+        <Callout tone="accent" title="Finite by construction">
           <p>
-            The HWA token, emissions, epoch pots and the market pool ship as a module after the core protocol. Nothing
-            accrues until it is deployed, and the app shows no reward figure while it is inactive.
+            HWA has a fixed 1B supply: 800M seeds the permanently locked Project X LP, 100M funds three launch seasons,
+            and 100M vests to the ecosystem over 24 months after a 3-month cliff. Public claims remain locked until launch.
           </p>
         </Callout>
-        <H3>Depositor emissions</H3>
+        <H3>Three 15-day seasons</H3>
         <P>
-          Positions are checkpointed on the <K>square root of their backing</K>, so emissions scale sub-linearly:
-          doubling your backing does not double your share of the stream. It rewards keeping liquidity in the pool
-          without handing the whole emission to the largest depositor.
+          Season caps decline from <V>50M</V> to <V>30M</V> to <V>20M HWA</V>. These are maximums, not promised
+          distributions. Each settled acquisition unlocks at most <V>5%</V> of its HYPE value in HWA using the lower of
+          the launch quote and the 30-minute TWAP. Unused daily capacity is burned and never carried forward.
         </P>
-        <Formula caption="Share of the depositor stream, per active position.">
-          {`share = sqrt(backing) / Σ sqrt(backing)`}
+        <H3>Who receives seasonal HWA</H3>
+        <P>
+          Half is allocated to eligible depositors by <K>square root of backing</K>; half is allocated to purchasers by
+          <K>actual settled HYPE spent</K>. Refunded and expired requests are excluded. Protocol-seeded Genesis listings
+          do not receive the pre-funded depositor allocation.
+        </P>
+        <Formula caption="Depositor weight for an eligible active position.">
+          {`weight = sqrt(backing) / Σ sqrt(eligible backing)`}
         </Formula>
-        <H3>Purchaser epochs</H3>
+        <H3>Revenue-funded buybacks</H3>
         <P>
-          Acquisitions are grouped into fixed <K>24-hour epochs</K> measured from emission start. Every successfully
-          settled acquisition counts as one equal unit when that day&apos;s HWA pot is divided. The hot/cold gap does not
-          close the epoch: it controls the fraction of acquisition surcharge reserved as the purchaser&apos;s HYPE
-          allowance to buy HWA. That fraction is zero through <V>{FWA_PARAMS.hotGapSec}s</V>, ramps linearly, and reaches
-          100% after <V>{COLD_MIN} min</V>. Within a batch, only the first request observes the pre-batch gap.
+          After day 45 the fixed reserve stops. Protocol revenue can still buy HWA through the Project X 1% wHYPE pool,
+          protected by a 30-minute TWAP. Purchased HWA routes 40% to depositors, 40% to purchasers and 20% to permanent
+          burn. The hot/cold gap controls only the purchaser&apos;s HYPE buy allowance: zero through <V>{FWA_PARAMS.hotGapSec}s</V>,
+          then a linear ramp to 100% after <V>{COLD_MIN} min</V>.
         </P>
-        <H3>Market</H3>
-        <P>
-          HWA is intended to trade against wHYPE in a <V>1%</V> fee pool on Project X. Protocol revenue routes into
-          permissionless buybacks protected by a 30-minute pool TWAP and dynamic price bounds. Buybacks fail closed
-          until the oracle window is ready. None of this is live; when it is, it appears under{" "}
-          <Link href="/token" className="text-accent underline-offset-2 hover:underline">
-            $HWA
-          </Link>
-          .
-        </P>
-        <Params
-          rows={[
-            ["Emission weighting", "√ backing"],
-            ["Hot gap", `${FWA_PARAMS.hotGapSec}s`],
-            ["Cold gap", `${COLD_MIN} min`],
-            ["Market pool fee", "1%"],
-          ]}
-        />
+        <Params rows={[["Season 1", "50M max · days 1–15"], ["Season 2", "30M max · days 16–30"], ["Season 3", "20M max · days 31–45"], ["Value cap", "5% of settled HYPE"], ["Buyback routing", "40 / 40 / 20 burn"]]} />
       </>
     ),
   },

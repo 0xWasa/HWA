@@ -47,17 +47,22 @@ contract BindProjectXRewards {
         }
         if (
             address(fwa.rewards()) != address(0) || fwa.activeListingCount() != 0
-                || fwa.unsettledAcquisitionCount() != 0
+                || fwa.unsettledAcquisitionCount() != 0 || fwa.acquisitionsEnabled()
         ) revert CoreNotReady();
         if (
             rewards.fwa() != address(fwa) || rewards.token() != address(token)
                 || address(rewards.swapAdapter()) != address(adapter) || token.rewardsPool() != address(rewards)
                 || token.adapter() != address(adapter) || adapter.rewardsBuyer() != address(rewards)
+                || rewards.emissionStart() != 0 || rewards.claimsEnabled() || token.externalBuysEnabled()
         ) revert InvalidWiring();
 
         vm.startBroadcast(ownerKey);
         fwa.setRewards(address(rewards));
         vm.stopBroadcast();
+        if (
+            address(fwa.rewards()) != address(rewards) || fwa.acquisitionsEnabled() || rewards.emissionStart() != 0
+                || rewards.claimsEnabled() || token.externalBuysEnabled()
+        ) revert InvalidWiring();
         emit ProjectXRewardsBound(address(fwa), address(rewards), owner);
     }
 }

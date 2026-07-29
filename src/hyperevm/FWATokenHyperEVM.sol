@@ -61,6 +61,7 @@ contract FWATokenHyperEVM is ERC20, Ownable, ReentrancyGuard {
     address public adapter;
     address public rewardsPool;
     uint256 public lpTokenId;
+    uint256 public launchHwaPerHypeX96;
     bool public launched;
     bool public externalBuysEnabled;
     bool private _launching;
@@ -158,6 +159,7 @@ contract FWATokenHyperEVM is ERC20, Ownable, ReentrancyGuard {
 
     function setDistributor(address account, bool allowed) external onlyOwner {
         if (account == address(0)) revert InvalidAddress();
+        if (!allowed && (account == adapter || account == rewardsPool)) revert InvalidTransfer();
         isDistributor[account] = allowed;
         emit DistributorSet(account, allowed);
     }
@@ -248,6 +250,8 @@ contract FWATokenHyperEVM is ERC20, Ownable, ReentrancyGuard {
         }
 
         launched = true;
+        uint256 launchQuote = _quoteAtSqrtPrice(1 ether, sqrtPriceX96);
+        launchHwaPerHypeX96 = FixedPointMathLib.fullMulDiv(launchQuote, Q96, 1 ether);
         address createdPool =
             POSITION_MANAGER.createAndInitializePoolIfNecessary(token0, token1, POOL_FEE, sqrtPriceX96);
         if (createdPool == address(0) || createdPool != FACTORY.getPool(token0, token1, POOL_FEE)) {
@@ -319,6 +323,14 @@ contract FWATokenHyperEVM is ERC20, Ownable, ReentrancyGuard {
 
     function buybackOracleReady() external view returns (bool ready) {
         (ready,) = _tryTwapSqrtPriceX96();
+    }
+
+    /// @notice Raw 30-minute TWAP HWA per HYPE in X96. Zero means the oracle window is unavailable.
+    function twapHwaPerHypeX96() external view returns (uint256) {
+        (bool ready, uint160 twapSqrtPriceX96) = _tryTwapSqrtPriceX96();
+        if (!ready) return 0;
+        uint256 quote = _quoteAtSqrtPrice(1 ether, twapSqrtPriceX96);
+        return FixedPointMathLib.fullMulDiv(quote, Q96, 1 ether);
     }
 
     function quoteBuyback(uint256 hypeIn)

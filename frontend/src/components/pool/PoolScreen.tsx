@@ -28,7 +28,7 @@ export function PoolScreen() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { prelaunch } = useProtocol();
+  const { prelaunch, writesEnabled } = useProtocol();
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [limit, setLimit] = useState(PAGE_SIZE);
@@ -92,7 +92,7 @@ export function PoolScreen() {
           {/* left: stats bar + prize stack */}
           <div className="flex min-h-0 min-w-0 flex-col">
             <HeroStatsBar snapshot={snapshot} listings={poolAll?.items} prelaunch={prelaunch} />
-            <PoolMissionHud snapshot={snapshot} inFlightCount={inFlightTickets.length} prelaunch={prelaunch} />
+            <PoolMissionHud snapshot={snapshot} inFlightCount={inFlightTickets.length} prelaunch={prelaunch} paused={!writesEnabled} />
             <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-hidden px-4 py-6 lg:py-2">
               {prelaunch ? (
                 <ProtocolPrelaunch
@@ -153,6 +153,27 @@ export function PoolScreen() {
           ))}
         </div>
 
+        <div className="rounded-xl border border-secondary/30 bg-secondary/8 p-4 sm:p-5">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="mlabel text-secondary-readable">HWA SEASONS</div>
+              <h3 className="mt-1 text-xl font-semibold text-ink">Finite launch incentives. Permanent buyback loop.</h3>
+            </div>
+            <a href="/rewards" className="text-xs font-medium text-accent hover:underline">Inspect reward accounting →</a>
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            {[["S01", "50M max", "Days 1–15"], ["S02", "30M max", "Days 16–30"], ["S03", "20M max", "Days 31–45"]].map(([season, cap, days]) => (
+              <div key={season} className="rounded-lg border border-line/70 bg-inset/60 px-3 py-2.5">
+                <div className="font-mono text-2xs text-purple">{season}</div>
+                <div className="mt-1 font-mono text-base font-semibold text-ink">{cap}</div>
+                <div className="text-2xs text-mute">{days} · volume-gated</div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-2xs leading-relaxed text-mute">
+            Seasonal HWA is capped at 5% of settled HYPE volume and unused daily capacity is burned. After day 45, only protocol-revenue buybacks continue. No new HWA can be minted.
+          </p>
+        </div>
         <div className="flex flex-col gap-3 rounded-xl border border-amber/25 bg-amber/6 p-4 sm:flex-row sm:items-start sm:gap-5">
           <span className="mlabel shrink-0 rounded-full border border-amber/25 px-2.5 py-1 text-amber">RISK ENGINE</span>
           <p className="text-sm leading-relaxed text-dim">

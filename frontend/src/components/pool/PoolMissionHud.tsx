@@ -3,8 +3,9 @@ import type { PoolSnapshot } from "@/protocol/types";
 
 type MarketMode = "prelaunch" | "syncing" | "genesis" | "live" | "drawing" | "paused";
 
-function marketMode(snapshot: PoolSnapshot | undefined, inFlightCount: number, prelaunch: boolean): MarketMode {
+function marketMode(snapshot: PoolSnapshot | undefined, inFlightCount: number, prelaunch: boolean, paused: boolean): MarketMode {
   if (prelaunch) return "prelaunch";
+  if (paused) return "paused";
   if (!snapshot) return "syncing";
   if (snapshot.activeListingCount === 0) return "genesis";
   if (inFlightCount > 0) return "drawing";
@@ -18,19 +19,21 @@ const MODE_COPY: Record<MarketMode, { label: string; detail: string; tone: strin
   genesis: { label: "GENESIS", detail: "First position needed", tone: "text-accent" },
   live: { label: "MARKET LIVE", detail: "Random draw open", tone: "text-green" },
   drawing: { label: "DRAW IN FLIGHT", detail: "Randomness settling", tone: "text-chain" },
-  paused: { label: "MARKET PAUSED", detail: "Pool visible, buys closed", tone: "text-amber" },
+  paused: { label: "PROTOCOL PAUSED", detail: "Launch pending - all actions closed", tone: "text-amber" },
 };
 
 export function PoolMissionHud({
   snapshot,
   inFlightCount,
   prelaunch = false,
+  paused = false,
 }: {
   snapshot?: PoolSnapshot;
   inFlightCount: number;
   prelaunch?: boolean;
+  paused?: boolean;
 }) {
-  const mode = marketMode(snapshot, inFlightCount, prelaunch);
+  const mode = marketMode(snapshot, inFlightCount, prelaunch, paused);
   const activeStep = mode === "prelaunch" ? -1 : mode === "genesis" ? 0 : mode === "drawing" ? 2 : 1;
   const copy = MODE_COPY[mode];
 
