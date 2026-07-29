@@ -192,7 +192,13 @@ function fetchPinnedMetadata(url: URL, destination: ResolvedDestination): Promis
         method: "GET",
         headers: { accept: "application/json" },
         servername: isIP(url.hostname) ? undefined : url.hostname,
-        lookup: (_hostname, _options, callback) => callback(null, destination.address, destination.family),
+        lookup: (_hostname, options, callback) => {
+          // Node 20+ may request every candidate address (`all: true`) for its
+          // family autoselection path. Preserve the DNS pin in both lookup
+          // callback shapes instead of returning the scalar form unconditionally.
+          if (options.all) callback(null, [destination]);
+          else callback(null, destination.address, destination.family);
+        },
       },
       (response) => {
         const status = response.statusCode ?? 0;
