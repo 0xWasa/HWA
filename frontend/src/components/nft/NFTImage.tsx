@@ -69,7 +69,7 @@ export function NFTImage({
             <span aria-hidden className="grid size-8 rotate-45 place-items-center rounded-md border border-accent/30 bg-bg/50 shadow-lg">
               <span className="size-2 -rotate-45 rounded-[2px] bg-accent/70" />
             </span>
-            <span className="mlabel mt-1 text-[8px] tracking-[0.16em] text-mute">NFT / MEDIA OFFLINE</span>
+            <span className="mlabel mt-1 text-3xs tracking-[0.16em] text-mute">NFT / MEDIA OFFLINE</span>
           </div>
         </div>
       )}

@@ -41,6 +41,8 @@ test.describe("Acquisition journey", () => {
     await expect(tickets.first()).toBeVisible({ timeout: 10_000 });
     const reveal = page.getByTestId("reveal-overlay");
     await expect(reveal).toBeVisible({ timeout: 20_000 });
+    // Pack-opening machine: sealed → flipping → revealed always terminates.
+    await expect(reveal).toHaveAttribute("data-reveal-stage", "revealed", { timeout: 10_000 });
     await expect(reveal.getByTestId("purchase-result-surface")).toBeVisible();
     await expect(reveal.getByText("Purchase Successful", { exact: true })).toBeVisible();
     await expect(reveal.getByTestId("inline-settlement-panel")).toBeVisible();
@@ -55,6 +57,25 @@ test.describe("Acquisition journey", () => {
     await expect(share.locator("canvas")).toBeVisible();
     await expect(share.getByTestId("download-purchase-card")).toBeVisible();
     await expect(share.getByTestId("share-purchase-card")).toBeVisible();
+  });
+
+  test("sealed reveal card can be tapped through and always resolves", async ({ page }) => {
+    await page.goto("/?scenario=default");
+    await page.getByTestId("connect-wallet").click();
+    await page.getByTestId("acquire-review").click();
+    await page.getByTestId("acquire-confirm").click();
+
+    const reveal = page.getByTestId("reveal-overlay");
+    await expect(reveal).toBeVisible({ timeout: 20_000 });
+    // The seal auto-advances after a short hold; if we catch it in time, a tap
+    // must skip the hold. The click races the machine by design, so a miss is
+    // fine — the real invariant is that the machine always lands on "revealed".
+    const seal = reveal.getByTestId("reveal-seal");
+    if (await seal.isVisible().catch(() => false)) {
+      await seal.click({ timeout: 1_500 }).catch(() => {});
+    }
+    await expect(reveal).toHaveAttribute("data-reveal-stage", "revealed", { timeout: 8_000 });
+    await expect(reveal.getByText("Purchase Successful", { exact: true })).toBeVisible();
   });
 
   test("insufficient balance blocks the CTA with a reason", async ({ page }) => {

@@ -240,13 +240,13 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
           <div className="flex min-w-0 items-center gap-2.5">
             <span
               aria-hidden
-              className="order-ticket-mark grid size-8 shrink-0 place-items-center rounded-md border border-accent/25 bg-accent/8 font-mono text-xs font-black text-accent"
+              className="order-ticket-mark grid size-8 shrink-0 place-items-center rounded-md border border-accent/25 bg-accent/8 font-mono text-xs font-bold text-accent"
             >
               ↗
             </span>
             <div className="min-w-0">
               <div className="mlabel text-accent">DRAW TICKET</div>
-              <div className="mt-1 truncate text-3xs text-mute">One entry · one random NFT position</div>
+              <div className="mt-1 truncate text-3xs text-mute">Pay HYPE · receive one random NFT position</div>
             </div>
           </div>
           <span className={`flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 ${ticketStatus.shell}`}>
@@ -263,8 +263,11 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
             accent
           />
           <TicketMetric label="POOL DEPTH" value={snapshot ? formatHype(snapshot.totalBacking) : "—"} suffix="HYPE" />
-          <TicketMetric label="ODDS MODEL" value="INVERSE" suffix="WEIGHT" />
+          <TicketMetric label="DRAW ODDS" value="INVERSE" suffix="BACKING" />
         </div>
+
+        {/* Ticket stub tear line */}
+        <div aria-hidden className="ticket-perfo my-0.5" />
 
         {/* Quantity + freshness */}
         <div className="flex items-end justify-between gap-4">
@@ -281,10 +284,10 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
         {/* Drift tolerance */}
         <div className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-1 text-2xs text-mute">
-            Settlement guard
+            Max settlement drift
             <InfoTip>
-              The pool changes while your randomness is in flight. Settlement refunds if the pool value at processing
-              drifts against you beyond this tolerance. Protocol default: 10%.
+              The pool can move while randomness is in flight. Your entry is refunded if its settlement value moves
+              against you by more than this limit. Protocol default: 10%.
             </InfoTip>
           </span>
           <div className="flex gap-1">
@@ -356,7 +359,7 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
               {insufficient
                 ? "Insufficient HYPE balance"
                 : quote.data
-                  ? `${quantity} NFT${quantity > 1 ? "s" : ""} · ${formatHype(quote.data.total)} HYPE`
+                  ? `Review draw · ${quantity} NFT${quantity > 1 ? "s" : ""} · ${formatHype(quote.data.total)} HYPE`
                   : "Loading quote…"}
             </span>
           </Button>
@@ -383,8 +386,8 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
               NFT ·{" "}
             </>
           ) : null}
-          one <span className="font-medium text-dim">randomly selected</span> position per entry · lower backing means
-          higher draw weight.
+          one <span className="font-medium text-dim">verifiably random</span> position per entry · lower-backed NFTs
+          have higher draw odds.
           {connected && balance !== undefined && (
             <span className={insufficient ? "text-red" : ""}>
               {" "}
@@ -424,7 +427,7 @@ function TicketMetric({
         className={`num mt-1 flex min-w-0 items-baseline gap-1 font-mono text-2xs font-bold ${accent ? "text-accent" : "text-ink"}`}
       >
         <span className="truncate">{value}</span>
-        <span className="shrink-0 text-[0.45rem] font-medium text-mute">{suffix}</span>
+        <span className="shrink-0 text-3xs font-medium text-mute">{suffix}</span>
       </div>
     </div>
   );

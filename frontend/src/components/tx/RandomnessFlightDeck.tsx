@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { env } from "@/config/env";
 import { randomnessSecurityBufferSec } from "@/protocol/params";
 import type { AcquisitionTicket, PoolSnapshot } from "@/protocol/types";
+import { PressureMotif } from "@/components/ui/PressureMotif";
 
 const PHASES: { phases: AcquisitionTicket["phase"][]; label: string }[] = [
   { phases: ["requested", "randomness_pending"], label: "Round locked" },
@@ -52,8 +53,12 @@ export function RandomnessFlightDeck({
   const securityBuffer = randomnessSecurityBufferSec(env.chainId);
 
   return (
-    <div className="flex w-full max-w-5xl flex-col items-center px-3" data-testid="randomness-flight-deck">
-      <div className="mb-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 font-mono text-[9px] uppercase tracking-[0.12em] text-faint sm:text-2xs">
+    <div
+      className="flex w-full max-w-5xl flex-col items-center px-3"
+      data-testid="randomness-flight-deck"
+      data-deck-phase={phaseIndex}
+    >
+      <div className="mb-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 font-mono text-3xs uppercase tracking-[0.12em] text-faint sm:text-2xs">
         <span className="flex items-center gap-1.5 text-secondary-readable">
           <span className="anim-pulse size-1.5 rounded-full bg-secondary" aria-hidden />
           {elapsed !== null ? `${elapsed.toString()} blocks elapsed` : "Drand request live"}
@@ -77,7 +82,7 @@ export function RandomnessFlightDeck({
               aria-hidden
               className={`randomness-card-back absolute left-1/2 top-1/2 aspect-[0.72] w-[clamp(9.2rem,24vw,16rem)] rounded-xl border ${
                 isCenter ? "border-accent/55" : "border-secondary/25"
-              }`}
+              } ${isCenter && phaseIndex >= 2 ? "deck-charging" : ""}`}
               style={{
                 zIndex: 50 - Math.round(distance),
                 transform: `translate(-50%, -50%) translateX(calc(${slot} * clamp(3.8rem, 9vw, 7rem))) translateY(${Math.min(38, distance * 7)}px) rotate(${slot * 3.8}deg) scale(${isCenter ? 1 : Math.max(0.72, 0.91 - distance * 0.055)})`,
@@ -85,14 +90,16 @@ export function RandomnessFlightDeck({
               }}
             >
               <div className="absolute inset-2 rounded-lg border border-dashed border-line-strong/70" />
+              <PressureMotif
+                tone="violet"
+                wall={false}
+                className="pointer-events-none absolute inset-0 size-full opacity-55"
+              />
               <div className="absolute inset-0 grid place-items-center">
-                <div className="relative grid size-24 place-items-center rounded-full border border-secondary/24 sm:size-32">
-                  <div className="absolute inset-[18%] rounded-full border border-accent/20" />
-                  <span className="font-display text-6xl font-black text-ink sm:text-7xl">?</span>
-                </div>
+                <span className="font-display text-6xl font-extrabold text-ink sm:text-7xl">?</span>
               </div>
-              <span className="absolute left-4 top-4 font-mono text-[8px] uppercase tracking-[0.18em] text-chain">HWA / SEALED</span>
-              <span className="absolute bottom-4 right-4 font-mono text-[8px] text-mute">SEQ {ticket.sequence.toString().padStart(3, "0")}</span>
+              <span className="absolute left-4 top-4 font-mono text-3xs uppercase tracking-[0.18em] text-chain">HWA / SEALED</span>
+              <span className="absolute bottom-4 right-4 font-mono text-3xs text-mute">SEQ {ticket.sequence.toString().padStart(3, "0")}</span>
             </div>
           );
         })}
@@ -105,7 +112,7 @@ export function RandomnessFlightDeck({
             return (
               <div key={step.label} className="flex min-w-0 flex-1 flex-col gap-1.5">
                 <span className={`h-1 rounded-full ${active ? "bg-accent" : "bg-control"} ${index === phaseIndex ? "anim-pulse" : ""}`} />
-                <span className={`truncate text-center text-[9px] uppercase tracking-wide ${active ? "text-accent" : "text-faint"}`}>{step.label}</span>
+                <span className={`truncate text-center text-3xs uppercase tracking-wide ${active ? "text-accent" : "text-faint"}`}>{step.label}</span>
               </div>
             );
           })}
@@ -117,7 +124,7 @@ export function RandomnessFlightDeck({
           The NFT remains unknown until the authenticated drand word is received and the FIFO sequence is processed.
           {ordered.length > 1 && <span className="text-dim"> {ordered.length} requests are queued in this batch.</span>}
         </p>
-        <p className="mt-1.5 text-center font-mono text-[9px] uppercase tracking-[0.1em] text-chain">
+        <p className="mt-1.5 text-center font-mono text-3xs uppercase tracking-[0.1em] text-chain">
           {env.chainId === 999 ? "Mainnet security buffer" : "Testnet relay buffer"}: at least {securityBuffer} seconds
           before the target round
         </p>

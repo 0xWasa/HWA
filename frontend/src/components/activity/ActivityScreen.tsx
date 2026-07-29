@@ -184,7 +184,7 @@ export function ActivityScreen() {
         <>
           <div className="overflow-x-auto rounded-md border border-line bg-panel" data-testid="activity-feed">
             <div className="min-w-[560px]">
-              <div className="grid grid-cols-[110px_minmax(0,1fr)_110px_90px_90px_60px] gap-3 border-b border-line px-3 py-1.5 text-[10px] uppercase tracking-wide text-faint">
+              <div className="grid grid-cols-[110px_minmax(0,1fr)_110px_90px_90px_60px] gap-3 border-b border-line px-3 py-1.5 text-2xs uppercase tracking-wide text-faint">
                 <span>Event</span>
                 <span>Detail</span>
                 <span className="text-right">Amount</span>

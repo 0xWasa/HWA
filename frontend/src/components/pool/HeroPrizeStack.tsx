@@ -303,7 +303,7 @@ export function HeroPrizeStack({
               >
                 {isFront && (
                 <div className="hero-card-header relative z-10 border-b border-line bg-inset/95 px-2.5 py-2">
-                  <div className="flex items-center justify-between gap-2 text-[7px] font-bold uppercase tracking-[0.12em] text-faint sm:text-[8px]">
+                  <div className="flex items-center justify-between gap-2 text-3xs font-bold uppercase tracking-[0.12em] text-faint">
                     <span>
                       <span className="text-accent">#{index + 1}</span> · <span className="text-chain">HWA VERIFIED</span>
                     </span>
@@ -311,16 +311,16 @@ export function HeroPrizeStack({
                   </div>
                   <div className="mt-1 flex items-end justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="truncate text-[10px] font-semibold text-ink sm:text-xs">{label}</div>
-                      <div className="truncate text-[8px] text-mute sm:text-[9px]">
+                      <div className="truncate text-2xs font-semibold text-ink sm:text-xs">{label}</div>
+                      <div className="truncate text-3xs text-mute">
                         {sanitizeLabel(listing.nft.collectionName, "Unknown collection")}
                       </div>
                     </div>
-                    <span className="num shrink-0 font-mono text-[9px] font-semibold text-dim">#{listing.id.toString()}</span>
+                    <span className="num shrink-0 font-mono text-3xs font-semibold text-dim">#{listing.id.toString()}</span>
                   </div>
                   {/* Two cells, not three: "1 in N" and the percentage are the
                       same fact, and three columns truncated the number. */}
-                  <div className="mt-2 grid grid-cols-[1fr_auto] gap-2 border-t border-line-subtle pt-1.5 text-[7px] uppercase tracking-wide text-faint sm:text-[8px]">
+                  <div className="mt-2 grid grid-cols-[1fr_auto] gap-2 border-t border-line-subtle pt-1.5 text-3xs uppercase tracking-wide text-faint">
                     <span>Backing <strong className="block truncate font-mono text-dim"><Hype wei={listing.backing} maxDecimals={2} /></strong></span>
                     <span className="text-right">
                       Chance
@@ -338,7 +338,7 @@ export function HeroPrizeStack({
                 <span aria-hidden className="hero-card-texture pointer-events-none absolute inset-0 z-20" />
                 <span aria-hidden className="hero-card-glare pointer-events-none absolute inset-0 z-20" />
                 {listing.isCrown && (
-                  <span className="absolute bottom-2 left-2 z-30 rounded-xs border border-gold/35 bg-bg/90 px-1.5 py-0.5 text-[9px] font-bold text-gold backdrop-blur">
+                  <span className="absolute bottom-2 left-2 z-30 rounded-xs border border-gold/35 bg-bg/90 px-1.5 py-0.5 text-3xs font-bold text-gold backdrop-blur">
                     ♛ TOP DEPOSIT
                   </span>
                 )}
@@ -364,7 +364,7 @@ export function HeroPrizeStack({
                       <CardDatum label="Depositor" value={<span className="num font-mono">{shortAddress(listing.depositor)}</span>} />
                     </dl>
 
-                    <div className="relative z-10 mt-auto pt-3 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-mute">
+                    <div className="relative z-10 mt-auto pt-3 text-center font-mono text-3xs uppercase tracking-[0.14em] text-mute">
                       Tap to flip back
                     </div>
                   </div>
@@ -420,7 +420,7 @@ export function HeroPrizeStack({
         </div>
 
         <div className="flex flex-col items-center gap-2">
-          <div className="flex items-center gap-2 text-[9px] uppercase tracking-wide text-faint">
+          <div className="flex items-center gap-2 text-3xs uppercase tracking-wide text-faint">
             <span className="hidden sm:inline">Drag or use ← →</span>
             <span className="num font-mono text-mute" data-testid="hero-position">
               {String(activeFront + 1).padStart(2, "0")} / {String(deck.length).padStart(2, "0")}

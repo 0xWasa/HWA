@@ -46,7 +46,7 @@ export function TicketProgress({ ticket }: { ticket: AcquisitionTicket }) {
                   <div
                     className={`h-[3px] rounded-full ${reached ? "bg-green" : "bg-control"} ${current ? "anim-pulse" : ""}`}
                   />
-                  <span className={`text-[9px] leading-none ${reached ? "text-green" : "text-faint"}`}>{s.label}</span>
+                  <span className={`text-3xs leading-none ${reached ? "text-green" : "text-faint"}`}>{s.label}</span>
                 </div>
               );
             })}

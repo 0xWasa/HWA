@@ -272,7 +272,7 @@ export function PoolScreen() {
               />
             </div>
           ) : viewMode === "grid" ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6" data-testid="listing-grid">
+            <div className="deck-tilt grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6" data-testid="listing-grid">
               {page.items.map((l) => (
                 <ListingCard key={l.id.toString()} listing={l} totalWeight={totalWeight} onOpen={openListing} />
               ))}

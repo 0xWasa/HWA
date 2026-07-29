@@ -20,7 +20,7 @@ export function InfoTip({ children, label = "More info" }: { children: ReactNode
         onBlur={(e) => {
           if (!e.currentTarget.parentElement?.contains(e.relatedTarget as Node)) setOpen(false);
         }}
-        className={`grid size-3.5 place-items-center rounded-full border text-[9px] leading-none ${
+        className={`grid size-3.5 place-items-center rounded-full border text-3xs leading-none ${
           open ? "border-accent text-accent" : "border-line-strong text-mute hover:border-mute hover:text-dim"
         }`}
       >

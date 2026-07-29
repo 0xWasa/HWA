@@ -40,6 +40,14 @@
   --shadow-drawer: -16px 0 48px rgba(3, 4, 10, 0.58);
   --elev-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
   --elev-2: 0 2px 6px rgba(0, 0, 0, 0.45), 0 18px 40px -20px rgba(0, 0, 0, 0.7);
+
+  /* Motion ramp — terminal-snappy to game-bouncy. Every NEW transition and
+     animation must pick from this ramp instead of inventing a duration. */
+  --dur-fast: 0.12s;
+  --dur-base: 0.2s;
+  --dur-slow: 0.34s;
+  --ease-squish: cubic-bezier(0.34, 1.56, 0.64, 1); /* press/rebound overshoot */
+  --ease-spring: cubic-bezier(0.16, 1.3, 0.3, 1); /* slider thumb, step pops  */
 }
 
 .light {
@@ -126,11 +134,11 @@
 }
 
 @theme {
-  /* Type — Inter body, functional micro-mono (fwa.fun scale) */
-  --text-3xs: 0.5625rem; /* 9px — sort chips            */
-  --text-3xs--line-height: 0.75rem;
-  --text-2xs: 0.625rem; /* 10px — mono labels, meta    */
-  --text-2xs--line-height: 0.875rem;
+  /* Type — one readable UI ramp across the entire trading surface. */
+  --text-3xs: 0.625rem; /* 10px — compact market labels */
+  --text-3xs--line-height: 0.875rem;
+  --text-2xs: 0.6875rem; /* 11px — metadata and controls */
+  --text-2xs--line-height: 1rem;
   --text-xs: 0.75rem; /* 12px — captions, CTA text   */
   --text-xs--line-height: 1.05rem;
   --text-sm: 0.8125rem; /* 13px — dense UI             */
@@ -149,15 +157,19 @@
   --font-sans:
     var(--font-sans-hwa), "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI",
     "Helvetica Neue", Arial, sans-serif;
-  --font-display: var(--font-display), "Sora", var(--font-sans-hwa), sans-serif;
+  --font-display:
+    var(--font-sans-hwa), "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
   --font-mono:
     var(--font-mono-hwa), "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
     Consolas, monospace;
 
   /* Radii — softer than fwa.fun's 8px system, closer to prjx's generous
-     rounding, while keeping small controls crisp. */
+     rounding, while keeping small controls crisp. Data surfaces (tables,
+     tape rows, tickets) use the tighter terminal radius. */
   --radius-xs: 5px;
   --radius-sm: 8px;
+  --radius-data: 6px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 22px;
@@ -191,9 +203,14 @@ td.num,
   font-variant-numeric: tabular-nums;
 }
 
-/* Display face — titles and the wordmark */
+/* Display weight — same family as the UI, with a stronger cut. */
 h1,
-h2,
+h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
 .font-display {
   font-family: var(--font-display);
   letter-spacing: -0.02em;
@@ -328,20 +345,24 @@ h2,
   border-radius: var(--radius-md);
   box-shadow: 0 10px 22px var(--btn-glow);
   transition:
-    filter 0.16s,
-    transform 0.16s,
-    border-bottom-width 0.16s,
-    background-color 0.16s,
-    box-shadow 0.16s;
+    filter var(--dur-fast),
+    transform var(--dur-base) var(--ease-squish),
+    border-bottom-width var(--dur-fast),
+    background-color var(--dur-fast),
+    box-shadow var(--dur-base);
 }
 .btn3d:not(:disabled):hover {
   filter: brightness(1.05);
+  transform: translateY(-1px);
 }
 .btn3d:not(:disabled):active {
-  transform: translateY(2px);
+  /* Squash-and-stretch press: sinks AND squishes, then the squish easing
+     rebounds it past rest on release. */
+  transform: translateY(2px) scale(0.985, 0.955);
   border-bottom-width: 2px;
   filter: brightness(0.92);
   box-shadow: 0 5px 14px var(--btn-glow);
+  transition-duration: var(--dur-fast);
 }
 .btn3d:disabled {
   filter: saturate(0.7);
@@ -370,10 +391,124 @@ h2,
   border-bottom-width: 1px;
   box-shadow: none;
 }
+.btn3d--flat:not(:disabled):hover {
+  transform: none;
+}
 .btn3d--flat:not(:disabled):active {
   transform: none;
   border-bottom-width: 1px;
   box-shadow: none;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Desk stamps — rubber-stamped state labels. Mono, bordered, barely  */
+/*  crooked. Text stays exact; only the frame has personality.         */
+/* ------------------------------------------------------------------ */
+
+.stamp {
+  --stamp-ink: var(--hwa-muted);
+  --stamp-rot: -1.5deg;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border: 1.5px solid color-mix(in srgb, var(--stamp-ink) 62%, transparent);
+  border-radius: 4px;
+  transform: rotate(var(--stamp-rot));
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--stamp-ink);
+  background: color-mix(in srgb, var(--stamp-ink) 7%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--stamp-ink) 10%, transparent);
+}
+.stamp--tilt-r {
+  --stamp-rot: 1.5deg;
+}
+.stamp--flat {
+  --stamp-rot: 0deg;
+}
+.stamp--amber { --stamp-ink: var(--hwa-warning); }
+.stamp--red { --stamp-ink: var(--hwa-danger); }
+.stamp--green { --stamp-ink: var(--hwa-success); }
+.stamp--blue { --stamp-ink: var(--hwa-info); }
+.stamp--chain { --stamp-ink: var(--hwa-chain); }
+.stamp--violet { --stamp-ink: var(--hwa-secondary-readable); }
+.stamp--accent { --stamp-ink: var(--hwa-accent); }
+.stamp--gold { --stamp-ink: var(--hwa-gold); }
+
+/* ------------------------------------------------------------------ */
+/*  Tape semantics — terminal green/red ticks for signed values.       */
+/* ------------------------------------------------------------------ */
+
+.tick-up {
+  color: var(--hwa-success);
+}
+.tick-down {
+  color: var(--hwa-danger);
+}
+.tick-up::before {
+  content: "▲ ";
+  font-size: 0.72em;
+}
+.tick-down::before {
+  content: "▼ ";
+  font-size: 0.72em;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Deck tilt — the card game never stacks its cards perfectly. Grid   */
+/*  items lean ±0.4° alternately and straighten when engaged. Static   */
+/*  rotation (not animation) so reduced-motion users keep the look     */
+/*  without movement.                                                  */
+/* ------------------------------------------------------------------ */
+
+.deck-tilt > * {
+  transition: transform var(--dur-base) var(--ease-squish);
+}
+.deck-tilt > *:nth-child(odd) {
+  transform: rotate(-0.4deg);
+}
+.deck-tilt > *:nth-child(even) {
+  transform: rotate(0.35deg);
+}
+.deck-tilt > *:nth-child(3n) {
+  transform: rotate(0.15deg);
+}
+.deck-tilt > *:hover,
+.deck-tilt > *:focus-within {
+  transform: rotate(0deg) translateY(-3px);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Ticket perforation — the acquisition ticket tears like a stub.     */
+/* ------------------------------------------------------------------ */
+
+.ticket-perfo {
+  position: relative;
+  height: 0;
+  border-top: 2px dashed color-mix(in srgb, var(--hwa-border) 85%, transparent);
+  margin-inline: -0.25rem;
+}
+.ticket-perfo::before,
+.ticket-perfo::after {
+  content: "";
+  position: absolute;
+  top: -7px;
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: var(--hwa-bg);
+  border: 1px solid var(--hwa-separator);
+}
+.ticket-perfo::before {
+  left: -14px;
+}
+.ticket-perfo::after {
+  right: -14px;
 }
 
 /* ------------------------------------------------------------------ */
@@ -614,7 +749,7 @@ h2,
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--hwa-secondary) 13%, transparent), transparent 43%),
     radial-gradient(circle at 50% 44%, color-mix(in srgb, var(--hwa-accent) 9%, transparent), transparent 38%),
-    var(--hwa-panel);
+    var(--hwa-surface);
   box-shadow:
     0 26px 54px rgba(0, 0, 0, 0.52),
     inset 0 0 0 1px color-mix(in srgb, var(--hwa-fg) 4%, transparent);
@@ -641,6 +776,16 @@ h2,
 @keyframes hwa-sealed-scan {
   from { background-position: 0 0; }
   to { background-position: 80px 40px; }
+}
+
+/* Randomness deck escalation: the scan quickens and the center card charges
+   as the drand phase advances toward the reveal. */
+[data-deck-phase="2"] .randomness-card-back::after,
+[data-deck-phase="3"] .randomness-card-back::after {
+  animation-duration: 1.3s;
+}
+.deck-charging {
+  animation: deposit-core-breathe 1.15s ease-in-out infinite;
 }
 
 .hero-card-spectrum {
@@ -1046,9 +1191,23 @@ h2,
 }
 
 @keyframes deposit-card-complete {
-  0% { opacity: 0.6; transform: translateX(62px) rotate(4deg) scale(0.86); filter: brightness(1.8); }
-  62% { opacity: 1; transform: translateX(-5px) rotate(-2.5deg) scale(1.035); filter: brightness(1.14); }
+  0% { opacity: 0.55; transform: translateX(96px) rotate(5deg) scale(0.8); filter: brightness(1.9); }
+  55% { opacity: 1; transform: translateX(-10px) rotate(-3deg) scale(1.05); filter: brightness(1.16); }
+  78% { opacity: 1; transform: translateX(4px) rotate(-1.4deg) scale(0.99); filter: brightness(1.05); }
   100% { opacity: 1; transform: translateX(0) rotate(-2deg) scale(1); filter: brightness(1); }
+}
+
+/* Docking flash: the pool core visibly "receives" the card on completion. */
+@keyframes deposit-core-dock {
+  0% { scale: 1; filter: brightness(1); }
+  30% { scale: 1.2; filter: brightness(1.5); }
+  60% { scale: 0.96; filter: brightness(1.1); }
+  100% { scale: 1; filter: brightness(1); }
+}
+.deposit-launch.is-active .deposit-pool-core {
+  animation:
+    deposit-core-dock 0.85s var(--ease-squish) 1,
+    deposit-core-breathe 1.9s ease-in-out 0.85s infinite;
 }
 
 @keyframes deposit-card-failed {
@@ -1227,6 +1386,108 @@ h2,
     opacity: 1;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/*  Pack-opening reveal — sealed card slams in, holds, flips into the  */
+/*  result. Stages are driven by [data-reveal-stage] on the overlay so */
+/*  tests poll logical state, never animation timing.                  */
+/* ------------------------------------------------------------------ */
+
+@keyframes hwa-seal-slam {
+  0% {
+    transform: scale(1.22) rotate(3deg);
+    opacity: 0;
+  }
+  62% {
+    transform: scale(0.965) rotate(-1.2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(-0.6deg);
+    opacity: 1;
+  }
+}
+
+@keyframes hwa-step-pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.22);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.anim-step-pop {
+  display: inline-block;
+  animation: hwa-step-pop 0.24s var(--ease-squish) both;
+}
+
+/* The soft HWA logo squishes when poked — hover/press only, never idle. */
+@keyframes hwa-logo-squish {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.12, 0.86); }
+  70% { transform: scale(0.94, 1.08); }
+  100% { transform: scale(1); }
+}
+.logo-squish {
+  transition: transform var(--dur-base) var(--ease-squish);
+}
+a:hover > .logo-squish {
+  animation: hwa-logo-squish 0.45s var(--ease-squish);
+}
+a:active > .logo-squish {
+  transform: scale(0.92, 0.9);
+}
+
+.reveal-flip-scene {
+  perspective: 1400px;
+}
+.reveal-seal-card {
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  animation: hwa-seal-slam 0.5s var(--ease-squish) both;
+}
+[data-reveal-stage="flipping"] .reveal-seal-card {
+  transform: rotateY(-180deg);
+  opacity: 0;
+  transition:
+    transform 0.55s var(--ease-swift),
+    opacity 0.2s ease 0.24s;
+  animation: none;
+}
+.reveal-result-face {
+  backface-visibility: hidden;
+}
+[data-reveal-stage="sealed"] .reveal-result-face {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+  opacity: 0;
+  pointer-events: none;
+}
+[data-reveal-stage="flipping"] .reveal-result-face {
+  transform: rotateY(0deg);
+  opacity: 1;
+  transition:
+    transform 0.55s var(--ease-swift),
+    opacity 0.2s ease 0.18s;
+}
+[data-reveal-stage="revealed"] .reveal-result-face {
+  transform: none;
+  opacity: 1;
+}
+/* Result rows cascade in once the card face is up. */
+[data-reveal-stage="revealed"] .reveal-cascade > * {
+  animation: fwa-fade-up 0.3s var(--ease-swift) both;
+}
+[data-reveal-stage="revealed"] .reveal-cascade > *:nth-child(1) { animation-delay: 0.05s; }
+[data-reveal-stage="revealed"] .reveal-cascade > *:nth-child(2) { animation-delay: 0.1s; }
+[data-reveal-stage="revealed"] .reveal-cascade > *:nth-child(3) { animation-delay: 0.15s; }
+[data-reveal-stage="revealed"] .reveal-cascade > *:nth-child(4) { animation-delay: 0.2s; }
+[data-reveal-stage="revealed"] .reveal-cascade > *:nth-child(5) { animation-delay: 0.25s; }
+[data-reveal-stage="revealed"] .reveal-cascade > *:nth-child(n + 6) { animation-delay: 0.3s; }
 @keyframes hwa-halo {
   0%,
   100% {
@@ -1271,7 +1532,7 @@ h2,
   animation: hwa-float 4s ease-in-out infinite;
 }
 .anim-marquee {
-  animation: hwa-marquee 60s linear infinite;
+  animation: hwa-marquee 120s linear infinite;
 }
 .anim-marquee:hover {
   animation-play-state: paused;
@@ -1341,6 +1602,14 @@ h2,
   .hero-card-texture,
   .hero-card-glare {
     opacity: 0 !important;
+  }
+  /* Deck lean is static personality, but the hover straighten shouldn't
+     jump for reduced-motion users — keep everything level instead. */
+  .deck-tilt > * {
+    transform: none !important;
+  }
+  .stamp {
+    transform: none;
   }
 }
 
