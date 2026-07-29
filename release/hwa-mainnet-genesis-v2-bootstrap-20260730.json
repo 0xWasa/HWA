@@ -1,0 +1,690 @@
+{
+    "schemaVersion":  1,
+    "generatedAtUtc":  "2026-07-29T23:35:26.3468458Z",
+    "status":  "verified-fail-closed",
+    "chainId":  999,
+    "core":  "0x13aB222c1079084064F75713e72defCE20751f4A",
+    "whitelist":  "0xD2E5eC83bD273d3ced73E473a3cAd5cdEa146C37",
+    "genesis":  "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+    "deployer":  "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+    "seed":  {
+                 "sourceBlock":  41796801,
+                 "blockHash":  "0x5a3c8de866f2f59b6f5574953e6febd04594cd8c348926e9ecc0844628787d72",
+                 "algorithm":  "0.10 HYPE + (keccak256(abi.encode(seed, tokenId)) mod 21) * 0.01 HYPE"
+             },
+    "inventory":  {
+                      "firstTokenId":  42,
+                      "lastTokenId":  121,
+                      "count":  80
+                  },
+    "backing":  {
+                    "minimumHype":  "0.10",
+                    "maximumHype":  "0.30",
+                    "totalWei":  "15700000000000000000",
+                    "totalHype":  "15.70"
+                },
+    "setupTransactions":  {
+                              "allowlist":  "0x0d8e33324b74a4b92d4d5c5e0ff99477030b92bf1fa9cf9a05d87cc7818084e5",
+                              "approval":  "0x01eb5394f34aed4f0d9379a08b935efbee98400bc0f50fdf41a3854f39177ee4"
+                          },
+    "listings":  [
+                     {
+                         "listingId":  1,
+                         "tokenId":  42,
+                         "backingWei":  "250000000000000000",
+                         "backingHype":  "0.25",
+                         "transactionHash":  "0x19f383ac9cb325b4779ff9ac095897df4c782f17d05965e19739db7954fe32b1",
+                         "blockNumber":  41796904
+                     },
+                     {
+                         "listingId":  2,
+                         "tokenId":  43,
+                         "backingWei":  "180000000000000000",
+                         "backingHype":  "0.18",
+                         "transactionHash":  "0xde31dc3f440ae04bdd115c8c40b136ef3f3ed229e2459795fe7611c665c6b017",
+                         "blockNumber":  41796908
+                     },
+                     {
+                         "listingId":  3,
+                         "tokenId":  44,
+                         "backingWei":  "230000000000000000",
+                         "backingHype":  "0.23",
+                         "transactionHash":  "0xa522b8c9f637092b516360b970dffd231acc209110c5b25fb006f34596d77cc0",
+                         "blockNumber":  41796911
+                     },
+                     {
+                         "listingId":  4,
+                         "tokenId":  45,
+                         "backingWei":  "220000000000000000",
+                         "backingHype":  "0.22",
+                         "transactionHash":  "0xb606b773939209bf58c03f06372df79edd4ec10a62e893edefe8848685800fb5",
+                         "blockNumber":  41796914
+                     },
+                     {
+                         "listingId":  5,
+                         "tokenId":  46,
+                         "backingWei":  "270000000000000000",
+                         "backingHype":  "0.27",
+                         "transactionHash":  "0xb201492373d5521f4c3891f383232e14a8018b84f5d25bcd2b5f7823ee4a6773",
+                         "blockNumber":  41796918
+                     },
+                     {
+                         "listingId":  6,
+                         "tokenId":  47,
+                         "backingWei":  "240000000000000000",
+                         "backingHype":  "0.24",
+                         "transactionHash":  "0xaeaf53d678bf03b1754ac404a605eb772464953921327260308250e9b31803c4",
+                         "blockNumber":  41796923
+                     },
+                     {
+                         "listingId":  7,
+                         "tokenId":  48,
+                         "backingWei":  "250000000000000000",
+                         "backingHype":  "0.25",
+                         "transactionHash":  "0x1b689a73103da6acb875263bea043a375c50e54b80ccd29f09f0454b56f93476",
+                         "blockNumber":  41796926
+                     },
+                     {
+                         "listingId":  8,
+                         "tokenId":  49,
+                         "backingWei":  "280000000000000000",
+                         "backingHype":  "0.28",
+                         "transactionHash":  "0xd337fa16eba13cd86f59cb188b03db32d128cb01f90a96c1e1bef2ecaca6cd45",
+                         "blockNumber":  41796930
+                     },
+                     {
+                         "listingId":  9,
+                         "tokenId":  50,
+                         "backingWei":  "170000000000000000",
+                         "backingHype":  "0.17",
+                         "transactionHash":  "0xec4d25145758b1e0ce773db19f836c1752c0454fcd29bf36a99ebdb2df356394",
+                         "blockNumber":  41796935
+                     },
+                     {
+                         "listingId":  10,
+                         "tokenId":  51,
+                         "backingWei":  "160000000000000000",
+                         "backingHype":  "0.16",
+                         "transactionHash":  "0x26a679d25d36e7af4e887ce1ab06ab7e2991a182d189cc556f5dd598ed58fd58",
+                         "blockNumber":  41796938
+                     },
+                     {
+                         "listingId":  11,
+                         "tokenId":  52,
+                         "backingWei":  "230000000000000000",
+                         "backingHype":  "0.23",
+                         "transactionHash":  "0xcb393ecf0959aedb14c18e2af8aff0efb5aa35b3e0e285ae4e10140cc58d0b48",
+                         "blockNumber":  41796941
+                     },
+                     {
+                         "listingId":  12,
+                         "tokenId":  53,
+                         "backingWei":  "210000000000000000",
+                         "backingHype":  "0.21",
+                         "transactionHash":  "0x2bd49bd2634dc08ac107ddd596a1d2b4cc9fd72a3f0ec738c2dbe7e82e6f22cb",
+                         "blockNumber":  41796944
+                     },
+                     {
+                         "listingId":  13,
+                         "tokenId":  54,
+                         "backingWei":  "240000000000000000",
+                         "backingHype":  "0.24",
+                         "transactionHash":  "0xbcf18638ca94a38ab98f8849f10a0d52d78b5457c6f25b6c2f4682c7df0a0068",
+                         "blockNumber":  41796947
+                     },
+                     {
+                         "listingId":  14,
+                         "tokenId":  55,
+                         "backingWei":  "210000000000000000",
+                         "backingHype":  "0.21",
+                         "transactionHash":  "0x6243434db2c483b293f4ee3ce795e744fef89e431b28c661e20c8d66562df32b",
+                         "blockNumber":  41796950
+                     },
+                     {
+                         "listingId":  15,
+                         "tokenId":  56,
+                         "backingWei":  "240000000000000000",
+                         "backingHype":  "0.24",
+                         "transactionHash":  "0xd2dca8da744f1924a196b23c7917b2042817b95ecbf5967f88d0b96e19ffd27b",
+                         "blockNumber":  41796953
+                     },
+                     {
+                         "listingId":  16,
+                         "tokenId":  57,
+                         "backingWei":  "190000000000000000",
+                         "backingHype":  "0.19",
+                         "transactionHash":  "0x97b6b0d9e5aad0f165c3c5d1be5d7093d68b2e4389686f64e91c2a4718759893",
+                         "blockNumber":  41796956
+                     },
+                     {
+                         "listingId":  17,
+                         "tokenId":  58,
+                         "backingWei":  "160000000000000000",
+                         "backingHype":  "0.16",
+                         "transactionHash":  "0x324963e7100815e098a358d1c8745a97f3e081a8834eff5d1626354ef8c399a7",
+                         "blockNumber":  41796960
+                     },
+                     {
+                         "listingId":  18,
+                         "tokenId":  59,
+                         "backingWei":  "100000000000000000",
+                         "backingHype":  "0.10",
+                         "transactionHash":  "0x59b52505965cc94d50b3b0a8ec9951ca4725927296fa92ea4f55e6c6fd6fd466",
+                         "blockNumber":  41796966
+                     },
+                     {
+                         "listingId":  19,
+                         "tokenId":  60,
+                         "backingWei":  "260000000000000000",
+                         "backingHype":  "0.26",
+                         "transactionHash":  "0x12b287702de9ee558f744067b65d7de3b5872ff70ba311328f232dd2be391d4f",
+                         "blockNumber":  41796969
+                     },
+                     {
+                         "listingId":  20,
+                         "tokenId":  61,
+                         "backingWei":  "180000000000000000",
+                         "backingHype":  "0.18",
+                         "transactionHash":  "0xcdff8026cb8c2de3e69a185502c27d07b0e7cac9164f39d392a4bd31d74c722f",
+                         "blockNumber":  41796972
+                     },
+                     {
+                         "listingId":  21,
+                         "tokenId":  62,
+                         "backingWei":  "180000000000000000",
+                         "backingHype":  "0.18",
+                         "transactionHash":  "0xba93fb7b0d3077231e18eb42b5c434f4597f657d918ba75caef499b214fb183d",
+                         "blockNumber":  41796976
+                     },
+                     {
+                         "listingId":  22,
+                         "tokenId":  63,
+                         "backingWei":  "180000000000000000",
+                         "backingHype":  "0.18",
+                         "transactionHash":  "0x5c4d5c1ac4b69020eea1144690c92d7b18ca85e37483e8374a628dcddedba648",
+                         "blockNumber":  41797020
+                     },
+                     {
+                         "listingId":  23,
+                         "tokenId":  64,
+                         "backingWei":  "280000000000000000",
+                         "backingHype":  "0.28",
+                         "transactionHash":  "0xedb5f9275ba5e76764cf11730fd013846243d957913889bea3bb63e9423be34a",
+                         "blockNumber":  41797047
+                     },
+                     {
+                         "listingId":  24,
+                         "tokenId":  65,
+                         "backingWei":  "250000000000000000",
+                         "backingHype":  "0.25",
+                         "transactionHash":  "0x1d1961d4046c0e846cf60363a93f89a766d8227854ba4e4d339e6f84e5557f5d",
+                         "blockNumber":  41797051
+                     },
+                     {
+                         "listingId":  25,
+                         "tokenId":  66,
+                         "backingWei":  "290000000000000000",
+                         "backingHype":  "0.29",
+                         "transactionHash":  "0x22faa8e6bf6ec72658ff2c31ed94b8e1a52a5f8e2a19438e19202168d6ad0ff5",
+                         "blockNumber":  41797054
+                     },
+                     {
+                         "listingId":  26,
+                         "tokenId":  67,
+                         "backingWei":  "170000000000000000",
+                         "backingHype":  "0.17",
+                         "transactionHash":  "0xf45eabac5c5a5c0dc75887ccbb3a37f1255bc0d740646d2491dc3735e4bac3aa",
+                         "blockNumber":  41797057
+                     },
+                     {
+                         "listingId":  27,
+                         "tokenId":  68,
+                         "backingWei":  "110000000000000000",
+                         "backingHype":  "0.11",
+                         "transactionHash":  "0x8499fd99267ba546ff8b0746e433f1569197cc06894485b5bb1f866176e8f898",
+                         "blockNumber":  41797060
+                     },
+                     {
+                         "listingId":  28,
+                         "tokenId":  69,
+                         "backingWei":  "260000000000000000",
+                         "backingHype":  "0.26",
+                         "transactionHash":  "0xea6a442cb88726e1fc7598e1c5d82406ad2569b3d5ce2fe41480953fb92e8c75",
+                         "blockNumber":  41797063
+                     },
+                     {
+                         "listingId":  29,
+                         "tokenId":  70,
+                         "backingWei":  "160000000000000000",
+                         "backingHype":  "0.16",
+                         "transactionHash":  "0x4a47c7f1a0ca74a1c388b94a18bde2e6c2fc3612bc2d6acafd669f8103fcf0a4",
+                         "blockNumber":  41797066
+                     },
+                     {
+                         "listingId":  30,
+                         "tokenId":  71,
+                         "backingWei":  "220000000000000000",
+                         "backingHype":  "0.22",
+                         "transactionHash":  "0x7d7a818c5a0b07376abb5695cd122f09966191235cb0f64c5797cdd546835bd6",
+                         "blockNumber":  41797069
+                     },
+                     {
+                         "listingId":  31,
+                         "tokenId":  72,
+                         "backingWei":  "130000000000000000",
+                         "backingHype":  "0.13",
+                         "transactionHash":  "0x9b36f7e8ca5d9e527fae3fb81aa8d3aff15f3519c032b6bc051d878867b57cfd",
+                         "blockNumber":  41797072
+                     },
+                     {
+                         "listingId":  32,
+                         "tokenId":  73,
+                         "backingWei":  "130000000000000000",
+                         "backingHype":  "0.13",
+                         "transactionHash":  "0xa5d4f483ddfc64c964c0223dedb96775cce52239d4bcebcdbdf99eb14a38e891",
+                         "blockNumber":  41797076
+                     },
+                     {
+                         "listingId":  33,
+                         "tokenId":  74,
+                         "backingWei":  "290000000000000000",
+                         "backingHype":  "0.29",
+                         "transactionHash":  "0x1f2c1f00185eb6788e02153a5692fd782db7a72d4b3e81eff518fabb291a710c",
+                         "blockNumber":  41797079
+                     },
+                     {
+                         "listingId":  34,
+                         "tokenId":  75,
+                         "backingWei":  "100000000000000000",
+                         "backingHype":  "0.10",
+                         "transactionHash":  "0x317f64af7c78cb045cb1346f8ebe95ef48771e3adbeb1a8fa986dc5d56e35aa5",
+                         "blockNumber":  41797082
+                     },
+                     {
+                         "listingId":  35,
+                         "tokenId":  76,
+                         "backingWei":  "180000000000000000",
+                         "backingHype":  "0.18",
+                         "transactionHash":  "0x54c1a329f1fb2e0b3087d1cf5e1ca7c01234802bc069dd546e403fc733c76d31",
+                         "blockNumber":  41797085
+                     },
+                     {
+                         "listingId":  36,
+                         "tokenId":  77,
+                         "backingWei":  "270000000000000000",
+                         "backingHype":  "0.27",
+                         "transactionHash":  "0x71c2aa5a6f3804286a03bae1334723050dc7f1871704d3bbbbbc1fa34456aacc",
+                         "blockNumber":  41797089
+                     },
+                     {
+                         "listingId":  37,
+                         "tokenId":  78,
+                         "backingWei":  "210000000000000000",
+                         "backingHype":  "0.21",
+                         "transactionHash":  "0xf7bb52c8c950038febe86ae8889d5fc749485e8d53df691ad3ece0aa36060eed",
+                         "blockNumber":  41797093
+                     },
+                     {
+                         "listingId":  38,
+                         "tokenId":  79,
+                         "backingWei":  "230000000000000000",
+                         "backingHype":  "0.23",
+                         "transactionHash":  "0xa7f921cd047ca6e388a54fd4cf64d4cedf87f226e6fd99fdb8f2170c83a32cb7",
+                         "blockNumber":  41797096
+                     },
+                     {
+                         "listingId":  39,
+                         "tokenId":  80,
+                         "backingWei":  "250000000000000000",
+                         "backingHype":  "0.25",
+                         "transactionHash":  "0x7b044c048a3e3c8e63a89727f6c60da943fac09f5a1ac74464eda4cb76c55843",
+                         "blockNumber":  41797099
+                     },
+                     {
+                         "listingId":  40,
+                         "tokenId":  81,
+                         "backingWei":  "200000000000000000",
+                         "backingHype":  "0.20",
+                         "transactionHash":  "0xc7f74c7f121a335522ea4554d306d0e09b3c76d6104f714b39e908befe59ee03",
+                         "blockNumber":  41797103
+                     },
+                     {
+                         "listingId":  41,
+                         "tokenId":  82,
+                         "backingWei":  "240000000000000000",
+                         "backingHype":  "0.24",
+                         "transactionHash":  "0xa01441590a01313f85a665b57357ba6926e026179f185c12983ac6e6a07a9115",
+                         "blockNumber":  41797106
+                     },
+                     {
+                         "listingId":  42,
+                         "tokenId":  83,
+                         "backingWei":  "200000000000000000",
+                         "backingHype":  "0.20",
+                         "transactionHash":  "0x823ff40fef7a41aef4246d70357c165927b22e0c575338f4fe3f282f46997663",
+                         "blockNumber":  41797109
+                     },
+                     {
+                         "listingId":  43,
+                         "tokenId":  84,
+                         "backingWei":  "190000000000000000",
+                         "backingHype":  "0.19",
+                         "transactionHash":  "0x7761737c424548f63f2b6b1f70d49a1d7b13a0a23b6c4e71ae8d67aadaf36ccb",
+                         "blockNumber":  41797112
+                     },
+                     {
+                         "listingId":  44,
+                         "tokenId":  85,
+                         "backingWei":  "110000000000000000",
+                         "backingHype":  "0.11",
+                         "transactionHash":  "0x90042951f1eb95d0823d7d59e56733901ff98f1030405edfd5a397ac0820eca7",
+                         "blockNumber":  41797116
+                     },
+                     {
+                         "listingId":  45,
+                         "tokenId":  86,
+                         "backingWei":  "130000000000000000",
+                         "backingHype":  "0.13",
+                         "transactionHash":  "0x86b5d5914666926f5a96685ccd063a988e19c946796fa9989b2e49cdc53b43ef",
+                         "blockNumber":  41797119
+                     },
+                     {
+                         "listingId":  46,
+                         "tokenId":  87,
+                         "backingWei":  "160000000000000000",
+                         "backingHype":  "0.16",
+                         "transactionHash":  "0x5a7327b8b0747defa4e9ad85840bf17e8a0931baf7d0f7458dd51ebdc15fb235",
+                         "blockNumber":  41797122
+                     },
+                     {
+                         "listingId":  47,
+                         "tokenId":  88,
+                         "backingWei":  "150000000000000000",
+                         "backingHype":  "0.15",
+                         "transactionHash":  "0xcb748f2a47d62a9b8860651559d1db515209b9f6d071e9cfa0bf497d853c3231",
+                         "blockNumber":  41797126
+                     },
+                     {
+                         "listingId":  48,
+                         "tokenId":  89,
+                         "backingWei":  "190000000000000000",
+                         "backingHype":  "0.19",
+                         "transactionHash":  "0x15fd0ff8fd556445eede2d606ae15ab7856c7b18496b862ca813165528c33a1f",
+                         "blockNumber":  41797129
+                     },
+                     {
+                         "listingId":  49,
+                         "tokenId":  90,
+                         "backingWei":  "100000000000000000",
+                         "backingHype":  "0.10",
+                         "transactionHash":  "0xc1c0a70a15100e49ae3514135130d4ea26ffa50b0f08b17cf67c7152feb97a70",
+                         "blockNumber":  41797132
+                     },
+                     {
+                         "listingId":  50,
+                         "tokenId":  91,
+                         "backingWei":  "300000000000000000",
+                         "backingHype":  "0.30",
+                         "transactionHash":  "0x666408410bdb6ec0dbf29a29f7970cd6b9054aca64776d9403e110fb80e2f0cc",
+                         "blockNumber":  41797135
+                     },
+                     {
+                         "listingId":  51,
+                         "tokenId":  92,
+                         "backingWei":  "100000000000000000",
+                         "backingHype":  "0.10",
+                         "transactionHash":  "0x8af4239caf80bd6a43b847c7058e389238310f8ae782bcc67d2da7e85fc22981",
+                         "blockNumber":  41797139
+                     },
+                     {
+                         "listingId":  52,
+                         "tokenId":  93,
+                         "backingWei":  "290000000000000000",
+                         "backingHype":  "0.29",
+                         "transactionHash":  "0xa6f988a1b4e19132a15d43b14f9a18a6697d2285a22347fc96c0bb2b3406fda7",
+                         "blockNumber":  41797142
+                     },
+                     {
+                         "listingId":  53,
+                         "tokenId":  94,
+                         "backingWei":  "100000000000000000",
+                         "backingHype":  "0.10",
+                         "transactionHash":  "0x18cbea526cb40b114639fdec9a8a889fbf30eb9c6726f92f115cf36dca946d3d",
+                         "blockNumber":  41797145
+                     },
+                     {
+                         "listingId":  54,
+                         "tokenId":  95,
+                         "backingWei":  "180000000000000000",
+                         "backingHype":  "0.18",
+                         "transactionHash":  "0x6e994628d836f3a3a2cbdc53b1f3f3901a13d46f16429fc3618acfc1f4b3e405",
+                         "blockNumber":  41797149
+                     },
+                     {
+                         "listingId":  55,
+                         "tokenId":  96,
+                         "backingWei":  "100000000000000000",
+                         "backingHype":  "0.10",
+                         "transactionHash":  "0xb27cc094e817b42b902e5d5418fc764cee4144af19aacd9e4900b0d0e4772c2f",
+                         "blockNumber":  41797152
+                     },
+                     {
+                         "listingId":  56,
+                         "tokenId":  97,
+                         "backingWei":  "220000000000000000",
+                         "backingHype":  "0.22",
+                         "transactionHash":  "0x968893ddbb43b0ee1213a9c6bac616f0d689b30c8ff1bed37de2768c7a524702",
+                         "blockNumber":  41797155
+                     },
+                     {
+                         "listingId":  57,
+                         "tokenId":  98,
+                         "backingWei":  "270000000000000000",
+                         "backingHype":  "0.27",
+                         "transactionHash":  "0xc4e36c228775d9416b46688e09c2221ba29ddc64713ebeaabf8cadbd323db891",
+                         "blockNumber":  41797158
+                     },
+                     {
+                         "listingId":  58,
+                         "tokenId":  99,
+                         "backingWei":  "280000000000000000",
+                         "backingHype":  "0.28",
+                         "transactionHash":  "0xdb73863068933473381c11ae957dee908ae3a8167afeb480bc0d2b4fe3f9c2b7",
+                         "blockNumber":  41797161
+                     },
+                     {
+                         "listingId":  59,
+                         "tokenId":  100,
+                         "backingWei":  "150000000000000000",
+                         "backingHype":  "0.15",
+                         "transactionHash":  "0xe7b80da6398afcb3169ad62424d0a6ba1fb62330d3ca48520a05ed68e3aba981",
+                         "blockNumber":  41797165
+                     },
+                     {
+                         "listingId":  60,
+                         "tokenId":  101,
+                         "backingWei":  "100000000000000000",
+                         "backingHype":  "0.10",
+                         "transactionHash":  "0xaedbe3f59c5073c288276a49f2f97505b21de0a2746082f5ddc08d1fbb198546",
+                         "blockNumber":  41797168
+                     },
+                     {
+                         "listingId":  61,
+                         "tokenId":  102,
+                         "backingWei":  "180000000000000000",
+                         "backingHype":  "0.18",
+                         "transactionHash":  "0xc3f252adf111b8c2de291799bc97c822a7668c9dbceaafd8888c733d99e8d8d3",
+                         "blockNumber":  41797171
+                     },
+                     {
+                         "listingId":  62,
+                         "tokenId":  103,
+                         "backingWei":  "140000000000000000",
+                         "backingHype":  "0.14",
+                         "transactionHash":  "0x3e62b98d07dc1aa14add523fe20bae72a76de13c46b92e32def048509654e559",
+                         "blockNumber":  41797174
+                     },
+                     {
+                         "listingId":  63,
+                         "tokenId":  104,
+                         "backingWei":  "270000000000000000",
+                         "backingHype":  "0.27",
+                         "transactionHash":  "0x3b70f603066e89cee626858893206d7511439fdd6b72f53cd56c1a92e78af8b2",
+                         "blockNumber":  41797177
+                     },
+                     {
+                         "listingId":  64,
+                         "tokenId":  105,
+                         "backingWei":  "160000000000000000",
+                         "backingHype":  "0.16",
+                         "transactionHash":  "0x8457fdb4b1a79adbea80d7995a65d2691e6aab89e51c9b3ecdcae3473d4f3386",
+                         "blockNumber":  41797182
+                     },
+                     {
+                         "listingId":  65,
+                         "tokenId":  106,
+                         "backingWei":  "180000000000000000",
+                         "backingHype":  "0.18",
+                         "transactionHash":  "0x2b3bc9c4bbc848216599e3c9891852027290ec3af6bc9fc49725b709084dafb4",
+                         "blockNumber":  41797186
+                     },
+                     {
+                         "listingId":  66,
+                         "tokenId":  107,
+                         "backingWei":  "130000000000000000",
+                         "backingHype":  "0.13",
+                         "transactionHash":  "0xda4dd57d2f5d4d95a204f464115180e4c9ead5342a96e628a803c2f43eee4aa6",
+                         "blockNumber":  41797189
+                     },
+                     {
+                         "listingId":  67,
+                         "tokenId":  108,
+                         "backingWei":  "210000000000000000",
+                         "backingHype":  "0.21",
+                         "transactionHash":  "0x09bf520388ed0ef09257b9cced596041796e015f6146535fab5da0aa1f870f0f",
+                         "blockNumber":  41797192
+                     },
+                     {
+                         "listingId":  68,
+                         "tokenId":  109,
+                         "backingWei":  "100000000000000000",
+                         "backingHype":  "0.10",
+                         "transactionHash":  "0xfb9c728b348885a4889432158e9e63608c35b13f7ce8047292697c83ea4bcef8",
+                         "blockNumber":  41797195
+                     },
+                     {
+                         "listingId":  69,
+                         "tokenId":  110,
+                         "backingWei":  "260000000000000000",
+                         "backingHype":  "0.26",
+                         "transactionHash":  "0x5610689452618540b5ed16d24bbf5dfd1297312105a26af546e6fc4003a00a1f",
+                         "blockNumber":  41797199
+                     },
+                     {
+                         "listingId":  70,
+                         "tokenId":  111,
+                         "backingWei":  "180000000000000000",
+                         "backingHype":  "0.18",
+                         "transactionHash":  "0x7e390f783222634b3d187bff8eeb0c76dccf9fd69ca997271bc5c96628943bb5",
+                         "blockNumber":  41797202
+                     },
+                     {
+                         "listingId":  71,
+                         "tokenId":  112,
+                         "backingWei":  "160000000000000000",
+                         "backingHype":  "0.16",
+                         "transactionHash":  "0xc8baf5fda244fb710ce539c303766e76b9458e22e30adc9498c954e89ba5f179",
+                         "blockNumber":  41797206
+                     },
+                     {
+                         "listingId":  72,
+                         "tokenId":  113,
+                         "backingWei":  "160000000000000000",
+                         "backingHype":  "0.16",
+                         "transactionHash":  "0x1a6edfafe206eb99938c8e170ddedd26ce6bb74dfad44b083c4113ab6c928183",
+                         "blockNumber":  41797210
+                     },
+                     {
+                         "listingId":  73,
+                         "tokenId":  114,
+                         "backingWei":  "230000000000000000",
+                         "backingHype":  "0.23",
+                         "transactionHash":  "0xd779e0c4b2381f2796300264a3b0f72fe610e8d01a08d6470efdfa54674bdd28",
+                         "blockNumber":  41797213
+                     },
+                     {
+                         "listingId":  74,
+                         "tokenId":  115,
+                         "backingWei":  "210000000000000000",
+                         "backingHype":  "0.21",
+                         "transactionHash":  "0x0191b84cca0ee4923d2aac86d6951f885975e0918a4f911ee6cde38fff20f689",
+                         "blockNumber":  41797216
+                     },
+                     {
+                         "listingId":  75,
+                         "tokenId":  116,
+                         "backingWei":  "230000000000000000",
+                         "backingHype":  "0.23",
+                         "transactionHash":  "0xd46c95d91d00637c519c1e49742c2f7e1dfc685eacfcfda2297f3a2e8740053b",
+                         "blockNumber":  41797219
+                     },
+                     {
+                         "listingId":  76,
+                         "tokenId":  117,
+                         "backingWei":  "200000000000000000",
+                         "backingHype":  "0.20",
+                         "transactionHash":  "0xa942d18fa987fe6c32b0e1e2f0a0899cd738cfe69cc0e85a6fb4d6c3b317da7b",
+                         "blockNumber":  41797221
+                     },
+                     {
+                         "listingId":  77,
+                         "tokenId":  118,
+                         "backingWei":  "110000000000000000",
+                         "backingHype":  "0.11",
+                         "transactionHash":  "0x32afdf9a1d011645661079efbe385d04518d7b24259050f5d5656f06115d6b22",
+                         "blockNumber":  41797224
+                     },
+                     {
+                         "listingId":  78,
+                         "tokenId":  119,
+                         "backingWei":  "190000000000000000",
+                         "backingHype":  "0.19",
+                         "transactionHash":  "0xfdc593a57abf08ba315cb4437dfacf33c05673bb8ccab3e91e8147bf85ba7484",
+                         "blockNumber":  41797227
+                     },
+                     {
+                         "listingId":  79,
+                         "tokenId":  120,
+                         "backingWei":  "190000000000000000",
+                         "backingHype":  "0.19",
+                         "transactionHash":  "0x34b81b5becabc5013f59b775e268e92c14747cca849f81f1f0a75fe03a983d4b",
+                         "blockNumber":  41797230
+                     },
+                     {
+                         "listingId":  80,
+                         "tokenId":  121,
+                         "backingWei":  "290000000000000000",
+                         "backingHype":  "0.29",
+                         "transactionHash":  "0x88b7cce9f63883702f3d9bd3e429ffdc7d6bee4b2b46cf7c87574121f782c6af",
+                         "blockNumber":  41797233
+                     }
+                 ],
+    "finalState":  {
+                       "activeListings":  80,
+                       "stagedListings":  0,
+                       "activeBackingWei":  "15700000000000000000",
+                       "coreGenesisBalance":  80,
+                       "deployerGenesisBalance":  252,
+                       "nextListingId":  81,
+                       "deployerNextNonce":  258,
+                       "acquisitionsEnabled":  false,
+                       "withdrawOnly":  false,
+                       "pendingAcquisitions":  0,
+                       "unsettledAcquisitions":  0,
+                       "rewardsEmissionStart":  0,
+                       "rewardClaimsEnabled":  false,
+                       "externalBuysEnabled":  false,
+                       "publicWritesEnabled":  false,
+                       "publicDepositsEnabled":  false
+                   }
+}
