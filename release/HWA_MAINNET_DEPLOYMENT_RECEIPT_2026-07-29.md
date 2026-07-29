@@ -58,6 +58,8 @@ At handoff:
 - HyperEVM big-block routing for the deployer is disabled
 - Project X LP token `522723` is owned by the immutable locker
 - Drand relayer is active and maintains a sub-five-minute launch-ready heartbeat
+- The relayer's transaction transport uses the private, reviewed Alchemy HyperEVM endpoint; the
+  intermittently inconsistent public RPC is not used for heartbeat broadcasts
 
 No canary activation calldata in `release/mainnet-owner-actions-eoa.json` has been broadcast.
 
