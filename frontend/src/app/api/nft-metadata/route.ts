@@ -10,7 +10,8 @@ const MAX_METADATA_BYTES = 512 * 1024;
 const MAX_DATA_IMAGE_BYTES = 768 * 1024;
 const FETCH_TIMEOUT_MS = 5_000;
 const RATE_WINDOW_MS = 60_000;
-const RATE_LIMIT = 60;
+const DEFAULT_RATE_LIMIT = 60;
+const MAX_CONFIGURED_RATE_LIMIT = 5_000;
 const MAX_RATE_BUCKETS = 4_096;
 const rateBuckets = new Map<string, { startedAt: number; count: number }>();
 
@@ -224,9 +225,18 @@ function fetchPinnedMetadata(url: URL, destination: ResolvedDestination): Promis
   });
 }
 
-function trustedClientKey(request: NextRequest): string {
+export function metadataRateLimit(): number {
+  const configured = Number(process.env.NFT_METADATA_RATE_LIMIT_PER_MINUTE ?? DEFAULT_RATE_LIMIT);
+  if (!Number.isSafeInteger(configured) || configured < 1) return DEFAULT_RATE_LIMIT;
+  return Math.min(configured, MAX_CONFIGURED_RATE_LIMIT);
+}
+
+export function trustedClientKey(request: NextRequest): string {
   const configured = (process.env.NFT_METADATA_TRUSTED_CLIENT_IP_HEADER ?? "").trim().toLowerCase();
-  const supported = new Set(["x-vercel-forwarded-for", "cf-connecting-ip", "fly-client-ip"]);
+  // x-real-ip is safe only when the application is private behind a reverse
+  // proxy that overwrites it. The production container binds to 127.0.0.1 and
+  // Nginx sets this header from $remote_addr.
+  const supported = new Set(["x-vercel-forwarded-for", "cf-connecting-ip", "fly-client-ip", "x-real-ip"]);
   if (!supported.has(configured)) return "untrusted-shared";
   const values = (request.headers.get(configured) ?? "").split(",").map((value) => value.trim()).filter(Boolean);
   const candidate = values.at(-1) ?? "";
@@ -250,7 +260,7 @@ function rateLimited(request: NextRequest): boolean {
     return false;
   }
   bucket.count += 1;
-  return bucket.count > RATE_LIMIT;
+  return bucket.count > metadataRateLimit();
 }
 
 export async function GET(request: NextRequest) {

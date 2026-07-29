@@ -1,6 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { NextRequest } from "next/server";
+import { afterEach, describe, expect, it } from "vitest";
 
-import { isPrivateAddress } from "./route";
+import { isPrivateAddress, metadataRateLimit, trustedClientKey } from "./route";
+
+const originalTrustedHeader = process.env.NFT_METADATA_TRUSTED_CLIENT_IP_HEADER;
+const originalRateLimit = process.env.NFT_METADATA_RATE_LIMIT_PER_MINUTE;
+
+afterEach(() => {
+  if (originalTrustedHeader === undefined) delete process.env.NFT_METADATA_TRUSTED_CLIENT_IP_HEADER;
+  else process.env.NFT_METADATA_TRUSTED_CLIENT_IP_HEADER = originalTrustedHeader;
+  if (originalRateLimit === undefined) delete process.env.NFT_METADATA_RATE_LIMIT_PER_MINUTE;
+  else process.env.NFT_METADATA_RATE_LIMIT_PER_MINUTE = originalRateLimit;
+});
 
 describe("NFT metadata destination classification", () => {
   it.each([
@@ -28,4 +39,23 @@ describe("NFT metadata destination classification", () => {
       expect(isPrivateAddress(address)).toBe(false);
     },
   );
+});
+
+describe("NFT metadata production throttling", () => {
+  it("uses the Nginx-overwritten real client address when explicitly trusted", () => {
+    process.env.NFT_METADATA_TRUSTED_CLIENT_IP_HEADER = "x-real-ip";
+    const request = new NextRequest("https://hwa.fun/api/nft-metadata", {
+      headers: { "x-real-ip": "203.0.113.42" },
+    });
+    expect(trustedClientKey(request)).toBe("203.0.113.42");
+  });
+
+  it("bounds an operator-configured per-client rate", () => {
+    process.env.NFT_METADATA_RATE_LIMIT_PER_MINUTE = "600";
+    expect(metadataRateLimit()).toBe(600);
+    process.env.NFT_METADATA_RATE_LIMIT_PER_MINUTE = "999999";
+    expect(metadataRateLimit()).toBe(5_000);
+    process.env.NFT_METADATA_RATE_LIMIT_PER_MINUTE = "invalid";
+    expect(metadataRateLimit()).toBe(60);
+  });
 });

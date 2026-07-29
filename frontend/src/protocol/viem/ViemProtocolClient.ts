@@ -87,6 +87,48 @@ const RPC_TRANSPORT_OPTIONS = {
   retryDelay: 500,
 } as const;
 
+// Wallet discovery can surface hundreds of NFTs at once. Pace metadata calls
+// so a legitimate collection view does not trip the public Nginx/API limits or
+// create hundreds of simultaneous upstream IPFS requests.
+const NFT_METADATA_MAX_CONCURRENCY = 8;
+const NFT_METADATA_START_INTERVAL_MS = 50;
+type MetadataJob<T> = {
+  run: () => Promise<T>;
+  resolve: (value: T) => void;
+  reject: (reason?: unknown) => void;
+};
+const metadataJobs: MetadataJob<unknown>[] = [];
+let activeMetadataJobs = 0;
+let lastMetadataJobStartedAt = 0;
+let metadataDrainTimer: ReturnType<typeof setTimeout> | undefined;
+
+function drainMetadataJobs(): void {
+  if (metadataDrainTimer || activeMetadataJobs >= NFT_METADATA_MAX_CONCURRENCY || metadataJobs.length === 0) return;
+  const delay = Math.max(0, lastMetadataJobStartedAt + NFT_METADATA_START_INTERVAL_MS - Date.now());
+  if (delay > 0) {
+    metadataDrainTimer = setTimeout(() => {
+      metadataDrainTimer = undefined;
+      drainMetadataJobs();
+    }, delay);
+    return;
+  }
+  const job = metadataJobs.shift()!;
+  activeMetadataJobs += 1;
+  lastMetadataJobStartedAt = Date.now();
+  void job.run().then(job.resolve, job.reject).finally(() => {
+    activeMetadataJobs -= 1;
+    drainMetadataJobs();
+  });
+  drainMetadataJobs();
+}
+
+function scheduleMetadataRequest<T>(run: () => Promise<T>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    metadataJobs.push({ run, resolve, reject } as MetadataJob<unknown>);
+    drainMetadataJobs();
+  });
+}
+
 function sameAddress(a: Address | undefined, b: Address | undefined): boolean {
   return !!a && !!b && a.toLowerCase() === b.toLowerCase();
 }
@@ -336,7 +378,9 @@ export class ViemProtocolClient implements ProtocolClient {
   private resolveNFTMetadata(tokenURI: string): Promise<{ name?: string; imageUrl?: string }> {
     const existing = this.metadataCache.get(tokenURI);
     if (existing) return existing;
-    const request = fetch(`/api/nft-metadata?uri=${encodeURIComponent(tokenURI)}`, { cache: "force-cache" })
+    const request = scheduleMetadataRequest(() =>
+      fetch(`/api/nft-metadata?uri=${encodeURIComponent(tokenURI)}`, { cache: "force-cache" }),
+    )
       .then(async (response) => {
         if (!response.ok) return {};
         const value = (await response.json()) as { name?: unknown; imageUrl?: unknown };
