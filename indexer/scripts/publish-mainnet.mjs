@@ -34,12 +34,17 @@ for (const collection of manifest.collections ?? []) {
   }
 }
 
-const npm = process.platform === "win32" ? "npm.cmd" : "npm";
-const check = spawnSync(npm, ["run", "check:mainnet"], { cwd: indexerDir, stdio: "inherit" });
+const npmExecPath = process.env.npm_execpath?.trim();
+const check = npmExecPath
+  ? spawnSync(process.execPath, [npmExecPath, "run", "check:mainnet"], { cwd: indexerDir, stdio: "inherit" })
+  : spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", ["run", "check:mainnet"], {
+      cwd: indexerDir,
+      stdio: "inherit",
+    });
 if (check.status !== 0) throw new Error("Mainnet indexer build failed; Goldsky publication aborted");
 
-const goldsky = resolve(indexerDir, "node_modules", ".bin", process.platform === "win32" ? "goldsky.cmd" : "goldsky");
-const deployment = spawnSync(goldsky, [
+const goldsky = resolve(indexerDir, "node_modules", "@goldskycom", "cli", "bin", "goldsky");
+const deployment = spawnSync(process.execPath, [goldsky,
   "subgraph",
   "deploy",
   `hwa-hyperevm/${version}`,

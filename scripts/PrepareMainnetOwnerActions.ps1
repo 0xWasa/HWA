@@ -7,6 +7,8 @@ param(
     [Parameter(Mandatory = $true)] [string[]]$Collections,
     [Parameter(Mandatory = $true)] [string]$CanaryCollection,
     [string]$Coordinator,
+    [string]$ExpectedOwner,
+    [switch]$EoaOwnerRiskAccepted,
     [string]$RpcUrl,
     [switch]$OfflineTemplate,
     [string]$OutputPath = "release/mainnet-owner-actions.json"
@@ -32,6 +34,9 @@ if ($OfflineTemplate -and $RpcUrl) { throw "OfflineTemplate cannot be combined w
 if (-not $OfflineTemplate) {
     if ([string]::IsNullOrWhiteSpace($RpcUrl)) { throw "RpcUrl is required unless OfflineTemplate is explicitly selected" }
     if ($Coordinator -notmatch $addressPattern -or $Coordinator -eq $zero) { throw "A non-zero Coordinator is required for RPC validation" }
+    if ($ExpectedOwner -notmatch $addressPattern -or $ExpectedOwner -eq $zero) {
+        throw "A non-zero ExpectedOwner is required for RPC validation"
+    }
 }
 
 function Get-Calldata([string]$Signature, [string[]]$Arguments) {
@@ -73,11 +78,17 @@ if (-not $OfflineTemplate) {
         if ((Get-Code $address) -eq "0x") { throw "Missing deployed bytecode at $address" }
     }
 
-    $safeOwner = (Get-View $Fwa "owner()(address)").ToLowerInvariant()
-    if ($safeOwner -eq $zero -or (Get-Code $safeOwner) -eq "0x") { throw "FWA owner must be a deployed Safe contract" }
+    $owner = (Get-View $Fwa "owner()(address)").ToLowerInvariant()
+    $expectedOwnerNormalized = $ExpectedOwner.ToLowerInvariant()
+    if ($owner -ne $expectedOwnerNormalized) {
+        throw "FWA owner mismatch: expected $expectedOwnerNormalized, got $owner"
+    }
+    if ((Get-Code $owner) -eq "0x" -and -not $EoaOwnerRiskAccepted) {
+        throw "EOA ownership requires -EoaOwnerRiskAccepted"
+    }
     foreach ($owned in @($Whitelist, $Rewards, $Token, $Splitter, $Coordinator)) {
         $actualOwner = (Get-View $owned "owner()(address)").ToLowerInvariant()
-        if ($actualOwner -ne $safeOwner) { throw "Owner mismatch at $owned`: expected $safeOwner, got $actualOwner" }
+        if ($actualOwner -ne $owner) { throw "Owner mismatch at $owned`: expected $owner, got $actualOwner" }
     }
 
     $boundRewards = (Get-View $Fwa "rewards()(address)").ToLowerInvariant()
@@ -102,7 +113,7 @@ if (-not $OfflineTemplate) {
     $onchain = [ordered]@{
         performed = $true
         chainId = 999
-        owner = $safeOwner
+        owner = $owner
         rewardsBound = $rewardsBound
         drandLaunchReady = $drandReady
         splitFrozen = $splitFrozen

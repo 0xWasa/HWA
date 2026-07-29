@@ -5,6 +5,7 @@ import {FWA} from "fwa-reference/src/FWA.sol";
 import {FWAHyperSwapAdapter} from "../src/hyperevm/FWAHyperSwapAdapter.sol";
 import {FWARewardsHyperEVM} from "../src/hyperevm/FWARewardsHyperEVM.sol";
 import {FWATokenHyperEVM} from "../src/hyperevm/FWATokenHyperEVM.sol";
+import {MainnetOwnerPolicy} from "./MainnetOwnerPolicy.sol";
 
 interface VmProjectXBind {
     function envUint(string calldata name) external returns (uint256 value);
@@ -25,7 +26,6 @@ contract BindProjectXRewards {
 
     error WrongChain(uint256 actual);
     error BindingNotConfirmed();
-    error MainnetSafeActionRequired();
     error UnauthorizedOwner();
     error CoreNotReady();
     error InvalidWiring();
@@ -33,18 +33,18 @@ contract BindProjectXRewards {
     function run() external {
         if (block.chainid != TESTNET && block.chainid != MAINNET) revert WrongChain(block.chainid);
         if (!vm.envBool("PROJECTX_CORE_BINDING_CONFIRMED")) revert BindingNotConfirmed();
-        // The chain-999 owner is the deployed 2-of-3 Safe, which has no private key. Mainnet
-        // binding must use the calldata emitted by PrepareMainnetOwnerActions.ps1.
-        if (block.chainid == MAINNET) revert MainnetSafeActionRequired();
-
-        uint256 ownerKey = vm.envUint("OWNER_PRIVATE_KEY");
+        uint256 ownerKey = vm.envUint(block.chainid == MAINNET ? "PRIVATE_KEY" : "OWNER_PRIVATE_KEY");
         address owner = vm.addr(ownerKey);
         FWA fwa = FWA(vm.envAddress("FWA_ADDRESS"));
         FWATokenHyperEVM token = FWATokenHyperEVM(payable(vm.envAddress("FWA_TOKEN_ADDRESS")));
         FWARewardsHyperEVM rewards = FWARewardsHyperEVM(vm.envAddress("FWA_REWARDS_ADDRESS"));
         FWAHyperSwapAdapter adapter = FWAHyperSwapAdapter(payable(vm.envAddress("FWA_PROJECTX_ADAPTER_ADDRESS")));
 
-        if (fwa.owner() != owner) revert UnauthorizedOwner();
+        if (block.chainid == MAINNET) {
+            MainnetOwnerPolicy.validateDeploymentOwner(fwa.owner(), owner, vm.envBool("MAINNET_EOA_OWNER_CONFIRMED"));
+        } else if (fwa.owner() != owner) {
+            revert UnauthorizedOwner();
+        }
         if (
             address(fwa.rewards()) != address(0) || fwa.activeListingCount() != 0
                 || fwa.unsettledAcquisitionCount() != 0

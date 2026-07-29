@@ -9,6 +9,7 @@ import {FWAWhitelist} from "fwa-whitelist-reference/src/FWAWhitelist.sol";
 import {DrandBN254Coordinator} from "../src/hyperevm/DrandBN254Coordinator.sol";
 import {DrandEvmnetRegistry} from "../src/hyperevm/DrandEvmnetRegistry.sol";
 import {SplitterHyperEVM} from "../src/hyperevm/SplitterHyperEVM.sol";
+import {MainnetOwnerPolicy} from "./MainnetOwnerPolicy.sol";
 
 interface VmDeployHyperEVMMainnet {
     function envUint(string calldata name) external returns (uint256 value);
@@ -68,7 +69,7 @@ contract DeployHyperEVMMainnetCore {
         address deployer = vm.addr(deployerKey);
         address finalOwner = vm.envAddress("FWA_OWNER");
         address splitter = vm.envAddress("FWA_SPLITTER_ADDRESS");
-        if (finalOwner == address(0) || finalOwner.code.length == 0) revert InvalidOwner();
+        MainnetOwnerPolicy.validateDeploymentOwner(finalOwner, deployer, vm.envBool("MAINNET_EOA_OWNER_CONFIRMED"));
         if (
             splitter == address(0) || splitter.code.length == 0
                 || SplitterHyperEVM(payable(splitter)).owner() != finalOwner

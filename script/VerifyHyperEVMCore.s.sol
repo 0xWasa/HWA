@@ -6,10 +6,12 @@ import {FWAVRFService} from "fwa-vrf-reference/src/FWAVRFService.sol";
 import {FWAWhitelist} from "fwa-whitelist-reference/src/FWAWhitelist.sol";
 
 import {SplitterHyperEVM} from "../src/hyperevm/SplitterHyperEVM.sol";
+import {MainnetOwnerPolicy} from "./MainnetOwnerPolicy.sol";
 
 interface VmVerify {
     function envAddress(string calldata name) external view returns (address value);
     function envUint(string calldata name) external view returns (uint256 value);
+    function envBool(string calldata name) external view returns (bool value);
 }
 
 interface IFWARandomnessCoordinatorView {
@@ -56,6 +58,11 @@ contract VerifyHyperEVMCore {
         _requireCode(splitter.NFT_ADDRESS());
 
         address finalOwner = fwa.owner();
+        if (chainId == HYPEREVM_MAINNET_CHAIN_ID) {
+            MainnetOwnerPolicy.validateConfiguredOwner(
+                finalOwner, vm.envAddress("FWA_OWNER"), vm.envBool("MAINNET_EOA_OWNER_CONFIRMED")
+            );
+        }
         (address activeCoordinator, uint256 subId) = fwa.vrfCoordinatorAndSubId();
         (bytes32 keyHash, uint32 callbackGasLimit) = fwa.vrfRequestConfig();
         (,,, address subscriptionOwner, address[] memory consumers) = coordinator.getSubscription(subId);
@@ -73,8 +80,7 @@ contract VerifyHyperEVMCore {
 
         if (
             chainId == HYPEREVM_MAINNET_CHAIN_ID
-                && (finalOwner.code.length == 0
-                    || !fwa.rewardsRequiredForActivation()
+                && (!fwa.rewardsRequiredForActivation()
                     || fwa.selectionTimeoutBlocks() != vm.envUint("FWA_SELECTION_TIMEOUT_BLOCKS")
                     || fwa.maxAcquisitionsPerTx() != 1
                     || fwa.maxActivationsPerAcquisition() != 1

@@ -1,0 +1,84 @@
+{
+  "name": "HWA Genesis Position #276",
+  "description": "A pressure field: organic contour rings crushed against a straight liquidation wall. All trading statistics are simulated, all visual traits are cosmetic, and every token represents one equal unit of the 333-token Genesis snapshot.",
+  "image": "https://assets.hwa.fun/hwa-genesis/v3/96b80e5c8a06b07407d92b58dbf7865aab242439bdfdb5d8436e370cd2915648/images/276.svg",
+  "background_color": "030C09",
+  "attributes": [
+    {
+      "trait_type": "Edition",
+      "value": "HWA Genesis"
+    },
+    {
+      "trait_type": "Direction",
+      "value": "PRESSURE FIELD"
+    },
+    {
+      "trait_type": "Size Class",
+      "value": "WHALE"
+    },
+    {
+      "trait_type": "Class Supply",
+      "display_type": "number",
+      "value": 35
+    },
+    {
+      "trait_type": "Side",
+      "value": "LONG"
+    },
+    {
+      "trait_type": "Formation",
+      "value": "FIELD"
+    },
+    {
+      "trait_type": "Wall Proximity",
+      "value": "SQUEEZE"
+    },
+    {
+      "trait_type": "Leverage",
+      "display_type": "number",
+      "value": 35
+    },
+    {
+      "trait_type": "PNL Band",
+      "value": "GREEN"
+    },
+    {
+      "trait_type": "Simulated PNL",
+      "display_type": "number",
+      "value": 79.1
+    },
+    {
+      "trait_type": "Surface",
+      "value": "STORM"
+    },
+    {
+      "trait_type": "Position Size HYPE",
+      "display_type": "number",
+      "value": 33.457
+    },
+    {
+      "trait_type": "Renderer",
+      "value": "HWA-GEN-3.0.0"
+    },
+    {
+      "trait_type": "Snapshot Unit",
+      "value": "1 / 333"
+    },
+    {
+      "trait_type": "Simulated",
+      "value": "Yes"
+    }
+  ],
+  "properties": {
+    "token_id": 276,
+    "renderer": "HWA-GEN-3.0.0",
+    "direction": "PRESSURE FIELD",
+    "simulated": true,
+    "equal_snapshot_unit": "1/333",
+    "simulated_entry": 0.65773985,
+    "simulated_mark": 0.67260477,
+    "visual_seed": "0x1f755aaaa52a32b506340d03a051e53941127fcc99f63a13c07979a2937a21b1",
+    "image_sha256": "862529ca402d67b0121141d44e83520eb1729bc7d4eb0ac09ee0b511b42109c1",
+    "geometry_fingerprint_sha256": "a8c431c3241ac948d76be207da1abe56e93cc25d0263c8e0a2ff76b0c3e87653"
+  }
+}

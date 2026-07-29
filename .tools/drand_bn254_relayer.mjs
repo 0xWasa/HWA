@@ -83,6 +83,8 @@ const logRpcApiKey = process.env.HYPEREVM_LOG_RPC_API_KEY?.trim() || "";
 const logRpcApiKeyHeader = process.env.HYPEREVM_LOG_RPC_API_KEY_HEADER?.trim().toLowerCase() || "x-api-key";
 if (!/^[a-z0-9-]{1,64}$/u.test(logRpcApiKeyHeader)) throw new Error("Invalid HYPEREVM_LOG_RPC_API_KEY_HEADER");
 const fairnessAlertBlocks = positiveBigInt("FWA_DRAND_FAIRNESS_ALERT_BLOCKS", "120");
+const heartbeatIntervalMs = Number(positiveBigInt("FWA_DRAND_HEARTBEAT_INTERVAL_MS", "180000"));
+if (!Number.isSafeInteger(heartbeatIntervalMs) || heartbeatIntervalMs < 30_000) throw new Error("Invalid heartbeat interval");
 const submitterKey = required("FWA_DRAND_SUBMITTER_PRIVATE_KEY");
 const forge = foundryBinary("forge", "FOUNDRY_FORGE");
 const cast = foundryBinary("cast", "FOUNDRY_CAST");
@@ -104,6 +106,7 @@ if (validateConfig) {
     deploymentBlock: deploymentBlock.toString(),
     submitter: derived.stdout.trim(),
     statePath,
+    heartbeatIntervalMs,
     forge,
     cast,
   }, null, 2));
@@ -189,13 +192,26 @@ async function fetchJson(url) {
 }
 
 async function verifiedBeacon(round) {
-  const suffix = round === "latest" ? "latest" : round.toString();
+  if (round === "latest") {
+    const path = `${CHAIN_HASH}/public/latest`;
+    const [primaryLatest, independentLatest] = await Promise.all([
+      fetchJson(`https://api.drand.sh/${path}`),
+      fetchJson(`https://drand.cloudflare.com/${path}`),
+    ]);
+    const primaryRound = BigInt(primaryLatest.round);
+    const independentRound = BigInt(independentLatest.round);
+    // `latest` is eventually consistent across the independent CDN edges. Pin
+    // the older advertised round, then fetch that exact immutable beacon from
+    // both sources before accepting or submitting anything on-chain.
+    round = primaryRound < independentRound ? primaryRound : independentRound;
+  }
+  const suffix = round.toString();
   const path = `${CHAIN_HASH}/public/${suffix}`;
   const [primary, independent] = await Promise.all([
     fetchJson(`https://api.drand.sh/${path}`),
     fetchJson(`https://drand.cloudflare.com/${path}`),
   ]);
-  if (primary.round !== independent.round || (round !== "latest" && BigInt(primary.round) !== round)) throw new Error("Beacon round mismatch");
+  if (primary.round !== independent.round || BigInt(primary.round) !== round) throw new Error("Beacon round mismatch");
   const signature = String(primary.signature).toLowerCase();
   if (!/^[0-9a-f]{128}$/u.test(signature) || signature !== String(independent.signature).toLowerCase()) throw new Error("Independent drand signatures disagree");
   const randomness = createHash("sha256").update(Buffer.from(signature, "hex")).digest("hex");
@@ -204,7 +220,7 @@ async function verifiedBeacon(round) {
 }
 
 function broadcast(scriptTarget, environment) {
-  const result = spawnSync(forge, ["script", scriptTarget, "--rpc-url", rpcUrl, "--broadcast", "--slow", "--non-interactive"], {
+  const result = spawnSync(forge, ["script", scriptTarget, "--rpc-url", rpcUrl, "--broadcast", "--legacy", "--slow", "--non-interactive"], {
     cwd: root,
     env: { ...process.env, ...environment, DRAND_PROOF_SUBMISSION_CONFIRMED: "true" },
     encoding: "utf8",
@@ -229,6 +245,18 @@ function fulfill(requestId, beacon) {
     FWA_DRAND_ROUND: beacon.round.toString(),
     FWA_DRAND_SIGNATURE: beacon.signature,
   });
+}
+
+async function maintainHeartbeat() {
+  const encoded = await rpc("eth_call", [{ to: registry, data: "0x1ea7d16a" }, "latest"]);
+  const latestProvenRound = BigInt(encoded);
+  const now = BigInt(Math.floor(Date.now() / 1000));
+  const heartbeatIntervalSeconds = BigInt(Math.floor(heartbeatIntervalMs / 1000));
+  if (latestProvenRound !== 0n && now - roundTimestamp(latestProvenRound) < heartbeatIntervalSeconds) return;
+  const beacon = await verifiedBeacon("latest");
+  if (beacon.round <= latestProvenRound) return;
+  prove(beacon);
+  console.log(`proven heartbeat round=${beacon.round} randomness=${beacon.randomness}`);
 }
 
 async function fulfillReady(state) {
@@ -273,6 +301,7 @@ do {
   try {
     await scanRequests(state);
     await fulfillReady(state);
+    await maintainHeartbeat();
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     if (once) process.exitCode = 1;

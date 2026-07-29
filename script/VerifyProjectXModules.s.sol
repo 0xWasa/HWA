@@ -12,9 +12,11 @@ import {FWARewardsHyperEVM} from "../src/hyperevm/FWARewardsHyperEVM.sol";
 import {FWATokenHyperEVM} from "../src/hyperevm/FWATokenHyperEVM.sol";
 import {HWAProjectXLiquidityLocker} from "../src/hyperevm/HWAProjectXLiquidityLocker.sol";
 import {SplitterHyperEVM} from "../src/hyperevm/SplitterHyperEVM.sol";
+import {MainnetOwnerPolicy} from "./MainnetOwnerPolicy.sol";
 
 interface VmProjectXVerify {
     function envAddress(string calldata name) external returns (address value);
+    function envBool(string calldata name) external returns (bool value);
 }
 
 /// @notice Read-only release attestation for either the chain-998 compatibility venue or Project X mainnet.
@@ -74,6 +76,11 @@ contract VerifyProjectXModules {
 
         (uint160 price,,,,, uint8 feeProtocol,) = pool.slot0();
         address finalOwner = fwa.owner();
+        if (block.chainid == MAINNET) {
+            MainnetOwnerPolicy.validateConfiguredOwner(
+                finalOwner, vm.envAddress("FWA_OWNER"), vm.envBool("MAINNET_EOA_OWNER_CONFIRMED")
+            );
+        }
         if (
             keccak256(bytes(token.name())) != TOKEN_NAME_HASH || keccak256(bytes(token.symbol())) != TOKEN_SYMBOL_HASH
                 || !token.launched() || price == 0 || token.totalSupply() == 0 || token.totalSupply() > INITIAL_SUPPLY
@@ -103,7 +110,6 @@ contract VerifyProjectXModules {
                 && (rewards.emissionStart() != 0
                     || token.balanceOf(address(rewards)) < TOTAL_EMISSION
                     || token.externalBuysEnabled()
-                    || finalOwner.code.length == 0
                     || !token.buybackOracleReady()
                     || token.buybackMinOutPerHypeX96() == 0)
         ) revert InvalidWiring();

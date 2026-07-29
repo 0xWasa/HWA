@@ -126,10 +126,11 @@ try {
         if ($env:NEXT_PUBLIC_HYPEREVM_LOG_RPC_URL -ne "/api/rpc/logs") {
             throw "MainnetMode requires NEXT_PUBLIC_HYPEREVM_LOG_RPC_URL for indexer-independent emergency discovery"
         }
-        if (-not $env:HYPEREVM_LOG_RPC_UPSTREAM_URL -or -not $env:HYPEREVM_LOG_RPC_PROVIDER) {
-            throw "MainnetMode requires the server-only archive/log RPC provider and URL"
+        $logRuntimeAttested = $env:HYPEREVM_LOG_RPC_RUNTIME_ATTESTED -eq "true"
+        if (-not $env:HYPEREVM_LOG_RPC_PROVIDER -or (-not $env:HYPEREVM_LOG_RPC_UPSTREAM_URL -and -not $logRuntimeAttested)) {
+            throw "MainnetMode requires either the server-only archive/log RPC URL or its explicit runtime attestation"
         }
-        if ($env:HYPEREVM_LOG_RPC_UPSTREAM_URL -eq $env:NEXT_PUBLIC_HYPEREVM_RPC_URL) {
+        if ($env:HYPEREVM_LOG_RPC_UPSTREAM_URL -and $env:HYPEREVM_LOG_RPC_UPSTREAM_URL -eq $env:NEXT_PUBLIC_HYPEREVM_RPC_URL) {
             throw "The emergency log RPC upstream must be independent from the primary HyperEVM RPC"
         }
         if (-not $env:HYPEREVM_LOG_RPC_ALLOWED_ADDRESSES -or $env:HYPEREVM_LOG_RPC_ALLOWED_ADDRESSES -notmatch '^0x[0-9a-fA-F]{40}(,0x[0-9a-fA-F]{40})*$') {
@@ -151,17 +152,38 @@ try {
         $attestationDateValid = [DateTimeOffset]::TryParse($logAttestation.testedAtUtc, [ref]$testedAt)
         $attestationInvalid = $logAttestation.result -ne "passed" -or [int]$logAttestation.chainId -ne 999 -or $logAttestation.provider -ne $env:HYPEREVM_LOG_RPC_PROVIDER -or [int]$logAttestation.getLogsRangeBlocks -ne $logRange -or [long]$logAttestation.archiveDepthBlocks -lt 1000000 -or -not $attestationDateValid -or ([DateTimeOffset]::UtcNow - $testedAt).TotalDays -gt 7
         if ($attestationInvalid) { throw "Production log RPC attestation is stale or does not match the configured provider/range" }
-        $upstreamUri = [Uri]$env:HYPEREVM_LOG_RPC_UPSTREAM_URL
-        if ($upstreamUri.Scheme -ne "https" -or $upstreamUri.UserInfo -or $logAttestation.endpointHost -ne $upstreamUri.Host) {
-            throw "Production log RPC attestation endpoint does not match the configured credential-free HTTPS URL"
-        }
-        $hash = [Security.Cryptography.SHA256]::Create()
-        try {
-            $fingerprintBytes = [Text.Encoding]::UTF8.GetBytes($env:HYPEREVM_LOG_RPC_UPSTREAM_URL)
-            $configuredFingerprint = ([BitConverter]::ToString($hash.ComputeHash($fingerprintBytes))).Replace("-", "").ToLowerInvariant()
-        } finally { $hash.Dispose() }
-        if ($configuredFingerprint -ne $logAttestation.endpointFingerprintSha256) {
-            throw "Production log RPC URL fingerprint does not match its attestation"
+        if ($env:HYPEREVM_LOG_RPC_UPSTREAM_URL) {
+            $upstreamUri = [Uri]$env:HYPEREVM_LOG_RPC_UPSTREAM_URL
+            if ($upstreamUri.Scheme -ne "https" -or $upstreamUri.UserInfo -or $logAttestation.endpointHost -ne $upstreamUri.Host) {
+                throw "Production log RPC attestation endpoint does not match the configured credential-free HTTPS URL"
+            }
+            $hash = [Security.Cryptography.SHA256]::Create()
+            try {
+                $fingerprintBytes = [Text.Encoding]::UTF8.GetBytes($env:HYPEREVM_LOG_RPC_UPSTREAM_URL)
+                $configuredFingerprint = ([BitConverter]::ToString($hash.ComputeHash($fingerprintBytes))).Replace("-", "").ToLowerInvariant()
+            } finally { $hash.Dispose() }
+            if ($configuredFingerprint -ne $logAttestation.endpointFingerprintSha256) {
+                throw "Production log RPC URL fingerprint does not match its attestation"
+            }
+        } else {
+            if ($env:HYPEREVM_LOG_RPC_UPSTREAM_HOST -ne $logAttestation.endpointHost `
+                -or $env:HYPEREVM_LOG_RPC_UPSTREAM_FINGERPRINT_SHA256 -ne $logAttestation.endpointFingerprintSha256) {
+                throw "Runtime log RPC host/fingerprint does not match the reviewed archive attestation"
+            }
+            $probeUri = [Uri]$env:HYPEREVM_LOG_RPC_PUBLIC_PROBE_URL
+            if ($probeUri.Scheme -ne "https" -or $probeUri.UserInfo -or -not $env:FWA_ADDRESS -or -not $env:FWA_MAINNET_DEPLOYMENT_BLOCK) {
+                throw "Runtime-attested log RPC mode requires a credential-free HTTPS probe and deployed FWA binding"
+            }
+            $probeBlock = [long]$env:FWA_MAINNET_DEPLOYMENT_BLOCK
+            $probeHex = "0x{0:x}" -f $probeBlock
+            $probeBody = [ordered]@{
+                jsonrpc = "2.0"; id = 1; method = "eth_getLogs"
+                params = @([ordered]@{ address = $env:FWA_ADDRESS; fromBlock = $probeHex; toBlock = $probeHex })
+            } | ConvertTo-Json -Depth 8 -Compress
+            $probeResponse = Invoke-RestMethod -Uri $probeUri -Method Post -ContentType "application/json" -Body $probeBody -TimeoutSec 20
+            if ($probeResponse.error -or $null -eq $probeResponse.result) {
+                throw "The public bounded log RPC runtime probe failed"
+            }
         }
 
         # Genesis metadata is frozen forever on-chain. Refuse mainnet readiness until the exact
@@ -288,17 +310,22 @@ try {
     }
 
     if ($MainnetMode) {
+        $mainnetVerificationBlock = Get-StableForkBlock "chain-999 live attestation" "https://hwa.fun/api/rpc/read"
         Invoke-GateStep "Live 999 core attestation" $projectRoot $forge @(
-            "script", "script/VerifyHyperEVMCore.s.sol:VerifyHyperEVMCore", "--rpc-url", "hyperevm_mainnet", "-vv"
+            "script", "script/VerifyHyperEVMCore.s.sol:VerifyHyperEVMCore", "--rpc-url", "hyperevm_mainnet",
+            "--fork-block-number", "$mainnetVerificationBlock", "-vv"
         )
         Invoke-GateStep "Live 999 drand BN254 attestation" $projectRoot $forge @(
-            "script", "script/VerifyDrandBN254Coordinator.s.sol:VerifyDrandBN254Coordinator", "--rpc-url", "hyperevm_mainnet", "-vv"
+            "script", "script/VerifyDrandBN254Coordinator.s.sol:VerifyDrandBN254Coordinator", "--rpc-url", "hyperevm_mainnet",
+            "--fork-block-number", "$mainnetVerificationBlock", "-vv"
         )
         Invoke-GateStep "Live 999 Project X attestation" $projectRoot $forge @(
-            "script", "script/VerifyProjectXModules.s.sol:VerifyProjectXModules", "--rpc-url", "hyperevm_mainnet", "-vv"
+            "script", "script/VerifyProjectXModules.s.sol:VerifyProjectXModules", "--rpc-url", "hyperevm_mainnet",
+            "--fork-block-number", "$mainnetVerificationBlock", "-vv"
         )
         Invoke-GateStep "Live 999 activation-readiness attestation" $projectRoot $forge @(
-            "script", "script/ActivateHyperEVMMainnet.s.sol:ActivateHyperEVMMainnet", "--rpc-url", "hyperevm_mainnet", "-vv"
+            "script", "script/ActivateHyperEVMMainnet.s.sol:ActivateHyperEVMMainnet", "--rpc-url", "hyperevm_mainnet",
+            "--fork-block-number", "$mainnetVerificationBlock", "-vv"
         )
     }
 

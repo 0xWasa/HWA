@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 2,
+  "chainId": 999,
+  "generatedAtUtc": "2026-07-29T14:34:40.4554838Z",
+  "broadcast": false,
+  "executable": true,
+  "onchainValidation": {
+    "performed": true,
+    "chainId": 999,
+    "owner": "0x24398fc31899e2384e4e070fcdbf8bb6d916fcd9",
+    "rewardsBound": true,
+    "drandLaunchReady": true,
+    "splitFrozen": true,
+    "revenueReady": false,
+    "acquisitionsClosed": true,
+    "externalBuysClosed": true,
+    "poolEmpty": true,
+    "emissionNotStarted": true,
+    "activationReady": true,
+    "checkedAtUtc": "2026-07-29T14:34:40.0438525Z"
+  },
+  "preActivation": {
+    "to": "0x4E010e44E6369A92c090069833144901a92bed5E",
+    "value": "0",
+    "data": "0xec38a8620000000000000000000000008f6c63f1ed141af9ffb28a2ccb8a1bc58efaf22f",
+    "operation": 0,
+    "description": "Bind the audited rewards module while acquisitions and emissions are still closed"
+  },
+  "activationBatch": [
+    {
+      "order": 1,
+      "to": "0x1fA5613ff9Ecf177808B619B016f061bA6a20fAE",
+      "value": "0",
+      "data": "0xbf4568b5",
+      "operation": 0,
+      "description": "Start the holder claim window at launch rather than infrastructure deployment"
+    },
+    {
+      "order": 2,
+      "to": "0x4261cE6B2F3352544D448609c3f5c61Ea9304428",
+      "value": "0",
+      "data": "0x909d6a4b00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000063eb9d77d083ca10c304e28d5191321977fd0bfb",
+      "operation": 0,
+      "description": "Allowlist only the reviewed canary ERC-721 collection"
+    },
+    {
+      "order": 3,
+      "to": "0x4E010e44E6369A92c090069833144901a92bed5E",
+      "value": "0",
+      "data": "0x97cedc7600000000000000000000000000000000000000000000000000000000000000290000000000000000000000000000000000000000000000000000000000000001",
+      "operation": 0,
+      "description": "Open FWA acquisitions and start rewards emission"
+    }
+  ],
+  "activationTemplate": [
+    {
+      "order": 1,
+      "to": "0x1fA5613ff9Ecf177808B619B016f061bA6a20fAE",
+      "value": "0",
+      "data": "0xe9646c6b",
+      "operation": 0,
+      "description": "Permanently freeze the audited 70/30 revenue split"
+    },
+    {
+      "order": 1,
+      "to": "0x1fA5613ff9Ecf177808B619B016f061bA6a20fAE",
+      "value": "0",
+      "data": "0xbf4568b5",
+      "operation": 0,
+      "description": "Start the holder claim window at launch rather than infrastructure deployment"
+    },
+    {
+      "order": 2,
+      "to": "0x4261cE6B2F3352544D448609c3f5c61Ea9304428",
+      "value": "0",
+      "data": "0x909d6a4b00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000063eb9d77d083ca10c304e28d5191321977fd0bfb",
+      "operation": 0,
+      "description": "Allowlist only the reviewed canary ERC-721 collection"
+    },
+    {
+      "order": 3,
+      "to": "0x4E010e44E6369A92c090069833144901a92bed5E",
+      "value": "0",
+      "data": "0x97cedc7600000000000000000000000000000000000000000000000000000000000000290000000000000000000000000000000000000000000000000000000000000001",
+      "operation": 0,
+      "description": "Open FWA acquisitions and start rewards emission"
+    }
+  ],
+  "canaryCollection": "0x63eb9d77d083ca10c304e28d5191321977fd0bfb",
+  "postCanaryPublicCollectionsTemplate": [
+    {
+      "to": "0x4261cE6B2F3352544D448609c3f5c61Ea9304428",
+      "value": "0",
+      "data": "0x909d6a4b000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000003000000000000000000000000bc4a26ba78ce05e8bcbf069bbb87fb3e1dac8df800000000000000000000000043a9652e2b3ce8970e8d33d8c34252a59a6596aa0000000000000000000000009125e2d6827a00b0f8330d6ef7bef07730bac685",
+      "operation": 0,
+      "description": "NON-EXECUTABLE TEMPLATE: allowlist reviewed public collections only after a fulfilled canary acquisition"
+    }
+  ],
+  "postCanaryPublicCollectionsExecutable": false,
+  "emergencyPause": [
+    {
+      "order": 1,
+      "to": "0x4E010e44E6369A92c090069833144901a92bed5E",
+      "value": "0",
+      "data": "0x97cedc7600000000000000000000000000000000000000000000000000000000000000290000000000000000000000000000000000000000000000000000000000000000",
+      "operation": 0,
+      "description": "Close new acquisitions"
+    },
+    {
+      "order": 2,
+      "to": "0x4E010e44E6369A92c090069833144901a92bed5E",
+      "value": "0",
+      "data": "0x97cedc76000000000000000000000000000000000000000000000000000000000000002a0000000000000000000000000000000000000000000000000000000000000001",
+      "operation": 0,
+      "description": "Enter withdraw-only mode while canonical in-flight settlement remains processable"
+    },
+    {
+      "order": 3,
+      "to": "0x5457A903e0F388498AC8A1024B22487F730BB481",
+      "value": "0",
+      "data": "0xc990a7480000000000000000000000000000000000000000000000000000000000000000",
+      "operation": 0,
+      "description": "Close public Project X buys"
+    }
+  ],
+  "manualTradingControls": {
+    "open": {
+      "to": "0x5457A903e0F388498AC8A1024B22487F730BB481",
+      "value": "0",
+      "data": "0xc990a7480000000000000000000000000000000000000000000000000000000000000001",
+      "operation": 0,
+      "description": "Manually enable public Project X pool buys"
+    },
+    "close": {
+      "to": "0x5457A903e0F388498AC8A1024B22487F730BB481",
+      "value": "0",
+      "data": "0xc990a7480000000000000000000000000000000000000000000000000000000000000000",
+      "operation": 0,
+      "description": "Manually disable public Project X pool buys"
+    }
+  },
+  "notes": [
+    "This file contains calldata only and never broadcasts.",
+    "Execute preActivation first, then verify Project X/core wiring and complete closed-market E2E.",
+    "Re-run this script with the chain-999 RPC after preActivation; only an RPC-validated output is executable.",
+    "Execute activationBatch in order only after source, drand-BN254, Project X and closed-market attestations; it allowlists only the canary collection.",
+    "The post-canary template is deliberately non-executable. PreparePostCanaryCollections.ps1 must attest one exact Fulfilled acquisition before public collections are enabled.",
+    "The core independently rejects acquisition opening until rewards, recent drand proof and splitter readiness are all on-chain.",
+    "Public token buys are deliberately not part of activationBatch; use the separate manual open/close action."
+  ]
+}

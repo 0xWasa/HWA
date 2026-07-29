@@ -11,6 +11,7 @@ import {FWARewardsHyperEVM} from "../src/hyperevm/FWARewardsHyperEVM.sol";
 import {FWATokenHyperEVM} from "../src/hyperevm/FWATokenHyperEVM.sol";
 import {HWAProjectXLiquidityLocker} from "../src/hyperevm/HWAProjectXLiquidityLocker.sol";
 import {SplitterHyperEVM} from "../src/hyperevm/SplitterHyperEVM.sol";
+import {MainnetOwnerPolicy} from "./MainnetOwnerPolicy.sol";
 
 interface VmActivateHyperEVMMainnet {
     function envAddress(string calldata name) external view returns (address value);
@@ -18,8 +19,7 @@ interface VmActivateHyperEVMMainnet {
 }
 
 /// @notice Historical filename retained for operator compatibility; this is now a read-only
-///         activation-readiness attestation. Mainnet ownership is required to be a Safe contract,
-///         therefore gameplay is opened only with the calldata emitted by PrepareMainnetOwnerActions.
+///         activation-readiness attestation. It never opens gameplay or public token buys.
 contract ActivateHyperEVMMainnet {
     VmActivateHyperEVMMainnet internal constant vm =
         VmActivateHyperEVMMainnet(address(uint160(uint256(keccak256("hevm cheat code")))));
@@ -64,28 +64,32 @@ contract ActivateHyperEVMMainnet {
         FWAHyperSwapAdapter adapter = FWAHyperSwapAdapter(payable(vm.envAddress("FWA_PROJECTX_ADAPTER_ADDRESS")));
         HWAProjectXLiquidityLocker locker = HWAProjectXLiquidityLocker(token.liquidityLocker());
         address finalOwner = fwa.owner();
+        MainnetOwnerPolicy.validateConfiguredOwner(
+            finalOwner, vm.envAddress("FWA_OWNER"), vm.envBool("MAINNET_EOA_OWNER_CONFIRMED")
+        );
 
         (address activeCoordinator, uint256 subId) = fwa.vrfCoordinatorAndSubId();
         (,,, address subscriptionOwner, address[] memory consumers) = coordinator.getSubscription(subId);
         if (
-            finalOwner.code.length == 0 || activeCoordinator != address(coordinator)
-                || subId != coordinator.SUBSCRIPTION_ID() || coordinator.consumer() != address(fwa)
-                || coordinator.owner() != finalOwner || subscriptionOwner != finalOwner || consumers.length != 1
-                || consumers[0] != address(fwa) || coordinator.pendingRequestCount() != 0 || !coordinator.launchReady()
+            activeCoordinator != address(coordinator) || subId != coordinator.SUBSCRIPTION_ID()
+                || coordinator.consumer() != address(fwa) || coordinator.owner() != finalOwner
+                || subscriptionOwner != finalOwner || consumers.length != 1 || consumers[0] != address(fwa)
+                || coordinator.pendingRequestCount() != 0 || !coordinator.launchReady()
                 || address(service.fwa()) != address(fwa) || address(fwa.vrfService()) != address(service)
                 || service.owner() != finalOwner || whitelist.fwa() != address(fwa) || whitelist.owner() != finalOwner
                 || fwa.payoutAddress() != address(splitter) || splitter.owner() != finalOwner
                 || splitter.ownerShareBps() != 7_000 || splitter.nftShareBps() != 3_000 || !splitter.splitFrozen()
-                || splitter.SWEEP_AVAILABLE_AT() <= block.timestamp || address(fwa.rewards()) != address(rewards)
-                || rewards.fwa() != address(fwa) || rewards.token() != address(token)
-                || address(rewards.swapAdapter()) != address(adapter) || rewards.owner() != finalOwner
-                || adapter.owner() != finalOwner || token.owner() != finalOwner || locker.owner() != finalOwner
-                || !locker.bound() || locker.tokenId() != token.lpTokenId() || rewards.depositorRatePerSec() == 0
-                || rewards.purchaserDailyPot() == 0 || rewards.emissionStart() != 0
-                || token.balanceOf(address(rewards)) < TOTAL_EMISSION || token.adapter() != address(adapter)
-                || token.rewardsPool() != address(rewards) || token.externalBuysEnabled() || fwa.acquisitionsEnabled()
-                || !fwa.rewardsRequiredForActivation() || token.buybackSqrtPriceLimitX96() == 0
-                || !token.buybackOracleReady() || token.buybackMinOutPerHypeX96() == 0
+                || (splitter.SWEEP_AVAILABLE_AT() != 0 && splitter.SWEEP_AVAILABLE_AT() <= block.timestamp)
+                || address(fwa.rewards()) != address(rewards) || rewards.fwa() != address(fwa)
+                || rewards.token() != address(token) || address(rewards.swapAdapter()) != address(adapter)
+                || rewards.owner() != finalOwner || adapter.owner() != finalOwner || token.owner() != finalOwner
+                || locker.owner() != finalOwner || !locker.bound() || locker.tokenId() != token.lpTokenId()
+                || rewards.depositorRatePerSec() == 0 || rewards.purchaserDailyPot() == 0
+                || rewards.emissionStart() != 0 || token.balanceOf(address(rewards)) < TOTAL_EMISSION
+                || token.adapter() != address(adapter) || token.rewardsPool() != address(rewards)
+                || token.externalBuysEnabled() || fwa.acquisitionsEnabled() || !fwa.rewardsRequiredForActivation()
+                || token.buybackSqrtPriceLimitX96() == 0 || !token.buybackOracleReady()
+                || token.buybackMinOutPerHypeX96() == 0
         ) revert InvalidWiring();
     }
 }
