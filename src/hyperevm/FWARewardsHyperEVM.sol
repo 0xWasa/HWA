@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.30;
 
 import {Ownable} from "solady/src/auth/Ownable.sol";
 import {ReentrancyGuard} from "solady/src/utils/ReentrancyGuard.sol";
@@ -15,45 +15,44 @@ interface ITokenBurnable {
     function burn(uint256 amount) external;
 }
 
+interface IHWASeasonPrice {
+    function launchHwaPerHypeX96() external view returns (uint256);
+    function twapHwaPerHypeX96() external view returns (uint256);
+}
+
 interface IFWARewardsCore {
     function canRescueRewards() external view returns (bool);
 }
 
-/// @notice Core-facing interface. FWA remains responsible for NFT custody, acquisition escrow,
-///         and selection; this module owns only FWAToken rewards and the ETH earmarked for token buys.
 interface IFWARewards {
     function onListingActivated(uint256 listingId, address depositor, uint256 backing) external;
     function onListingRepriced(uint256 listingId, uint256 backing) external;
     function onListingRemoved(uint256 listingId) external;
-
     function registerAcquisition(uint256 requestId, address purchaser, uint256 fee, uint256 surchargeBps)
         external
         returns (uint256 slice, uint64 rewardEpoch);
-
     function settleAcquisition(uint256 requestId) external payable;
     function refundAcquisition(uint256 requestId) external;
     function startEmission() external;
     function buyFor(address recipient, uint256 minOut) external payable returns (uint256 tokenOut);
 }
 
-/// @title FWARewardsHyperEVM
-/// @notice Isolated FWAToken reward, emission, and DEX-adapter module for FWA on HyperEVM.
-/// @dev The owner wires exactly one FWA with `setFWA`. After that, only FWA may mutate listing and
-///      acquisition accounting. Participant claims remain permissionless pull paths and never run in
-///      FWA's ordered acquisition processor.
+/// @title HWA rewards v2
+/// @notice Fixed-supply, volume-capped seasonal incentives plus revenue-funded buyback rewards.
 contract FWARewardsHyperEVM is Ownable, ReentrancyGuard, IFWARewards {
-    /*//////////////////////////////////////////////////////////////
-                               CONSTANTS
-    //////////////////////////////////////////////////////////////*/
-
     uint256 public constant BPS = 10_000;
+    uint256 public constant Q96 = 1 << 96;
     uint256 internal constant SCALE = 1e36;
-    uint256 public constant EMISSION_DAYS = 15;
-    uint256 public constant EMISSION_DURATION = EMISSION_DAYS * 1 days;
-
-    /*//////////////////////////////////////////////////////////////
-                                 TYPES
-    //////////////////////////////////////////////////////////////*/
+    uint256 public constant EPOCH_DURATION = 1 days;
+    uint256 public constant SEASON_DURATION = 15 days;
+    uint256 public constant SEASON_EPOCHS = 15;
+    uint256 public constant SEASON_COUNT = 3;
+    uint256 public constant EMISSION_DAYS = 45;
+    uint256 public constant EMISSION_DURATION = 45 days;
+    uint256 public constant SEASONAL_RESERVE = 100_000_000 ether;
+    uint256 public constant DEPOSITOR_SEASONAL_RESERVE = 50_000_000 ether;
+    uint256 public constant PURCHASER_SEASONAL_RESERVE = 50_000_000 ether;
+    uint256 public constant VALUE_CAP_BPS = 500;
 
     enum AcquisitionRewardStatus {
         None,
@@ -76,83 +75,58 @@ contract FWARewardsHyperEVM is Ownable, ReentrancyGuard, IFWARewards {
         uint256 tokenSlice;
     }
 
-    /*//////////////////////////////////////////////////////////////
-                              IMMUTABLES
-    //////////////////////////////////////////////////////////////*/
-
     address public immutable token;
     IFWAProtocolSwapAdapter public immutable swapAdapter;
-
-    /*//////////////////////////////////////////////////////////////
-                              CORE WIRING
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice The sole FWA allowed to create reward liabilities. Set exactly once.
+    address public immutable seasonExcludedDepositor;
     address public fwa;
 
-    /*//////////////////////////////////////////////////////////////
-                         LISTING EMISSION STATE
-    //////////////////////////////////////////////////////////////*/
-
-    mapping(uint256 listingId => ListingReward reward) public listingRewards;
-
-    /// @notice Sum of sqrt(backing) across active listings.
+    mapping(uint256 => ListingReward) public listingRewards;
+    mapping(uint256 => bool) public seasonalListingEligible;
+    mapping(uint256 => uint256) public seasonalTokenDebt;
     uint256 public sqrtBackingTotal;
-    /// @notice Accumulated FWAToken per unit of sqrt(backing), scaled by 1e36.
     uint256 public accTokenPerSqrt;
-    /// @notice Last timestamp incorporated into the accumulator.
-    uint256 public lastTokenAccrual;
-    /// @notice Fixed depositor emission per second during the initial emission window.
+    uint256 public seasonalSqrtBackingTotal;
+    uint256 public accSeasonalTokenPerSqrt;
+    mapping(address => uint256) public tokenCredit;
+
+    // Compatibility/readability views. V2 emission is volume-triggered, not a guaranteed stream.
     uint256 public depositorRatePerSec;
-    /// @notice Depositor budget not yet emitted. Empty-pool time does not consume it.
+    uint256 public purchaserDailyPot;
     uint256 public depositorEmissionRemaining;
-    /// @notice Settled listing rewards awaiting withdrawal by their depositor.
-    mapping(address depositor => uint256 amount) public tokenCredit;
+    uint256 public lastTokenAccrual;
 
-    /// @notice Conservative aggregate HWA reserve. Rounding dust remains protected rather than
-    ///         becoming admin-withdrawable participant funds.
     uint256 public tokenLiability;
+    uint256 public seasonalReserveRemaining;
+    uint256 public seasonalEmitted;
+    uint256 public seasonalBurned;
+    uint256 public seasonalDepositorEmitted;
+    uint256 public seasonalPurchaserEmitted;
+    uint256 public buybackDepositorRouted;
+    uint256 public buybackPurchaserRouted;
     bool public emissionConfigured;
+    bool public claimsEnabled;
 
-    /*//////////////////////////////////////////////////////////////
-                       PURCHASER BUY ALLOWANCES
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice ETH from successful acquisitions earmarked for a purchaser's token buy.
-    mapping(address purchaser => uint256 ethOwed) public tokenBuyAllowance;
-    /// @notice Aggregate ETH liability represented by `tokenBuyAllowance`.
+    mapping(address => uint256) public tokenBuyAllowance;
     uint256 public tokenBuyAllowanceTotal;
-
-    /// @notice A request's committed surcharge slice and request-time reward epoch.
-    mapping(uint256 requestId => AcquisitionReward reward) public acquisitionRewards;
-
-    /// @notice Cold-gap curve: zero token share at/below hotGap and full share at/above coldGap.
+    mapping(uint256 => AcquisitionReward) public acquisitionRewards;
+    mapping(uint256 => uint256) public acquisitionSettledFee;
     uint256 public hotGap = 60;
     uint256 public coldGap = 3600;
-    /// @notice -1 selects the dynamic curve; [0, BPS] forces a static share.
     int256 public forcedTokenShareBps = -1;
     uint256 public lastAcquisitionTs;
 
-    /*//////////////////////////////////////////////////////////////
-                         PURCHASER EPOCH STATE
-    //////////////////////////////////////////////////////////////*/
-
     uint256 public emissionStart;
-    uint256 public purchaserDailyPot;
-
-    /// @notice Additional buyback-funded pot for each epoch.
-    mapping(uint256 epoch => uint256 amount) public purchaserEpochPot;
-    mapping(uint256 epoch => uint256 acquisitions) public acquisitionsInEpoch;
-    mapping(uint256 epoch => mapping(address purchaser => uint256 acquisitions)) public userAcquisitionsInEpoch;
-
-    /// @notice Requests assigned to an epoch but not terminal. Claims and empty sweeps wait for zero.
-    mapping(uint256 epoch => uint256 acquisitions) public pendingAcquisitionsInEpoch;
-    mapping(uint256 epoch => mapping(address purchaser => bool claimed)) public purchaserClaimed;
-    mapping(uint256 epoch => bool swept) public purchaserEpochSwept;
-
-    /*//////////////////////////////////////////////////////////////
-                                EVENTS
-    //////////////////////////////////////////////////////////////*/
+    mapping(uint256 => uint256) public purchaserEpochPot;
+    mapping(uint256 => uint256) public purchaserSeasonalEpochPot;
+    mapping(uint256 => uint256) public epochSeasonalEmitted;
+    mapping(uint256 => uint256) public settledHypeInEpoch;
+    mapping(uint256 => mapping(address => uint256)) public userSettledHypeInEpoch;
+    mapping(uint256 => uint256) public acquisitionsInEpoch;
+    mapping(uint256 => mapping(address => uint256)) public userAcquisitionsInEpoch;
+    mapping(uint256 => uint256) public pendingAcquisitionsInEpoch;
+    mapping(uint256 => mapping(address => bool)) public purchaserClaimed;
+    mapping(uint256 => bool) public purchaserEpochSwept;
+    mapping(uint256 => bool) public epochFinalized;
 
     event FWASet(address indexed fwa);
     event ListingRewardActivated(
@@ -160,7 +134,6 @@ contract FWARewardsHyperEVM is Ownable, ReentrancyGuard, IFWARewards {
     );
     event ListingRewardRepriced(uint256 indexed listingId, uint256 backing, uint256 sqrtBacking);
     event ListingRewardRemoved(uint256 indexed listingId, address indexed depositor);
-
     event AcquisitionRewardRegistered(
         uint256 indexed requestId,
         address indexed purchaser,
@@ -170,7 +143,16 @@ contract FWARewardsHyperEVM is Ownable, ReentrancyGuard, IFWARewards {
     );
     event AcquisitionTokenAccrued(address indexed purchaser, uint256 indexed requestId, uint256 slice);
     event AcquisitionRewardRefunded(uint256 indexed requestId, uint64 indexed epoch);
-
+    event SeasonalValueUnlocked(
+        uint256 indexed requestId,
+        uint256 indexed epoch,
+        uint256 settledHype,
+        uint256 quoteHwaPerHypeX96,
+        uint256 depositorAmount,
+        uint256 purchaserAmount
+    );
+    event EpochFinalized(uint256 indexed epoch, uint256 emitted, uint256 burned);
+    event ClaimsEnabled();
     event AccruedTokensClaimed(address indexed purchaser, uint256 ethSpent, uint256 tokenOut);
     event TokenBuyAllowanceWithdrawn(address indexed purchaser, uint256 amount);
     event DepositorTokensAccrued(address indexed depositor, uint256 indexed listingId, uint256 amount);
@@ -178,7 +160,6 @@ contract FWARewardsHyperEVM is Ownable, ReentrancyGuard, IFWARewards {
     event PurchaserTokensClaimed(address indexed purchaser, uint256 indexed epoch, uint256 amount);
     event PurchaserTokensRouted(uint256 indexed epoch, uint256 amount);
     event ProtocolTokensRedistributed(uint256 amount);
-
     event EmissionConfigured(uint256 depositorRatePerSec, uint256 purchaserDailyPot);
     event EmissionStarted(uint256 timestamp);
     event ColdGapBandsUpdated(uint256 hotGap, uint256 coldGap);
@@ -186,10 +167,6 @@ contract FWARewardsHyperEVM is Ownable, ReentrancyGuard, IFWARewards {
     event EmptyEpochSwept(uint256 indexed epoch, address indexed to, uint256 amount);
     event TokensRescued(address indexed to, uint256 amount);
     event EmptyEpochBurned(uint256 indexed epoch, uint256 amount);
-
-    /*//////////////////////////////////////////////////////////////
-                                ERRORS
-    //////////////////////////////////////////////////////////////*/
 
     error ZeroAddress();
     error InvalidConfig();
@@ -201,43 +178,37 @@ contract FWARewardsHyperEVM is Ownable, ReentrancyGuard, IFWARewards {
     error UnknownRequest();
     error AcquisitionAlreadyTerminal();
     error IncorrectTokenSlice();
-    error TokenNotConfigured();
     error NoTokenReward();
     error EmissionAlreadyStarted();
+    error EmissionNotConfigured();
     error EpochNotClosed();
     error EpochStillPending();
-    error EpochNotEmpty();
     error AlreadyClaimed();
     error NotToken();
     error RescueNotAllowed();
-
-    /*//////////////////////////////////////////////////////////////
-                              CONSTRUCTOR
-    //////////////////////////////////////////////////////////////*/
+    error ClaimsPaused();
+    error InsufficientFunding();
+    error EpochNotEmpty();
 
     constructor(address token_, address adapter_, address owner_) {
         if (token_ == address(0) || adapter_ == address(0) || owner_ == address(0)) revert ZeroAddress();
         if (token_.code.length == 0 || adapter_.code.length == 0) revert InvalidConfig();
-
-        IFWAProtocolSwapAdapter adapter = IFWAProtocolSwapAdapter(adapter_);
-        if (adapter.TOKEN() != token_) revert InvalidConfig();
-
+        IFWAProtocolSwapAdapter candidate = IFWAProtocolSwapAdapter(adapter_);
+        if (candidate.TOKEN() != token_) revert InvalidConfig();
         token = token_;
-        swapAdapter = adapter;
+        swapAdapter = candidate;
+        seasonExcludedDepositor = owner_;
         _initializeOwner(owner_);
     }
-
     modifier onlyFWA() {
         if (msg.sender != fwa) revert OnlyFWA();
         _;
     }
+    modifier whenClaimsEnabled() {
+        if (!claimsEnabled) revert ClaimsPaused();
+        _;
+    }
 
-    /*//////////////////////////////////////////////////////////////
-                              CORE WIRING
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Bind the module to its core FWA. This cannot be rotated: migration deploys a new
-    ///         module so stale and replacement pools cannot both create liabilities here.
     function setFWA(address fwa_) external onlyOwner {
         if (fwa_ == address(0)) revert ZeroAddress();
         if (fwa != address(0)) revert FWAAlreadySet();
@@ -245,72 +216,64 @@ contract FWARewardsHyperEVM is Ownable, ReentrancyGuard, IFWARewards {
         emit FWASet(fwa_);
     }
 
-    /*//////////////////////////////////////////////////////////////
-                        LISTING ACCOUNTING HOOKS
-    //////////////////////////////////////////////////////////////*/
-
     function onListingActivated(uint256 listingId, address depositor, uint256 backing) external onlyFWA {
         if (depositor == address(0) || backing == 0) revert InvalidConfig();
-
         ListingReward storage reward = listingRewards[listingId];
         if (reward.active) revert ListingAlreadyActive();
-
-        _advanceToken();
         uint256 sqrtBacking = FixedPointMathLib.sqrt(backing);
         reward.depositor = depositor;
         reward.active = true;
         reward.sqrtBacking = sqrtBacking;
-        // Ceil the join checkpoint so a new listing can never claim pre-activation rounding dust.
         reward.tokenDebt = _ceilDiv(sqrtBacking * accTokenPerSqrt, SCALE);
         sqrtBackingTotal += sqrtBacking;
-
+        bool eligible = depositor != seasonExcludedDepositor;
+        seasonalListingEligible[listingId] = eligible;
+        if (eligible) {
+            seasonalTokenDebt[listingId] = _ceilDiv(sqrtBacking * accSeasonalTokenPerSqrt, SCALE);
+            seasonalSqrtBackingTotal += sqrtBacking;
+        }
         emit ListingRewardActivated(listingId, depositor, backing, sqrtBacking);
     }
 
     function onListingRepriced(uint256 listingId, uint256 backing) external onlyFWA {
+        if (backing == 0) revert InvalidConfig();
         ListingReward storage reward = listingRewards[listingId];
         if (!reward.active) revert ListingNotActive();
-
-        _advanceToken();
         _creditPending(listingId, reward);
-
-        uint256 oldSqrtBacking = reward.sqrtBacking;
-        uint256 newSqrtBacking = FixedPointMathLib.sqrt(backing);
-        sqrtBackingTotal = sqrtBackingTotal - oldSqrtBacking + newSqrtBacking;
-        reward.sqrtBacking = newSqrtBacking;
-        reward.tokenDebt = _ceilDiv(newSqrtBacking * accTokenPerSqrt, SCALE);
-
-        emit ListingRewardRepriced(listingId, backing, newSqrtBacking);
+        uint256 oldSqrt = reward.sqrtBacking;
+        uint256 nextSqrt = FixedPointMathLib.sqrt(backing);
+        sqrtBackingTotal = sqrtBackingTotal - oldSqrt + nextSqrt;
+        if (seasonalListingEligible[listingId]) {
+            seasonalSqrtBackingTotal = seasonalSqrtBackingTotal - oldSqrt + nextSqrt;
+            seasonalTokenDebt[listingId] = _ceilDiv(nextSqrt * accSeasonalTokenPerSqrt, SCALE);
+        }
+        reward.sqrtBacking = nextSqrt;
+        reward.tokenDebt = _ceilDiv(nextSqrt * accTokenPerSqrt, SCALE);
+        emit ListingRewardRepriced(listingId, backing, nextSqrt);
     }
 
     function onListingRemoved(uint256 listingId) external onlyFWA {
         ListingReward storage reward = listingRewards[listingId];
         if (!reward.active) revert ListingNotActive();
-
-        _advanceToken();
         _creditPending(listingId, reward);
-
         address depositor = reward.depositor;
         sqrtBackingTotal -= reward.sqrtBacking;
+        if (seasonalListingEligible[listingId]) seasonalSqrtBackingTotal -= reward.sqrtBacking;
+        delete seasonalListingEligible[listingId];
+        delete seasonalTokenDebt[listingId];
         delete listingRewards[listingId];
-
         emit ListingRewardRemoved(listingId, depositor);
     }
 
-    /*//////////////////////////////////////////////////////////////
-                      ACQUISITION ACCOUNTING HOOKS
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Commit the purchaser's request-time epoch and potential token-buy slice. No ETH is
-    ///         transferred yet: FWA keeps the entire acquisition fee escrowed until ordered settlement.
     function registerAcquisition(uint256 requestId, address purchaser, uint256 fee, uint256 surchargeBps)
         external
         onlyFWA
         returns (uint256 slice, uint64 rewardEpoch)
     {
-        if (purchaser == address(0) || surchargeBps > type(uint256).max - BPS) revert InvalidConfig();
+        if (purchaser == address(0) || fee == 0 || surchargeBps > type(uint256).max - BPS) {
+            revert InvalidConfig();
+        }
         if (acquisitionRewards[requestId].status != AcquisitionRewardStatus.None) revert AcquisitionAlreadyTerminal();
-
         uint256 shareBps;
         int256 forced = forcedTokenShareBps;
         if (forced >= 0) {
@@ -319,62 +282,51 @@ contract FWARewardsHyperEVM is Ownable, ReentrancyGuard, IFWARewards {
             uint256 gap = lastAcquisitionTs == 0 ? coldGap : block.timestamp - lastAcquisitionTs;
             shareBps = tokenShareBps(gap);
         }
-
         uint256 ev = FixedPointMathLib.fullMulDiv(fee, BPS, BPS + surchargeBps);
         slice = FixedPointMathLib.fullMulDiv(fee - ev, shareBps, BPS);
         rewardEpoch = currentEpoch();
-
-        acquisitionRewards[requestId] = AcquisitionReward({
-            purchaser: purchaser, epoch: rewardEpoch, status: AcquisitionRewardStatus.Pending, tokenSlice: slice
-        });
+        acquisitionRewards[requestId] =
+            AcquisitionReward(purchaser, rewardEpoch, AcquisitionRewardStatus.Pending, slice);
+        acquisitionSettledFee[requestId] = fee;
         pendingAcquisitionsInEpoch[rewardEpoch] += 1;
         lastAcquisitionTs = block.timestamp;
-
         emit AcquisitionRewardRegistered(requestId, purchaser, rewardEpoch, slice, shareBps);
     }
 
-    /// @notice Terminal success hook. FWA forwards exactly the committed slice out of acquisition
-    ///         escrow; it becomes a pull-based ETH allowance and the request earns one epoch unit.
     function settleAcquisition(uint256 requestId) external payable onlyFWA {
         AcquisitionReward storage reward = acquisitionRewards[requestId];
         if (reward.status == AcquisitionRewardStatus.None) revert UnknownRequest();
         if (reward.status != AcquisitionRewardStatus.Pending) revert AcquisitionAlreadyTerminal();
         if (msg.value != reward.tokenSlice) revert IncorrectTokenSlice();
-
         reward.status = AcquisitionRewardStatus.Settled;
         uint64 epoch = reward.epoch;
         pendingAcquisitionsInEpoch[epoch] -= 1;
         acquisitionsInEpoch[epoch] += 1;
         userAcquisitionsInEpoch[epoch][reward.purchaser] += 1;
-
-        uint256 slice = reward.tokenSlice;
-        if (slice != 0) {
-            tokenBuyAllowance[reward.purchaser] += slice;
-            tokenBuyAllowanceTotal += slice;
+        uint256 settledFee = acquisitionSettledFee[requestId];
+        settledHypeInEpoch[epoch] += settledFee;
+        userSettledHypeInEpoch[epoch][reward.purchaser] += settledFee;
+        if (reward.tokenSlice != 0) {
+            tokenBuyAllowance[reward.purchaser] += reward.tokenSlice;
+            tokenBuyAllowanceTotal += reward.tokenSlice;
         }
-
-        emit AcquisitionTokenAccrued(reward.purchaser, requestId, slice);
+        _unlockSeasonal(requestId, epoch, settledFee);
+        emit AcquisitionTokenAccrued(reward.purchaser, requestId, reward.tokenSlice);
     }
 
-    /// @notice Terminal non-success hook shared by expiration, no-listing, and slippage refunds.
     function refundAcquisition(uint256 requestId) external onlyFWA {
         AcquisitionReward storage reward = acquisitionRewards[requestId];
         if (reward.status == AcquisitionRewardStatus.None) revert UnknownRequest();
         if (reward.status != AcquisitionRewardStatus.Pending) revert AcquisitionAlreadyTerminal();
-
         reward.status = AcquisitionRewardStatus.Refunded;
         pendingAcquisitionsInEpoch[reward.epoch] -= 1;
         emit AcquisitionRewardRefunded(requestId, reward.epoch);
     }
 
-    /*//////////////////////////////////////////////////////////////
-                         EMISSION ACCOUNTING
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Begin the fixed 15-day emissions when FWA first enables acquisitions. Repeated calls
-    ///         are harmless so toggling acquisitions off and back on does not break the core.
     function startEmission() external onlyFWA {
         if (emissionStart != 0) return;
+        if (!emissionConfigured) revert EmissionNotConfigured();
+        if (SafeTransferLib.balanceOf(token, address(this)) < tokenLiability) revert InsufficientFunding();
         emissionStart = block.timestamp;
         lastTokenAccrual = block.timestamp;
         emit EmissionStarted(block.timestamp);
@@ -383,99 +335,141 @@ contract FWARewardsHyperEVM is Ownable, ReentrancyGuard, IFWARewards {
     function currentEpoch() public view returns (uint64) {
         uint256 start = emissionStart;
         if (start == 0 || block.timestamp <= start) return 0;
-        return uint64((block.timestamp - start) / 1 days);
+        return uint64((block.timestamp - start) / EPOCH_DURATION);
     }
 
-    /// @notice Fraction of acquisition surcharge routed to a purchaser token buy for `gap` seconds.
-    function tokenShareBps(uint256 gap) public view returns (uint256) {
-        uint256 hot = hotGap;
-        uint256 cold = coldGap;
-        if (gap <= hot) return 0;
-        if (gap >= cold) return BPS;
-        return BPS * (gap - hot) / (cold - hot);
+    function currentSeason() public view returns (uint8) {
+        uint256 epoch = currentEpoch();
+        if (emissionStart == 0 || epoch >= EMISSION_DAYS) return 0;
+        return uint8(epoch / SEASON_EPOCHS + 1);
     }
 
-    function _advanceToken() internal {
-        uint256 start = emissionStart;
-        if (start == 0) return;
+    function seasonBudget(uint256 season) public pure returns (uint256) {
+        if (season == 0) return 50_000_000 ether;
+        if (season == 1) return 30_000_000 ether;
+        if (season == 2) return 20_000_000 ether;
+        return 0;
+    }
 
-        uint256 cappedNow = block.timestamp;
-        uint256 last = lastTokenAccrual;
-        if (cappedNow <= last) return;
+    function seasonEpochCap(uint256 epoch) public pure returns (uint256 cap) {
+        if (epoch >= EMISSION_DAYS) return 0;
+        uint256 budget = seasonBudget(epoch / SEASON_EPOCHS);
+        cap = budget / SEASON_EPOCHS;
+        if (epoch % SEASON_EPOCHS == SEASON_EPOCHS - 1) cap += budget - cap * SEASON_EPOCHS;
+    }
 
-        uint256 total = sqrtBackingTotal;
-        uint256 remaining = depositorEmissionRemaining;
-        if (total != 0 && depositorRatePerSec != 0 && remaining != 0) {
-            uint256 emission = depositorRatePerSec * (cappedNow - last);
-            if (emission > remaining) emission = remaining;
-            accTokenPerSqrt += emission * SCALE / total;
-            depositorEmissionRemaining = remaining - emission;
+    function effectiveSeasonQuoteX96() public view returns (uint256) {
+        uint256 launchQuote;
+        uint256 currentQuote;
+        try IHWASeasonPrice(token).launchHwaPerHypeX96() returns (uint256 value) {
+            launchQuote = value;
+        } catch {
+            return 0;
         }
-        // Checkpoint empty-pool time without consuming the budget. A later listing starts earning
-        // only from its activation, while the unused budget extends the depositor programme.
-        lastTokenAccrual = cappedNow;
+        try IHWASeasonPrice(token).twapHwaPerHypeX96() returns (uint256 value) {
+            currentQuote = value;
+        } catch {
+            return 0;
+        }
+        if (launchQuote == 0 || currentQuote == 0) return 0;
+        return currentQuote < launchQuote ? currentQuote : launchQuote;
     }
 
-    function _pendingToken(ListingReward storage reward) internal view returns (uint256) {
-        uint256 accrued = reward.sqrtBacking * accTokenPerSqrt / SCALE;
-        return accrued > reward.tokenDebt ? accrued - reward.tokenDebt : 0;
+    function _unlockSeasonal(uint256 requestId, uint256 epoch, uint256 settledFee) internal {
+        if (emissionStart == 0 || epoch >= EMISSION_DAYS || epochFinalized[epoch]) return;
+        uint256 quote = effectiveSeasonQuoteX96();
+        if (quote == 0) return;
+        uint256 valueCapHype = FixedPointMathLib.fullMulDiv(settledFee, VALUE_CAP_BPS, BPS);
+        uint256 amount = FixedPointMathLib.fullMulDiv(valueCapHype, quote, Q96);
+        uint256 cap = seasonEpochCap(epoch);
+        uint256 emitted = epochSeasonalEmitted[epoch];
+        if (amount > cap - emitted) amount = cap - emitted;
+        uint256 reserve = seasonalReserveRemaining;
+        if (amount > reserve) amount = reserve;
+        if (amount == 0) return;
+        uint256 depositorAmount = amount / 2;
+        uint256 purchaserAmount = amount - depositorAmount;
+        epochSeasonalEmitted[epoch] = emitted + amount;
+        seasonalReserveRemaining = reserve - amount;
+        seasonalEmitted += amount;
+        seasonalDepositorEmitted += depositorAmount;
+        seasonalPurchaserEmitted += purchaserAmount;
+        depositorEmissionRemaining = seasonalReserveRemaining / 2;
+        if (depositorAmount != 0) {
+            uint256 total = seasonalSqrtBackingTotal;
+            if (total == 0) {
+                tokenLiability -= depositorAmount;
+                seasonalBurned += depositorAmount;
+                ITokenBurnable(token).burn(depositorAmount);
+                depositorAmount = 0;
+            } else {
+                accSeasonalTokenPerSqrt += depositorAmount * SCALE / total;
+            }
+        }
+        if (purchaserAmount != 0) purchaserSeasonalEpochPot[epoch] += purchaserAmount;
+        emit SeasonalValueUnlocked(requestId, epoch, settledFee, quote, depositorAmount, purchaserAmount);
+    }
+
+    function finalizeEpoch(uint256 epoch) public returns (uint256 burned) {
+        if (epoch >= EMISSION_DAYS || epoch >= currentEpoch()) revert EpochNotClosed();
+        if (pendingAcquisitionsInEpoch[epoch] != 0) revert EpochStillPending();
+        if (epochFinalized[epoch]) revert AlreadyClaimed();
+        epochFinalized[epoch] = true;
+        burned = seasonEpochCap(epoch) - epochSeasonalEmitted[epoch];
+        if (burned > seasonalReserveRemaining) burned = seasonalReserveRemaining;
+        if (burned != 0) {
+            seasonalReserveRemaining -= burned;
+            depositorEmissionRemaining = seasonalReserveRemaining / 2;
+            seasonalBurned += burned;
+            tokenLiability -= burned;
+            ITokenBurnable(token).burn(burned);
+        }
+        emit EpochFinalized(epoch, epochSeasonalEmitted[epoch], burned);
+    }
+
+    function tokenShareBps(uint256 gap) public view returns (uint256) {
+        if (gap <= hotGap) return 0;
+        if (gap >= coldGap) return BPS;
+        return BPS * (gap - hotGap) / (coldGap - hotGap);
+    }
+
+    function _pendingToken(uint256 listingId, ListingReward storage reward) internal view returns (uint256) {
+        uint256 buybackAccrued = reward.sqrtBacking * accTokenPerSqrt / SCALE;
+        uint256 pending = buybackAccrued > reward.tokenDebt ? buybackAccrued - reward.tokenDebt : 0;
+        if (seasonalListingEligible[listingId]) {
+            uint256 seasonalAccrued = reward.sqrtBacking * accSeasonalTokenPerSqrt / SCALE;
+            uint256 debt = seasonalTokenDebt[listingId];
+            if (seasonalAccrued > debt) pending += seasonalAccrued - debt;
+        }
+        return pending;
     }
 
     function _creditPending(uint256 listingId, ListingReward storage reward) internal {
-        uint256 pending = _pendingToken(reward);
-        if (pending == 0) return;
-
-        tokenCredit[reward.depositor] += pending;
-        emit DepositorTokensAccrued(reward.depositor, listingId, pending);
+        uint256 pending = _pendingToken(listingId, reward);
+        if (pending != 0) {
+            tokenCredit[reward.depositor] += pending;
+            emit DepositorTokensAccrued(reward.depositor, listingId, pending);
+        }
     }
 
-    /// @notice Simulate the accumulator advance and return one active listing's unsettled reward.
     function pendingDepositorTokens(uint256 listingId) external view returns (uint256) {
         ListingReward storage reward = listingRewards[listingId];
-        if (!reward.active) return 0;
-
-        uint256 acc = accTokenPerSqrt;
-        uint256 start = emissionStart;
-        if (start != 0) {
-            uint256 cappedNow = block.timestamp;
-            uint256 total = sqrtBackingTotal;
-            uint256 remaining = depositorEmissionRemaining;
-            if (cappedNow > lastTokenAccrual && total != 0 && depositorRatePerSec != 0 && remaining != 0) {
-                uint256 emission = depositorRatePerSec * (cappedNow - lastTokenAccrual);
-                if (emission > remaining) emission = remaining;
-                acc += emission * SCALE / total;
-            }
-        }
-
-        uint256 accrued = reward.sqrtBacking * acc / SCALE;
-        return accrued > reward.tokenDebt ? accrued - reward.tokenDebt : 0;
+        return reward.active ? _pendingToken(listingId, reward) : 0;
     }
 
-    /*//////////////////////////////////////////////////////////////
-                             TOKEN CLAIMS
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Spend the caller's successful-acquisition allowance buying FWAToken for the caller.
-    function claimAccruedTokens(uint256 minOut) external nonReentrant returns (uint256 tokenOut) {
+    function claimAccruedTokens(uint256 minOut) external nonReentrant whenClaimsEnabled returns (uint256 tokenOut) {
         uint256 amount = tokenBuyAllowance[msg.sender];
         if (amount == 0) revert NoTokenReward();
-
         tokenBuyAllowance[msg.sender] = 0;
         tokenBuyAllowanceTotal -= amount;
         tokenOut = _buyTokens(amount, minOut);
         SafeTransferLib.safeTransfer(token, msg.sender, tokenOut);
-
         emit AccruedTokensClaimed(msg.sender, amount, tokenOut);
     }
 
-    /// @notice Emergency ETH exit for an otherwise unspendable purchaser allowance. It is available
-    ///         only while the bound FWA is in withdraw-only mode with no unsettled acquisition, the
-    ///         same fail-safe condition used for migration rescue. Normal operation therefore keeps
-    ///         the surcharge committed to FWAToken buy pressure.
     function withdrawTokenBuyAllowanceAsETH() external nonReentrant returns (uint256 amount) {
         address core = fwa;
         if (core == address(0) || !IFWARewardsCore(core).canRescueRewards()) revert RescueNotAllowed();
-
         amount = tokenBuyAllowance[msg.sender];
         if (amount == 0) revert NoTokenReward();
         tokenBuyAllowance[msg.sender] = 0;
@@ -484,73 +478,69 @@ contract FWARewardsHyperEVM is Ownable, ReentrancyGuard, IFWARewards {
         emit TokenBuyAllowanceWithdrawn(msg.sender, amount);
     }
 
-    /// @notice Harvest unsettled rewards from active listings owned by the caller.
-    function claimDepositorTokens(uint256[] calldata listingIds) external nonReentrant returns (uint256 total) {
-        _advanceToken();
-
+    function claimDepositorTokens(uint256[] calldata listingIds)
+        external
+        nonReentrant
+        whenClaimsEnabled
+        returns (uint256 total)
+    {
         for (uint256 i; i < listingIds.length; ++i) {
             uint256 listingId = listingIds[i];
             ListingReward storage reward = listingRewards[listingId];
             if (!reward.active) revert ListingNotActive();
             if (reward.depositor != msg.sender) revert NotDepositor();
-
-            uint256 pending = _pendingToken(reward);
-            if (pending == 0) continue;
-
+            uint256 pending = _pendingToken(listingId, reward);
             reward.tokenDebt = reward.sqrtBacking * accTokenPerSqrt / SCALE;
+            if (seasonalListingEligible[listingId]) {
+                seasonalTokenDebt[listingId] = reward.sqrtBacking * accSeasonalTokenPerSqrt / SCALE;
+            }
             total += pending;
-            emit DepositorTokensAccrued(msg.sender, listingId, pending);
+            if (pending != 0) emit DepositorTokensAccrued(msg.sender, listingId, pending);
         }
-
         if (total == 0) revert NoTokenReward();
         tokenLiability -= total;
         SafeTransferLib.safeTransfer(token, msg.sender, total);
     }
 
-    /// @notice Withdraw rewards settled into credit when a listing was repriced or removed.
-    function withdrawTokens() external nonReentrant returns (uint256 amount) {
+    function withdrawTokens() external nonReentrant whenClaimsEnabled returns (uint256 amount) {
         amount = tokenCredit[msg.sender];
         if (amount == 0) revert NoTokenReward();
-
         tokenCredit[msg.sender] = 0;
         tokenLiability -= amount;
         SafeTransferLib.safeTransfer(token, msg.sender, amount);
         emit TokensWithdrawn(msg.sender, amount);
     }
 
-    /// @notice Claim the caller's pro-rata share of one or more closed request-time epochs.
-    function claimEpochTokens(uint256[] calldata epochs) external nonReentrant returns (uint256 total) {
+    function claimEpochTokens(uint256[] calldata epochs)
+        external
+        nonReentrant
+        whenClaimsEnabled
+        returns (uint256 total)
+    {
         uint256 current = currentEpoch();
-
         for (uint256 i; i < epochs.length; ++i) {
             uint256 epoch = epochs[i];
             if (epoch >= current) revert EpochNotClosed();
             if (pendingAcquisitionsInEpoch[epoch] != 0) revert EpochStillPending();
+            if (epoch < EMISSION_DAYS && !epochFinalized[epoch]) revert EpochStillPending();
             if (purchaserEpochSwept[epoch] || purchaserClaimed[epoch][msg.sender]) revert AlreadyClaimed();
-
-            uint256 mine = userAcquisitionsInEpoch[epoch][msg.sender];
-            if (mine == 0) continue;
-
+            uint256 mine = userSettledHypeInEpoch[epoch][msg.sender];
+            uint256 totalWeight = settledHypeInEpoch[epoch];
+            if (mine == 0 || totalWeight == 0) continue;
             purchaserClaimed[epoch][msg.sender] = true;
-            uint256 amount = purchaserEpochAmount(epoch) * mine / acquisitionsInEpoch[epoch];
+            uint256 amount = FixedPointMathLib.fullMulDiv(purchaserEpochAmount(epoch), mine, totalWeight);
             total += amount;
             emit PurchaserTokensClaimed(msg.sender, epoch, amount);
         }
-
         if (total == 0) revert NoTokenReward();
         tokenLiability -= total;
         SafeTransferLib.safeTransfer(token, msg.sender, total);
     }
 
     function purchaserEpochAmount(uint256 epoch) public view returns (uint256) {
-        return purchaserEpochPot[epoch] + (epoch < EMISSION_DAYS ? purchaserDailyPot : 0);
+        return purchaserEpochPot[epoch] + purchaserSeasonalEpochPot[epoch];
     }
 
-    /*//////////////////////////////////////////////////////////////
-                               TOKEN SWAPS
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Core-funded HYPE -> HWA buy used by token-denominated settlement outcomes.
     function buyFor(address recipient, uint256 minOut)
         external
         payable
@@ -560,59 +550,58 @@ contract FWARewardsHyperEVM is Ownable, ReentrancyGuard, IFWARewards {
     {
         if (recipient == address(0)) revert ZeroAddress();
         if (msg.value == 0) revert NoTokenReward();
-
         tokenOut = _buyTokens(msg.value, minOut);
         SafeTransferLib.safeTransfer(token, recipient, tokenOut);
     }
 
-    /// @dev The adapter verifies a full exact-input fill, recipient balance delta and `minOut`.
     function _buyTokens(uint256 ethIn, uint256 minOut) internal returns (uint256 tokenOut) {
         tokenOut = swapAdapter.buyExactInput{value: ethIn}(minOut, 0);
         if (tokenOut == 0) revert NoTokenReward();
     }
 
-    /*//////////////////////////////////////////////////////////////
-                        BUYBACK TOKEN CALLBACK
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Route FWAToken transferred by `FWAToken.buyback` into depositor and purchaser rewards.
     function onTokenReceived(uint256 depositorAmt, uint256 purchaserAmt) external {
         if (msg.sender != token) revert NotToken();
-
         if (depositorAmt != 0) {
-            uint256 total = sqrtBackingTotal;
-            if (total == 0) {
+            if (sqrtBackingTotal == 0) {
                 ITokenBurnable(token).burn(depositorAmt);
             } else {
-                _advanceToken();
-                accTokenPerSqrt += depositorAmt * SCALE / total;
+                accTokenPerSqrt += depositorAmt * SCALE / sqrtBackingTotal;
                 tokenLiability += depositorAmt;
+                buybackDepositorRouted += depositorAmt;
                 emit ProtocolTokensRedistributed(depositorAmt);
             }
         }
-
         if (purchaserAmt != 0) {
-            uint64 epoch = currentEpoch();
-            purchaserEpochPot[epoch] += purchaserAmt;
-            tokenLiability += purchaserAmt;
-            emit PurchaserTokensRouted(epoch, purchaserAmt);
+            if (emissionStart == 0) {
+                ITokenBurnable(token).burn(purchaserAmt);
+            } else {
+                uint64 epoch = currentEpoch();
+                purchaserEpochPot[epoch] += purchaserAmt;
+                tokenLiability += purchaserAmt;
+                buybackPurchaserRouted += purchaserAmt;
+                emit PurchaserTokensRouted(epoch, purchaserAmt);
+            }
         }
     }
 
-    /*//////////////////////////////////////////////////////////////
-                              OWNER CONFIG
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Configure the two fixed emission buckets before emission starts. The module must be
-    ///         funded separately with enough FWAToken to honor the resulting claims.
     function setEmission(uint256 depositorTotal, uint256 purchaserTotal) external onlyOwner {
         if (emissionStart != 0 || emissionConfigured) revert EmissionAlreadyStarted();
+        if (depositorTotal != DEPOSITOR_SEASONAL_RESERVE || purchaserTotal != PURCHASER_SEASONAL_RESERVE) {
+            revert InvalidConfig();
+        }
         depositorRatePerSec = depositorTotal / EMISSION_DURATION;
-        purchaserDailyPot = purchaserTotal / EMISSION_DAYS;
-        depositorEmissionRemaining = depositorRatePerSec * EMISSION_DURATION;
-        tokenLiability = depositorEmissionRemaining + purchaserDailyPot * EMISSION_DAYS;
+        purchaserDailyPot = seasonEpochCap(0) / 2;
+        depositorEmissionRemaining = depositorTotal;
+        seasonalReserveRemaining = depositorTotal + purchaserTotal;
+        tokenLiability = seasonalReserveRemaining;
         emissionConfigured = true;
         emit EmissionConfigured(depositorRatePerSec, purchaserDailyPot);
+    }
+
+    function enableClaims() external onlyOwner {
+        if (claimsEnabled) revert AlreadyClaimed();
+        claimsEnabled = true;
+        emit ClaimsEnabled();
     }
 
     function setColdGapBands(uint256 hot, uint256 cold) external onlyOwner {
@@ -631,9 +620,9 @@ contract FWARewardsHyperEVM is Ownable, ReentrancyGuard, IFWARewards {
     function sweepEmptyEpoch(uint256 epoch, address) external onlyOwner returns (uint256 amount) {
         if (epoch >= currentEpoch()) revert EpochNotClosed();
         if (pendingAcquisitionsInEpoch[epoch] != 0) revert EpochStillPending();
-        if (acquisitionsInEpoch[epoch] != 0) revert EpochNotEmpty();
         if (purchaserEpochSwept[epoch]) revert AlreadyClaimed();
-
+        if (epoch < EMISSION_DAYS && !epochFinalized[epoch]) finalizeEpoch(epoch);
+        if (settledHypeInEpoch[epoch] != 0) revert EpochNotEmpty();
         purchaserEpochSwept[epoch] = true;
         amount = purchaserEpochAmount(epoch);
         if (amount != 0) {
@@ -644,16 +633,12 @@ contract FWARewardsHyperEVM is Ownable, ReentrancyGuard, IFWARewards {
         emit EmptyEpochSwept(epoch, address(0), amount);
     }
 
-    /// @notice Migration escape hatch restricted to tokens above the conservative participant
-    ///         liability. The reversible core mode can therefore never authorize a claim drain.
     function rescueTokens(address to) external onlyOwner returns (uint256 amount) {
         if (to == address(0)) revert ZeroAddress();
         address core = fwa;
         if (core == address(0) || !IFWARewardsCore(core).canRescueRewards()) revert RescueNotAllowed();
-
         uint256 balance = SafeTransferLib.balanceOf(token, address(this));
-        uint256 liability = tokenLiability;
-        if (balance > liability) amount = balance - liability;
+        if (balance > tokenLiability) amount = balance - tokenLiability;
         if (amount != 0) SafeTransferLib.safeTransfer(token, to, amount);
         emit TokensRescued(to, amount);
     }

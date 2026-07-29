@@ -142,15 +142,14 @@ Le comportement retenu doit être figé avant le testnet v2, testé et ajouté a
 La configuration actuelle à confirmer est :
 
 - supply totale : `1 000 000 000 HWA` ;
-- LP Project X verrouillée : `500 000 000 HWA` ;
-- émission depositors : `150 000 000 HWA` ;
-- émission purchasers : `150 000 000 HWA` ;
-- allocation historique/écosystème : `200 000 000 HWA` vers le Safe final ;
+- LP Project X verrouillée : `800 000 000 HWA` ;
+- réserve saisonnière totale : `100 000 000 HWA`, plafonnée à 50 M / 30 M / 20 M sur trois saisons de 15 jours ;
+- allocation écosystème : `100 000 000 HWA` dans un vesting immuable de 24 mois avec cliff de 3 mois ;
 - pool HWA/wHYPE Project X, fee tier 1 %, tick spacing 200 ;
 - achats publics fermés au déploiement, ouverture manuelle ultérieure ;
 - LP non retirable ; destinataire des fees modifiable uniquement selon la politique Safe retenue.
 
-À signer dans une fiche de lancement : prix initial, FDV min/max, largeur de range et politique de buyback. Le lancement Project X est one-sided avec `0 HYPE` dans la LP ; le plafond opérationnel global est `20 HYPE`. Les fees et les 200 M HWA vont au Safe final.
+À signer dans une fiche de lancement : prix initial, FDV min/max, largeur de range et politique de buyback. Le lancement Project X est one-sided avec `0 HYPE` dans la LP ; le plafond opérationnel global est `20 HYPE`. Le beneficiary du vesting et le recipient des fees sont l'owner EOA attestÃ©.
 
 ### 5.2 Collections NFT
 
@@ -191,7 +190,7 @@ Figer :
 - owner final de chaque contrat ;
 - operator/guardian et limites exactes de leurs pouvoirs ;
 - fee recipient Project X ;
-- recipient de l'allocation 200 M ;
+- beneficiary du vesting immuable de 100 M ;
 - deux wallets submitters drand, séparés du deployer ;
 - politique de timelock pour les changements sensibles ;
 - wallet canary faiblement financé.
@@ -326,7 +325,7 @@ Ordre recommandé :
 3. Registry drand, Coordinator BN254, VRF service, core FWA et whitelist ;
 4. HWA + pool Project X + initialisation + LP définitivement verrouillée via le chemin atomique corrigé ;
 5. adapter et rewards ;
-6. transferts des allocations 150 M / 150 M / 200 M ;
+6. financement de la rÃ©serve saisonniÃ¨re de 100 M et du vesting Ã©cosystÃ¨me de 100 M ;
 7. bindings core/rewards/token/adapter/Splitter ;
 8. transfert de tous les owners au Safe ;
 9. vérification bytecode, immutables, rôles, balances et LP NFT ;
@@ -418,7 +417,7 @@ Les acquisitions peuvent être refermées sans nécessairement fermer le marché
 | Liste initiale de collections | Avant testnet v2 final | Hypios, PiP, Odd Otties, Catbal ; Hypurr ensuite |
 | Routage époque vide `F5F-021` | Avant code freeze | Burn cohérent et horloge suspendue sans listing |
 | Safe, signers, seuil | Avant répétition mainnet | Préparé : Safe déterministe 2-sur-3 ; déploiement et attestation restent à faire |
-| Recipient 200 M et fees LP | Avant génération des calldatas | Décidé : Safe final, aucune EOA personnelle |
+| Beneficiary vesting 100 M et fees LP | Avant génération des calldatas | Décidé : owner EOA attesté |
 | Prix, FDV, range | À la cérémonie de freeze | Proposition 640 HYPE, bande 600–700 ; fiche à confirmer et vérifier deux fois |
 | RPC logs/archives | Avant testnet v2 fallback puis mainnet gate | Endpoint distinct, historique complet, plage testée ≥10k |
 | Timing d'ouverture public buys | Après canary | Manuel et séparé des acquisitions |

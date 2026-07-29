@@ -184,14 +184,13 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
 
   const blocker = ((): { label: string; sub?: string } | null => {
     if (prelaunch) return { label: "Launch pending", sub: "Mainnet contracts are not deployed." };
+    if (!writesEnabled) return { label: "Protocol paused", sub: "Launch pending - all public operations are disabled." };
     if (!snapshot) return { label: "Loading pool…" };
     if (!acquisitionsOpen)
       return {
         label: "Acquisitions closed",
         sub: snapshot.activeListingCount === 0 ? "The pool is empty." : "Purchases are disabled by the protocol.",
       };
-    if (!writesEnabled)
-      return { label: "Read-only mode", sub: "The deployment manifest deliberately disables new acquisitions." };
     return null;
   })();
 

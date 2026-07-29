@@ -316,6 +316,34 @@ contract FWATokenHyperEVMTest is TestBase {
         token.setExternalBuysEnabled(true);
     }
 
+    function testLaunchAndTwapQuotesAreExposedForSeasonCap() public {
+        _launch();
+        assertTrue(token.launchHwaPerHypeX96() != 0);
+        assertEq(token.twapHwaPerHypeX96(), 0);
+
+        vm.warp(block.timestamp + token.BUYBACK_TWAP_SECONDS() + 1);
+        assertTrue(token.twapHwaPerHypeX96() != 0);
+    }
+
+    function testCanonicalDistributorsCannotBeRevokedAfterBinding() public {
+        _launch();
+        MockFWATokenAdapter marketAdapter =
+            new MockFWATokenAdapter(address(token), address(whype), address(marketPool), 10_000);
+        MockFWABuybackRouter rewardsRouter = new MockFWABuybackRouter();
+        vm.startPrank(OWNER);
+        token.setAdapter(address(marketAdapter));
+        token.setRewardsPool(address(rewardsRouter));
+
+        vm.expectRevert(FWATokenHyperEVM.InvalidTransfer.selector);
+        token.setDistributor(address(marketAdapter), false);
+        vm.expectRevert(FWATokenHyperEVM.InvalidTransfer.selector);
+        token.setDistributor(address(rewardsRouter), false);
+        vm.stopPrank();
+
+        assertTrue(token.isDistributor(address(marketAdapter)));
+        assertTrue(token.isDistributor(address(rewardsRouter)));
+    }
+
     function testLockerPositionCannotBeWithdrawnAndFeesRemainCollectable() public {
         _launch();
         assertEq(positionManager.ownerOf(1), address(locker));

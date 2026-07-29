@@ -68,7 +68,7 @@ $publicValues = [ordered]@{
     FWA_OWNER = $ownerRecipient
     FWA_SPLITTER_SECONDARY_OWNER = $zero
     FWA_PROJECTX_FEE_RECIPIENT = $ownerRecipient
-    FWA_LEGACY_ALLOCATION_RECIPIENT = $ownerRecipient
+    HWA_ECOSYSTEM_BENEFICIARY = $ownerRecipient
     HWA_GENESIS_NFT_MAX_SUPPLY = "333"
     HWA_MAINNET_OPERATIONAL_BUDGET_WEI = "20000000000000000000"
     MAINNET_FWA_MIN_INITIAL_FDV_HYPE_WEI = "600000000000000000000"
@@ -91,6 +91,7 @@ if ($FinalizeSingleOwner) {
     $publicValues.FWA_PROJECTX_ADAPTER_ADDRESS = $zero
     $publicValues.FWA_PROJECTX_POOL_ADDRESS = $zero
     $publicValues.FWA_PROJECTX_LIQUIDITY_LOCKER_ADDRESS = $zero
+    $publicValues.HWA_ECOSYSTEM_VESTING_ADDRESS = $zero
     $publicValues.HWA_GENESIS_NFT_FINALIZATION_CONFIRMED = "false"
     $publicValues.FWA_SPLITTER_FREEZE_CONFIRMED = "false"
 }

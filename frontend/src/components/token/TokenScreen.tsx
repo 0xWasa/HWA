@@ -76,7 +76,7 @@ export function TokenScreen() {
           <div className="mx-auto max-w-md space-y-2 px-4 pb-6">
             <PreviewRow label="Token" detail="$HWA, 18 decimals, HyperEVM" />
             <PreviewRow label="Market" detail="Project X, wHYPE pair, 1% fee tier" />
-            <PreviewRow label="Distribution" detail="depositor emissions + purchaser epoch pots (see Rewards)" />
+            <PreviewRow label="Distribution" detail="100M seasonal reserve + 100M ecosystem vesting; fixed 1B supply" />
             <PreviewRow label="Buy pressure" detail="protocol revenue routes into buybacks (40/40/20 with burn)" />
           </div>
           <p className="border-t border-line-subtle px-4 py-3 text-center text-2xs text-mute">

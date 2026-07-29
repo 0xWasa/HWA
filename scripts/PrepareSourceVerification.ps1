@@ -42,6 +42,7 @@ $contracts = [ordered]@{
     token = "src/hyperevm/FWATokenHyperEVM.sol:FWATokenHyperEVM"
     projectXAdapter = "src/hyperevm/FWAHyperSwapAdapter.sol:FWAHyperSwapAdapter"
     projectXLiquidityLocker = "src/hyperevm/HWAProjectXLiquidityLocker.sol:HWAProjectXLiquidityLocker"
+    ecosystemVesting = "src/hyperevm/HWAEcosystemVesting.sol:HWAEcosystemVesting"
 }
 
 $bundleRoot = Join-Path $projectRoot (Join-Path $OutputDirectory $ChainId)

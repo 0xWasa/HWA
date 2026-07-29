@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "chainId": 999,
-  "generatedAtUtc": "2026-07-29T14:56:07.2577182Z",
+  "generatedAtUtc": "2026-07-29T15:44:29.3211991Z",
   "broadcast": false,
   "executable": true,
   "onchainValidation": {
@@ -17,7 +17,7 @@
     "poolEmpty": true,
     "emissionNotStarted": true,
     "activationReady": true,
-    "checkedAtUtc": "2026-07-29T14:56:06.8495886Z"
+    "checkedAtUtc": "2026-07-29T15:44:28.9913090Z"
   },
   "preActivation": {
     "to": "0x4E010e44E6369A92c090069833144901a92bed5E",
@@ -29,7 +29,7 @@
   "activationBatch": [
     {
       "order": 1,
-      "to": "0x1fA5613ff9Ecf177808B619B016f061bA6a20fAE",
+      "to": "0x1fa5613ff9ecf177808b619b016f061ba6a20fae",
       "value": "0",
       "data": "0xbf4568b5",
       "operation": 0,
@@ -55,7 +55,7 @@
   "activationTemplate": [
     {
       "order": 1,
-      "to": "0x1fA5613ff9Ecf177808B619B016f061bA6a20fAE",
+      "to": "0x1fa5613ff9ecf177808b619b016f061ba6a20fae",
       "value": "0",
       "data": "0xe9646c6b",
       "operation": 0,
@@ -63,7 +63,7 @@
     },
     {
       "order": 1,
-      "to": "0x1fA5613ff9Ecf177808B619B016f061bA6a20fAE",
+      "to": "0x1fa5613ff9ecf177808b619b016f061ba6a20fae",
       "value": "0",
       "data": "0xbf4568b5",
       "operation": 0,
@@ -87,15 +87,7 @@
     }
   ],
   "canaryCollection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
-  "postCanaryPublicCollectionsTemplate": [
-    {
-      "to": "0x4261cE6B2F3352544D448609c3f5c61Ea9304428",
-      "value": "0",
-      "data": "0x909d6a4b00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000400000000000000000000000063eb9d77d083ca10c304e28d5191321977fd0bfb000000000000000000000000bc4a26ba78ce05e8bcbf069bbb87fb3e1dac8df800000000000000000000000043a9652e2b3ce8970e8d33d8c34252a59a6596aa0000000000000000000000009125e2d6827a00b0f8330d6ef7bef07730bac685",
-      "operation": 0,
-      "description": "NON-EXECUTABLE TEMPLATE: allowlist reviewed public collections only after a fulfilled canary acquisition"
-    }
-  ],
+  "postCanaryPublicCollectionsTemplate": [],
   "postCanaryPublicCollectionsExecutable": false,
   "emergencyPause": [
     {

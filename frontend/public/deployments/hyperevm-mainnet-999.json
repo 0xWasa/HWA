@@ -1,64 +1,68 @@
 {
-  "schemaVersion": 1,
-  "chainId": 999,
-  "deployedAtBlock": 41761096,
-  "contracts": {
-    "fwa": "0x4E010e44E6369A92c090069833144901a92bed5E",
-    "whitelist": "0x4261cE6B2F3352544D448609c3f5c61Ea9304428",
-    "vrfService": "0x1507F0c0EffD46dd5692425f58533aAF51b7A7e6",
-    "randomnessCoordinator": "0x165AEb646C60EFF71dA4b0546Ee7F3747f6545D4",
-    "randomnessRegistry": "0x1911B5FC94A6884F4f2e5f00AfFc1B1538De74Fb",
-    "splitter": "0x1fA5613ff9Ecf177808B619B016f061bA6a20fAE",
-    "rewards": "0x8f6C63F1eD141Af9FFb28a2CCb8A1bC58EfAF22F",
-    "token": "0x5457A903e0F388498AC8A1024B22487F730BB481",
-    "projectXAdapter": "0xBDE03ce21Dec56bcE57a2A09FBd666342EBc4B6e",
-    "projectXPool": "0x9e76749f864a07E1342622750EbBB9E22Fbda9cf",
-    "projectXLiquidityLocker": "0xc8fAF2604675dCeE851aAF68536529C387B182d8",
-    "snapshotNft": "0x89D52133B105E9548Df16dE4d7cf59c412daf191"
-  },
-  "features": {
-    "writesEnabled": true,
-    "acquisitionsEnabled": false,
-    "randomnessMode": "drand-bn254",
-    "dexMode": "projectx"
-  },
-  "collections": [
-    {
-      "address": "0x63eb9d77d083ca10c304e28d5191321977fd0bfb",
-      "name": "Hypio",
-      "symbol": "hypio",
-      "deploymentBlock": 390921,
-      "testnetFixture": false
-    },
-    {
-      "address": "0xbc4a26ba78ce05e8bcbf069bbb87fb3e1dac8df8",
-      "name": "PiP & Friends",
-      "symbol": "PIPF",
-      "deploymentBlock": 3727372,
-      "testnetFixture": false
-    },
-    {
-      "address": "0x43a9652e2b3ce8970e8d33d8c34252a59a6596aa",
-      "name": "Odd Otties",
-      "symbol": "ODD",
-      "deploymentBlock": 1835630,
-      "testnetFixture": false
-    },
-    {
-      "address": "0x9125e2d6827a00b0f8330d6ef7bef07730bac685",
-      "name": "Hypurr",
-      "symbol": "HYPURR",
-      "deploymentBlock": 15060098,
-      "testnetFixture": false
-    },
-    {
-      "address": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
-      "name": "HWA Genesis Snapshot",
-      "symbol": "HWA-GEN",
-      "deploymentBlock": 41759742,
-      "maxTokenId": 333,
-      "testnetFixture": false,
-      "snapshotCollection": true
-    }
-  ]
+    "schemaVersion":  1,
+    "chainId":  999,
+    "deployedAtBlock":  41791962,
+    "contracts":  {
+                      "fwa":  "0x13aB222c1079084064F75713e72defCE20751f4A",
+                      "whitelist":  "0xD2E5eC83bD273d3ced73E473a3cAd5cdEa146C37",
+                      "vrfService":  "0xB399E3EE9419b92D2B7203F00F1Fd54e33174fb8",
+                      "randomnessCoordinator":  "0xBE13F57c0E682BD41764a07B672A5b149Fe0BeCe",
+                      "randomnessRegistry":  "0x15837226faD7411445b1ba2745Cbd2f02a33B367",
+                      "splitter":  "0xE8196d684e354De6cadcDd838bf2fc57CB4e6903",
+                      "rewards":  "0xdac6E20EeAE89beE1D4810c7754f1Cc35F25960f",
+                      "token":  "0x0d3433Df3D9f5A5746384C79Ada7B1808E155971",
+                      "projectXAdapter":  "0x5F946be27739446C546f9827c8E78465931E5C45",
+                      "projectXPool":  "0x2e98a09e6412AC1C55972832B4F1E841A0BD07e5",
+                      "projectXLiquidityLocker":  "0x00F8dA9A528aFf254D77C8a8CF6106Ac8e87A70d",
+                      "ecosystemVesting":  "0x92e5701F30767101A7A0032eaD053c3D4A406523",
+                      "snapshotNft":  "0x89D52133B105E9548Df16dE4d7cf59c412daf191"
+                  },
+    "features":  {
+                     "writesEnabled":  false,
+                     "depositsEnabled":  false,
+                     "acquisitionsEnabled":  false,
+                     "rewardClaimsEnabled":  false,
+                     "externalBuysEnabled":  false,
+                     "randomnessMode":  "drand-bn254",
+                     "dexMode":  "projectx"
+                 },
+    "collections":  [
+                        {
+                            "address":  "0x63eb9d77d083ca10c304e28d5191321977fd0bfb",
+                            "name":  "Hypio",
+                            "symbol":  "hypio",
+                            "deploymentBlock":  390921,
+                            "testnetFixture":  false
+                        },
+                        {
+                            "address":  "0xbc4a26ba78ce05e8bcbf069bbb87fb3e1dac8df8",
+                            "name":  "PiP \u0026 Friends",
+                            "symbol":  "PIPF",
+                            "deploymentBlock":  3727372,
+                            "testnetFixture":  false
+                        },
+                        {
+                            "address":  "0x43a9652e2b3ce8970e8d33d8c34252a59a6596aa",
+                            "name":  "Odd Otties",
+                            "symbol":  "ODD",
+                            "deploymentBlock":  1835630,
+                            "testnetFixture":  false
+                        },
+                        {
+                            "address":  "0x9125e2d6827a00b0f8330d6ef7bef07730bac685",
+                            "name":  "Hypurr",
+                            "symbol":  "HYPURR",
+                            "deploymentBlock":  15060098,
+                            "testnetFixture":  false
+                        },
+                        {
+                            "address":  "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+                            "name":  "HWA Genesis Snapshot",
+                            "symbol":  "HWA-GEN",
+                            "deploymentBlock":  41759742,
+                            "testnetFixture":  false,
+                            "maxTokenId":  333,
+                            "snapshotCollection":  true
+                        }
+                    ]
 }

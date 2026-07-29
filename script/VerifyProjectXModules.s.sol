@@ -10,6 +10,7 @@ import {
 import {FWAHyperSwapAdapter} from "../src/hyperevm/FWAHyperSwapAdapter.sol";
 import {FWARewardsHyperEVM} from "../src/hyperevm/FWARewardsHyperEVM.sol";
 import {FWATokenHyperEVM} from "../src/hyperevm/FWATokenHyperEVM.sol";
+import {HWAEcosystemVesting} from "../src/hyperevm/HWAEcosystemVesting.sol";
 import {HWAProjectXLiquidityLocker} from "../src/hyperevm/HWAProjectXLiquidityLocker.sol";
 import {SplitterHyperEVM} from "../src/hyperevm/SplitterHyperEVM.sol";
 import {MainnetOwnerPolicy} from "./MainnetOwnerPolicy.sol";
@@ -19,7 +20,7 @@ interface VmProjectXVerify {
     function envBool(string calldata name) external returns (bool value);
 }
 
-/// @notice Read-only release attestation for either the chain-998 compatibility venue or Project X mainnet.
+/// @notice Read-only fail-closed release attestation for Project X modules.
 contract VerifyProjectXModules {
     VmProjectXVerify internal constant vm = VmProjectXVerify(address(uint160(uint256(keccak256("hevm cheat code")))));
     uint256 internal constant TESTNET = 998;
@@ -33,7 +34,10 @@ contract VerifyProjectXModules {
     address internal constant TESTNET_V3_NFPM = 0x09Aca834543b5790DB7a52803d5F9d48c5b87e80;
     address internal constant TESTNET_WHYPE = 0xADcb2f358Eae6492F61A5F87eb8893d09391d160;
     uint256 internal constant INITIAL_SUPPLY = 1_000_000_000 ether;
-    uint256 internal constant TOTAL_EMISSION = 300_000_000 ether;
+    uint256 internal constant LP_ALLOCATION = 800_000_000 ether;
+    uint256 internal constant MAX_LP_DUST = 1 gwei;
+    uint256 internal constant SEASONAL_ALLOCATION = 100_000_000 ether;
+    uint256 internal constant ECOSYSTEM_ALLOCATION = 100_000_000 ether;
     bytes32 internal constant TOKEN_NAME_HASH = keccak256("Hyper World Assets");
     bytes32 internal constant TOKEN_SYMBOL_HASH = keccak256("HWA");
 
@@ -44,6 +48,7 @@ contract VerifyProjectXModules {
         address rewards,
         address adapter,
         address liquidityLocker,
+        address ecosystemVesting,
         uint8 feeProtocol
     );
 
@@ -62,14 +67,18 @@ contract VerifyProjectXModules {
         FWATokenHyperEVM token = FWATokenHyperEVM(payable(vm.envAddress("FWA_TOKEN_ADDRESS")));
         FWARewardsHyperEVM rewards = FWARewardsHyperEVM(vm.envAddress("FWA_REWARDS_ADDRESS"));
         FWAHyperSwapAdapter adapter = FWAHyperSwapAdapter(payable(vm.envAddress("FWA_PROJECTX_ADAPTER_ADDRESS")));
+        HWAEcosystemVesting vesting = HWAEcosystemVesting(vm.envAddress("HWA_ECOSYSTEM_VESTING_ADDRESS"));
         HWAProjectXLiquidityLocker locker = HWAProjectXLiquidityLocker(token.liquidityLocker());
         SplitterHyperEVM splitter = SplitterHyperEVM(payable(vm.envAddress("FWA_SPLITTER_ADDRESS")));
         IHyperSwapV3Pool pool = IHyperSwapV3Pool(token.pool());
+        uint256 poolTokenBalance = token.balanceOf(address(pool));
+        uint256 launchDust = token.balanceOf(address(token));
 
         _requireCode(address(fwa));
         _requireCode(address(token));
         _requireCode(address(rewards));
         _requireCode(address(adapter));
+        _requireCode(address(vesting));
         _requireCode(address(locker));
         _requireCode(address(splitter));
         _requireCode(address(pool));
@@ -83,7 +92,8 @@ contract VerifyProjectXModules {
         }
         if (
             keccak256(bytes(token.name())) != TOKEN_NAME_HASH || keccak256(bytes(token.symbol())) != TOKEN_SYMBOL_HASH
-                || !token.launched() || price == 0 || token.totalSupply() == 0 || token.totalSupply() > INITIAL_SUPPLY
+                || !token.launched() || price == 0 || token.totalSupply() != INITIAL_SUPPLY
+                || poolTokenBalance + launchDust != LP_ALLOCATION || launchDust > MAX_LP_DUST
                 || token.POOL_FEE() != 10_000 || token.POOL_TICK_SPACING() != 200 || token.WHYPE() != whype
                 || address(token.FACTORY()) != factory || address(token.POSITION_MANAGER()) != nfpm
                 || IHyperSwapV3Factory(factory).getPool(whype, address(token), 10_000) != address(pool)
@@ -98,22 +108,23 @@ contract VerifyProjectXModules {
                 || rewards.token() != address(token) || address(rewards.swapAdapter()) != address(adapter)
                 || rewards.fwa() != address(fwa) || address(fwa.rewards()) != address(rewards)
                 || fwa.token() != address(token) || token.owner() != finalOwner || rewards.owner() != finalOwner
-                || adapter.owner() != finalOwner || rewards.depositorRatePerSec() == 0
-                || rewards.purchaserDailyPot() == 0 || token.buybackSqrtPriceLimitX96() == 0
+                || adapter.owner() != finalOwner || rewards.SEASONAL_RESERVE() != SEASONAL_ALLOCATION
+                || rewards.seasonalReserveRemaining() != SEASONAL_ALLOCATION || !rewards.emissionConfigured()
                 || token.routeDepositorBps() != 4_000 || token.routePurchaserBps() != 4_000
                 || token.routeBurnBps() != 2_000 || fwa.payoutAddress() != address(splitter)
-                || splitter.owner() != finalOwner
+                || splitter.owner() != finalOwner || vesting.TOKEN() != address(token)
+                || vesting.BENEFICIARY() != vm.envAddress("HWA_ECOSYSTEM_BENEFICIARY")
+                || vesting.ALLOCATION() != ECOSYSTEM_ALLOCATION || vesting.DURATION() != 730 days
+                || vesting.CLIFF() != 90 days || token.balanceOf(address(vesting)) != ECOSYSTEM_ALLOCATION
         ) revert InvalidWiring();
 
+        // This attestation intentionally requires the entire public protocol to remain closed.
         if (
-            block.chainid == MAINNET
-                && (rewards.emissionStart() != 0
-                    || token.balanceOf(address(rewards)) < TOTAL_EMISSION
-                    || token.externalBuysEnabled()
-                    || !token.buybackOracleReady()
-                    || token.buybackMinOutPerHypeX96() == 0)
+            rewards.emissionStart() != 0 || rewards.claimsEnabled() || token.externalBuysEnabled()
+                || fwa.acquisitionsEnabled() || fwa.activeListingCount() != 0 || fwa.unsettledAcquisitionCount() != 0
+                || token.balanceOf(address(rewards)) != SEASONAL_ALLOCATION || token.launchHwaPerHypeX96() == 0
+                || token.balanceOf(finalOwner) != 0
         ) revert InvalidWiring();
-        if (block.chainid == TESTNET && token.buybackMinOutPerHypeX96() == 0) revert InvalidWiring();
 
         emit ProjectXModulesVerified(
             block.chainid,
@@ -122,6 +133,7 @@ contract VerifyProjectXModules {
             address(rewards),
             address(adapter),
             address(locker),
+            address(vesting),
             feeProtocol
         );
     }

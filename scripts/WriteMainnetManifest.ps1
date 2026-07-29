@@ -10,6 +10,7 @@ param(
     [Parameter(Mandatory = $true)] [string]$ProjectXAdapter,
     [Parameter(Mandatory = $true)] [string]$ProjectXPool,
     [Parameter(Mandatory = $true)] [string]$ProjectXLiquidityLocker,
+    [Parameter(Mandatory = $true)] [string]$EcosystemVesting,
     [Parameter(Mandatory = $true)] [string]$SnapshotNft,
     [Parameter(Mandatory = $true)] [long]$SnapshotDeploymentBlock,
     [Parameter(Mandatory = $true)] [int]$SnapshotMaxTokenId,
@@ -23,7 +24,7 @@ $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $zero = "0x0000000000000000000000000000000000000000"
 $addressPattern = '^0x[0-9a-fA-F]{40}$'
-$values = @($Fwa, $Whitelist, $VrfService, $RandomnessCoordinator, $RandomnessRegistry, $Splitter, $Rewards, $Token, $ProjectXAdapter, $ProjectXPool, $ProjectXLiquidityLocker, $SnapshotNft)
+$values = @($Fwa, $Whitelist, $VrfService, $RandomnessCoordinator, $RandomnessRegistry, $Splitter, $Rewards, $Token, $ProjectXAdapter, $ProjectXPool, $ProjectXLiquidityLocker, $EcosystemVesting, $SnapshotNft)
 foreach ($value in $values) {
     if ($value -notmatch $addressPattern -or $value -eq $zero) {
         throw "Invalid or zero deployment address: $value"
@@ -86,11 +87,15 @@ $manifest = [ordered]@{
         projectXAdapter = $ProjectXAdapter
         projectXPool = $ProjectXPool
         projectXLiquidityLocker = $ProjectXLiquidityLocker
+        ecosystemVesting = $EcosystemVesting
         snapshotNft = $SnapshotNft
     }
     features = [ordered]@{
         writesEnabled = $false
+        depositsEnabled = $false
         acquisitionsEnabled = $false
+        rewardClaimsEnabled = $false
+        externalBuysEnabled = $false
         randomnessMode = "drand-bn254"
         dexMode = "projectx"
     }
