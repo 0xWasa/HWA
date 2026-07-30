@@ -52,7 +52,9 @@ export function SupportedCollections({
         <span className="mlabel text-faint">{allowed.length} allowlisted</span>
       </div>
 
-      <div className="deck-tilt grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      {/* Auto-fit rather than a fixed column count: the allowlist grows, and a
+          hardcoded five left the sixth collection stranded on its own row. */}
+      <div className="deck-tilt grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(9rem,1fr))]">
         {allowed.map((collection) => {
           const config = collectionFloorConfig(collection.address);
           const name = sanitizeLabel(collection.name, "Unknown collection");
