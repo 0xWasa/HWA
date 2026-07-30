@@ -658,3 +658,61 @@ describe("ViemProtocolClient swap quoting", () => {
     });
   });
 });
+
+describe("ViemProtocolClient acquisition funding", () => {
+  it("funds the randomness fee at a gas price above the one it observed", async () => {
+    // requestFee() is gasEstimate * tx.gasprice * margin + flat, and the wallet
+    // picks tx.gasprice. Funding it at our own gas price is what made every
+    // acquisition revert with InsufficientPayment behind a wallet that bid
+    // higher, so the value sent has to carry headroom.
+    const client = new ViemProtocolClient(
+      { ...manifest, features: { ...manifest.features, acquisitionsEnabled: true, writesEnabled: true } } as DeploymentManifest,
+      "http://localhost:8545",
+      999,
+    );
+    const gasPrices: bigint[] = [];
+    const pub = {
+      getGasPrice: vi.fn(async () => 1_000_000_000n),
+      readContract: vi.fn(async () => 10n ** 24n),
+      call: vi.fn(async ({ gasPrice }: { gasPrice: bigint }) => {
+        gasPrices.push(gasPrice);
+        // Pool fee is flat; the service fee tracks the gas price it was quoted
+        // at, exactly as requestFee() does on-chain. (fee, vrf, total).
+        const fee = 10n ** 17n;
+        const service = gasPrice / 1_000_000n;
+        const word = (v: bigint) => v.toString(16).padStart(64, "0");
+        return { data: `0x${word(fee)}${word(service)}${word(fee + service)}` };
+      }),
+    };
+    let sentValue = 0n;
+    const wallet = {
+      writeContract: vi.fn(async ({ value }: { value: bigint }) => {
+        sentValue = value;
+        return `0x${"11".repeat(32)}`;
+      }),
+    };
+    Object.assign(client, { pub });
+    vi.spyOn(client as unknown as { connectedWallet: () => Promise<unknown> }, "connectedWallet").mockResolvedValue({
+      wallet,
+      account: "0x0000000000000000000000000000000000000020",
+    });
+    vi.spyOn(client as unknown as { followReceipt: (t: unknown) => Promise<unknown> }, "followReceipt").mockImplementation(
+      async (tx) => tx,
+    );
+
+    await client.acquire({
+      quote: {
+        quantity: 1,
+        maxAcquisitionFeePerItem: 10n ** 17n,
+        minWeightedValue: 0n,
+        driftToleranceBps: 1_000,
+      } as never,
+    });
+
+    // Both quotes were taken, the funded one at strictly higher gas.
+    expect(gasPrices).toHaveLength(2);
+    expect(Math.max(...gasPrices.map(Number))).toBeGreaterThan(Math.min(...gasPrices.map(Number)));
+    // The value carries the headroom fee, not the spot one.
+    expect(sentValue).toBe(10n ** 17n + 4_000n);
+  });
+});

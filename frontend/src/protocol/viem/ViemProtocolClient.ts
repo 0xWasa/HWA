@@ -63,6 +63,16 @@ import {
 import { buildPoolMarketHistory, type PoolSwapSample } from "./market";
 import { hypePerHwaFromSqrtPrice } from "./price";
 
+/**
+ * Gas-price headroom used to fund the randomness fee.
+ *
+ * That fee is priced from `tx.gasprice`, which the wallet chooses, not us. Four
+ * times the observed price covers an aggressive wallet setting; the core
+ * refunds the difference, and the fee is a ten-thousandth of the pool price, so
+ * the headroom costs the buyer nothing in practice.
+ */
+const ACQUIRE_GAS_PRICE_HEADROOM = 4n;
+
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
 const MAX_ENUMERATED_LISTINGS = 1_000n;
 const INDEXER_PAGE_SIZE = 200;
@@ -855,8 +865,8 @@ export class ViemProtocolClient implements ProtocolClient {
     }
   }
 
-  private async readQuote() {
-    const gasPrice = await this.pub.getGasPrice();
+  private async readQuote(gasPriceMultiplier = 1n) {
+    const gasPrice = (await this.pub.getGasPrice()) * gasPriceMultiplier;
     const data = encodeFunctionData({
       abi: fwaCoreAbi,
       functionName: "quoteAcquisitionPrice",
@@ -2453,11 +2463,20 @@ export class ViemProtocolClient implements ProtocolClient {
       throw new ProtocolError("ACQUISITIONS_DISABLED", "The supervised drand relayer session is not open.");
     }
     const { wallet, account } = await this.connectedWallet();
-    const [priced, weightedBackingTotal] = await Promise.all([
+    // The randomness fee is `gasEstimate * tx.gasprice * margin + flat`, so it
+    // is only known once the wallet picks a gas price, and wallets routinely
+    // ignore the one a dapp suggests. Funding the fee measured at our own gas
+    // price made every acquisition revert with InsufficientPayment whenever the
+    // wallet bid higher. The second quote reprices that fee with headroom,
+    // using the contract's own formula rather than a guessed multiple, and the
+    // core refunds every wei above the real cost.
+    const [priced, headroom, weightedBackingTotal] = await Promise.all([
       this.readQuote(),
+      this.readQuote(ACQUIRE_GAS_PRICE_HEADROOM),
       this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "weightedBackingTotal" }),
     ]);
-    const [poolFeePerItem, serviceFeePerItem] = priced.quote;
+    const [poolFeePerItem] = priced.quote;
+    const fundedServiceFeePerItem = headroom.quote[1];
     if (poolFeePerItem > input.quote.maxAcquisitionFeePerItem) {
       throw new ProtocolError("PRICE_DRIFTED", "The pool fee is above the signed quote guard.");
     }
@@ -2467,7 +2486,7 @@ export class ViemProtocolClient implements ProtocolClient {
     // `_acquire` may activate staged listings before repricing the pool. Fund the
     // signed ceiling, not the pre-activation spot quote; the core refunds every
     // wei above the final pool fee + randomness service fee.
-    const value = (input.quote.maxAcquisitionFeePerItem + serviceFeePerItem) * BigInt(input.quote.quantity);
+    const value = (input.quote.maxAcquisitionFeePerItem + fundedServiceFeePerItem) * BigInt(input.quote.quantity);
     const submit = () =>
       input.quote.quantity === 1
         ? wallet.writeContract({
