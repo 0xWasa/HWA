@@ -18,7 +18,7 @@ export function TermsScreen() {
           <p className="mlabel text-secondary-readable">Legal</p>
           <h1 className="mt-2 text-lg font-semibold">Terms of Service</h1>
           <p className="mt-2 text-xs leading-relaxed text-dim">
-            These terms govern your use of the Hyper World Assets interface — the website you are reading right now.
+            These terms govern your use of the HWA interface — the website you are reading right now.
             They are written to be read, not to be skipped. If something below is unacceptable to you, do not use the
             interface.
           </p>
@@ -38,7 +38,7 @@ export function TermsScreen() {
         <div className="mt-6 space-y-7">
           <Section id="what-this-is" title="1. What this interface is">
             <P>
-              Hyper World Assets is a front end: open-source software that runs in your browser, reads public state from
+              HWA is a front end: open-source software that runs in your browser, reads public state from
               the HyperEVM network, and helps you format transactions that your own wallet may then sign and broadcast.
               It is a convenience layer over public smart contracts. Anyone can interact with those contracts without
               this interface, and anyone can run their own copy of this interface.

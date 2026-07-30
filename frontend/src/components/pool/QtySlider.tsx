@@ -93,16 +93,19 @@ export function QtySlider({
           );
         })}
       </div>
-      {/* thumb */}
+      {/* thumb — springs into place; the number pops on every step change
+          (keyed span retriggers the pop without breaking the left transition) */}
       <div
         aria-hidden
-        className="absolute top-1/2 z-20 grid size-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-md bg-accent text-sm font-bold text-accent-fg transition-[left] duration-150"
+        className="absolute top-1/2 z-20 grid size-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-md bg-accent text-sm font-bold text-accent-fg transition-[left] duration-200 ease-(--ease-spring)"
         style={{
           left: posCalc,
           boxShadow: "0 6px 16px color-mix(in srgb, var(--hwa-accent) 35%, transparent)",
         }}
       >
-        {value}
+        <span key={value} className="anim-step-pop">
+          {value}
+        </span>
       </div>
     </div>
   );

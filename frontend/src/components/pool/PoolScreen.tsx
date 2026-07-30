@@ -6,6 +6,7 @@ import { env } from "@/config/env";
 import { formatHype } from "@/lib/units";
 import { RARITY_COLOR, RARITY_LABEL, rarityFromOdds } from "@/protocol/rarity";
 import { FWA_PARAMS } from "@/protocol/params";
+import { useProtocol } from "@/protocol/provider";
 import type { Listing, ListingsQuery, PoolSnapshot, RarityTier } from "@/protocol/types";
 import { useCollections, useListings, usePoolSnapshot, usePositions } from "@/state/queries";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -19,6 +20,7 @@ import { PoolStatCards } from "./PoolStatCards";
 import { PoolMissionHud } from "./PoolMissionHud";
 import { PurchaseSidebar } from "./PurchaseSidebar";
 import { RandomnessFlightDeck } from "@/components/tx/RandomnessFlightDeck";
+import { ProtocolPrelaunch } from "@/components/ui/ProtocolPrelaunch";
 
 const PAGE_SIZE = 24;
 
@@ -26,6 +28,7 @@ export function PoolScreen() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { prelaunch } = useProtocol();
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [limit, setLimit] = useState(PAGE_SIZE);
@@ -69,7 +72,7 @@ export function PoolScreen() {
   }, [router, pathname, searchParams]);
 
   const totalWeight = snapshot?.totalWeight ?? 0n;
-  const poolIsConfirmedEmpty = snapshot !== undefined && snapshot.activeListingCount === 0;
+  const poolIsConfirmedEmpty = !prelaunch && snapshot !== undefined && snapshot.activeListingCount === 0;
 
   return (
     <div className="flex w-full flex-col">
@@ -81,17 +84,23 @@ export function PoolScreen() {
             : "lg:h-[calc(100dvh-9.5rem)] lg:min-h-[560px] lg:max-h-[860px]"
         }`}
       >
-        <h1 className="sr-only">Hyper World Assets NFT pool</h1>
+        <h1 className="sr-only">HWA NFT pool</h1>
         <div aria-hidden className="grid-paper pointer-events-none absolute inset-0 select-none" />
         <div aria-hidden className="aurora pointer-events-none absolute inset-0 select-none" />
         <div aria-hidden className="dot-grid pointer-events-none absolute inset-0 select-none opacity-60" />
         <div className="relative z-10 grid h-full w-full lg:grid-cols-[minmax(0,1fr)_432px]">
           {/* left: stats bar + prize stack */}
           <div className="flex min-h-0 min-w-0 flex-col">
-            <HeroStatsBar snapshot={snapshot} listings={poolAll?.items} />
-            <PoolMissionHud snapshot={snapshot} inFlightCount={inFlightTickets.length} />
+            <HeroStatsBar snapshot={snapshot} listings={poolAll?.items} prelaunch={prelaunch} />
+            <PoolMissionHud snapshot={snapshot} inFlightCount={inFlightTickets.length} prelaunch={prelaunch} />
             <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-hidden px-4 py-6 lg:py-2">
-              {inFlightTickets.length > 0 ? (
+              {prelaunch ? (
+                <ProtocolPrelaunch
+                  compact
+                  title="The mainnet book is being prepared."
+                  detail="No pool, NFT position or $HWA market is live yet. This page will switch to verified on-chain data only after the deployment manifest is published."
+                />
+              ) : inFlightTickets.length > 0 ? (
                 <RandomnessFlightDeck tickets={inFlightTickets} snapshot={snapshot} />
               ) : (
                 <HeroPrizeStack listings={poolAll?.items ?? []} snapshot={snapshot} onOpen={openListing} />
@@ -164,7 +173,7 @@ export function PoolScreen() {
           </span>
         </div>
 
-        <PoolStatCards />
+        <PoolStatCards prelaunch={prelaunch} />
 
         <div className="grid w-full gap-3 md:grid-cols-3" data-testid="param-pills">
           {(
@@ -217,7 +226,14 @@ export function PoolScreen() {
         />
 
         <div className="mt-3">
-          {isLoading && !page ? (
+          {prelaunch ? (
+            <div className="card">
+              <EmptyState
+                title="No live positions before deployment"
+                detail="The pool explorer will populate from the mainnet contracts and indexer after launch. No simulated listings are mixed into this view."
+              />
+            </div>
+          ) : isLoading && !page ? (
             viewMode === "grid" ? (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -256,7 +272,7 @@ export function PoolScreen() {
               />
             </div>
           ) : viewMode === "grid" ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6" data-testid="listing-grid">
+            <div className="deck-tilt grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6" data-testid="listing-grid">
               {page.items.map((l) => (
                 <ListingCard key={l.id.toString()} listing={l} totalWeight={totalWeight} onOpen={openListing} />
               ))}
@@ -295,7 +311,15 @@ export function PoolScreen() {
 
 // ---------------------------------------------------------------- pieces
 
-function HeroStatsBar({ snapshot, listings }: { snapshot?: PoolSnapshot; listings?: Listing[] }) {
+function HeroStatsBar({
+  snapshot,
+  listings,
+  prelaunch = false,
+}: {
+  snapshot?: PoolSnapshot;
+  listings?: Listing[];
+  prelaunch?: boolean;
+}) {
   // Probability mass per rarity band: the chance an acquisition lands in it.
   const distribution = useMemo(() => {
     if (!listings || listings.length === 0 || !snapshot || snapshot.totalWeight <= 0n) return null;
@@ -319,7 +343,16 @@ function HeroStatsBar({ snapshot, listings }: { snapshot?: PoolSnapshot; listing
     <div className="flex h-14 shrink-0 items-center border-b border-line bg-bg/90 pl-4" data-testid="pool-stats">
       <div className="flex w-full min-w-0 items-center gap-3 overflow-x-auto pr-4">
         <span className="mlabel shrink-0 text-mute">Draw odds</span>
-        {distribution ? (
+        {prelaunch ? (
+          <>
+            <span className="flex shrink-0 items-center gap-2 rounded-full border border-amber/30 bg-amber/8 px-2.5 py-1">
+              <span aria-hidden className="size-1.5 rounded-full bg-amber" />
+              <span className="mlabel text-amber">Pre-launch</span>
+            </span>
+            <span className="num shrink-0 font-mono text-2xs text-mute">no live odds</span>
+            <span className="num shrink-0 font-mono text-2xs text-mute">chain 999</span>
+          </>
+        ) : distribution ? (
           distribution.map((d) => (
             <span
               key={d.tier}

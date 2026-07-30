@@ -2,6 +2,7 @@
 pragma solidity ^0.8.30;
 
 import {SplitterHyperEVM} from "../src/hyperevm/SplitterHyperEVM.sol";
+import {MainnetOwnerPolicy} from "./MainnetOwnerPolicy.sol";
 
 interface VmSplitterDeploy {
     function envUint(string calldata name) external returns (uint256 value);
@@ -58,10 +59,10 @@ contract DeploySplitterHyperEVM {
         if (owner == address(0) || secondaryOwner == owner || snapshotNft == address(0)) {
             revert InvalidAddress();
         }
-        if (
-            snapshotNft.code.length == 0 || maxTokenId == 0
-                || (block.chainid == HYPEREVM_MAINNET_CHAIN_ID && owner.code.length == 0)
-        ) revert InvalidSnapshot();
+        if (block.chainid == HYPEREVM_MAINNET_CHAIN_ID) {
+            MainnetOwnerPolicy.validateDeploymentOwner(owner, deployer, vm.envBool("MAINNET_EOA_OWNER_CONFIRMED"));
+        }
+        if (snapshotNft.code.length == 0 || maxTokenId == 0) revert InvalidSnapshot();
 
         vm.startBroadcast(deployerKey);
         splitter = new SplitterHyperEVM(owner, secondaryOwner, snapshotNft, maxTokenId);

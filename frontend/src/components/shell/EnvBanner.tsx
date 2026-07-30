@@ -11,7 +11,7 @@ import { useConnectionHealth } from "@/state/queries";
  * live data: the mock notice always wins.
  */
 export function EnvBanner() {
-  const { scenario, manifestState, writesEnabled } = useProtocol();
+  const { scenario, manifestState, writesEnabled, prelaunch } = useProtocol();
   const account = useAccountState();
   const { data: health } = useConnectionHealth();
 
@@ -24,6 +24,12 @@ export function EnvBanner() {
         scenario && scenario.id !== "default" ? ` · scenario: ${scenario.label}` : ""
       }`,
       testid: "banner-mock",
+    });
+  } else if (prelaunch) {
+    items.push({
+      tone: "amber",
+      text: "PRE-LAUNCH — HyperEVM mainnet contracts are not deployed; transactions are locked",
+      testid: "banner-prelaunch",
     });
   } else if (!writesEnabled) {
     const reason =

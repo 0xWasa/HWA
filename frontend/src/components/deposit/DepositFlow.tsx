@@ -21,6 +21,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { NFTImage } from "@/components/nft/NFTImage";
 import { DepositLaunchSequence } from "@/components/deposit/DepositLaunchSequence";
+import { ProtocolPrelaunch } from "@/components/ui/ProtocolPrelaunch";
 
 type DepositIntent = {
   collection: Address;
@@ -37,7 +38,7 @@ type DepositIntent = {
  */
 export function DepositFlow() {
   const account = useAccountState();
-  const { writesEnabled } = useProtocol();
+  const { writesEnabled, prelaunch } = useProtocol();
   const { data: snapshot } = usePoolSnapshot();
   const { data: owned, isLoading: loadingNfts } = useOwnedNfts();
   const { data: balance } = useNativeBalance();
@@ -122,6 +123,17 @@ export function DepositFlow() {
           : null;
 
   // ------------------------------------------------------------ gates
+  if (prelaunch) {
+    return (
+      <Shell>
+        <ProtocolPrelaunch
+          title="Deposits are locked until launch."
+          detail="The allowlist, pool custody and settlement contracts are not deployed on HyperEVM mainnet yet. Deposit controls will unlock only after the public manifest passes the final canary."
+          compact
+        />
+      </Shell>
+    );
+  }
   if (account.status !== "connected") {
     return (
       <Shell>
@@ -242,11 +254,11 @@ export function DepositFlow() {
                         {sanitizeLabel(n.nft.name, `#${n.tokenId}`)}
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="truncate text-[9px] text-mute">
+                        <span className="truncate text-3xs text-mute">
                           {sanitizeLabel(n.nft.collectionSymbol, "?")}
                         </span>
-                        {!n.whitelisted && <span className="text-[9px] text-red">not allowed</span>}
-                        {n.whitelisted && n.approved && <span className="text-[9px] text-green">approved ✓</span>}
+                        {!n.whitelisted && <span className="text-3xs text-red">not allowed</span>}
+                        {n.whitelisted && n.approved && <span className="text-3xs text-green">approved ✓</span>}
                       </div>
                     </div>
                     {active && <span aria-hidden className="absolute inset-0 rounded-sm ring-2 ring-inset ring-accent" />}
@@ -448,7 +460,7 @@ function StepRow({
     >
       <div className="flex min-w-0 items-center gap-2">
         <span
-          className={`grid size-5 shrink-0 place-items-center rounded-full border text-[10px] font-bold ${
+          className={`grid size-5 shrink-0 place-items-center rounded-full border text-3xs font-bold ${
             state === "done"
               ? "border-green bg-green text-bg"
               : state === "pending"

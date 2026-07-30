@@ -1,10 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { env } from "@/config/env";
 import { chainLabel } from "@/config/chains";
 import { useConnectionHealth } from "@/state/queries";
+import { useProtocol } from "@/protocol/provider";
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "./ThemeToggle";
 import { WalletButton } from "./WalletButton";
@@ -25,9 +27,11 @@ const NAV = [
  */
 export function TopBar() {
   const pathname = usePathname();
+  const { prelaunch } = useProtocol();
   const { data: health } = useConnectionHealth();
 
   const sync = (() => {
+    if (prelaunch) return { dot: "bg-amber", label: "Pre-launch", tone: "text-amber" };
     if (!health) return { dot: "bg-mute", label: "Syncing…", tone: "text-mute" };
     if (health.rpc === "down") return { dot: "bg-red", label: "RPC down", tone: "text-red" };
     if (health.indexer.status === "down") return { dot: "bg-red", label: "Indexer down", tone: "text-red" };
@@ -46,49 +50,25 @@ export function TopBar() {
       />
       <div className="mx-auto flex w-full max-w-[1600px] items-center gap-2 sm:gap-3">
         {/* left capsule: brand + routes */}
-        <div className="capsule flex min-w-0 flex-1 items-center gap-1 p-1.5 xl:flex-none">
+        <div className="capsule flex min-w-0 items-center gap-1 p-1.5 sm:flex-1 xl:flex-none">
           <Link
             href="/"
             className="flex shrink-0 items-center gap-2 rounded-xl px-1.5 py-1"
-            aria-label="Hyper World Assets — home"
+            aria-label="HWA — home"
           >
-            <span
-              aria-hidden
-              className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent font-display text-[11px] font-extrabold tracking-tight text-accent-fg"
-              style={{ boxShadow: "0 6px 16px color-mix(in srgb, var(--hwa-accent) 32%, transparent)" }}
-            >
-              HW
-            </span>
-            <span className="hidden font-display text-sm font-bold tracking-tight text-ink xl:inline 2xl:text-base">
-              Hyper<span className="text-accent">World</span><span className="text-secondary-readable">Assets</span>
+            <span aria-hidden className="logo-squish grid h-8 w-[66px] shrink-0 place-items-center">
+              <Image
+                src="/brand/hwa-wordmark.png"
+                alt=""
+                width={132}
+                height={58}
+                priority
+                className="h-8 w-auto object-contain drop-shadow-[0_5px_12px_color-mix(in_srgb,var(--hwa-accent)_22%,transparent)]"
+              />
             </span>
           </Link>
 
-          <nav
-            aria-label="Main"
-            className="flex min-w-0 items-center gap-0.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {NAV.map((item) => {
-              const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={`relative whitespace-nowrap rounded-xl px-3 py-2 text-sm font-semibold transition-all ${
-                    active
-                      ? "bg-secondary-deep text-ink shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--hwa-secondary)_28%,transparent)]"
-                      : "text-mute hover:bg-control/60 hover:text-dim"
-                  }`}
-                >
-                  {item.label}
-                  {active && (
-                    <span aria-hidden className="absolute inset-x-3 -bottom-0.5 h-px rounded-full bg-accent shadow-[0_0_8px_var(--hwa-accent)]" />
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
+          <MainNav pathname={pathname} className="hidden sm:flex" />
         </div>
 
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3">
@@ -118,6 +98,53 @@ export function TopBar() {
           </div>
         </div>
       </div>
+
+      {/* Mobile gets a full-width market navigation row: no clipped labels,
+          and every destination remains one horizontal swipe away. */}
+      <div className="mx-auto mt-2 w-full max-w-[1600px] sm:hidden">
+        <MainNav pathname={pathname} className="capsule flex px-1.5 py-1" mobile />
+      </div>
     </header>
+  );
+}
+
+function MainNav({
+  pathname,
+  className,
+  mobile = false,
+}: {
+  pathname: string;
+  className: string;
+  mobile?: boolean;
+}) {
+  return (
+    <nav
+      aria-label={mobile ? "Main mobile" : "Main"}
+      className={`${className} min-w-0 items-center gap-0.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
+    >
+      {NAV.map((item) => {
+        const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            className={`relative shrink-0 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-semibold transition-all ${
+              active
+                ? "bg-secondary-deep text-ink shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--hwa-secondary)_28%,transparent)]"
+                : "text-mute hover:bg-control/60 hover:text-dim"
+            }`}
+          >
+            {item.label}
+            {active && (
+              <span
+                aria-hidden
+                className="absolute inset-x-3 -bottom-0.5 h-px rounded-full bg-accent shadow-[0_0_8px_var(--hwa-accent)]"
+              />
+            )}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }

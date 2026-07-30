@@ -2,6 +2,7 @@
 
 import { sanitizeLabel, timeAgo } from "@/lib/format";
 import { formatOddsPercent, oddsOneIn } from "@/lib/units";
+import { RARITY_COLOR, rarityFromOdds } from "@/protocol/rarity";
 import type { Listing, ListingStatus } from "@/protocol/types";
 import { NFTImage } from "@/components/nft/NFTImage";
 import { RarityTag } from "@/components/nft/RarityTag";
@@ -96,17 +97,24 @@ export function ListingCard({
   const name = sanitizeLabel(listing.nft.name, `${sanitizeLabel(listing.nft.collectionName, "Unknown")} #${listing.tokenId}`);
   const inPool = listing.status === "active";
   const status = statusTag(listing);
+  const rarityInk = RARITY_COLOR[rarityFromOdds(listing.weight, totalWeight)];
   return (
     <button
       onClick={() => onOpen(listing.id)}
       data-testid={`listing-card-${listing.id}`}
-      className="card group relative p-2 text-left"
+      className="card group relative overflow-hidden p-2 text-left"
     >
       {/* Hover/focus treatment lives on an overlay: `.card` is unlayered CSS and
           would win over utility-level border/shadow overrides. */}
       <span
         aria-hidden
         className="pointer-events-none absolute inset-0 rounded-lg ring-1 ring-transparent transition-[box-shadow,background-color] duration-200 group-hover:bg-ink/[0.025] group-hover:ring-line-strong group-focus-visible:ring-accent"
+      />
+      {/* Rarity rail — the card-game frame leaking into the terminal grid. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[2.5px] opacity-55 transition-opacity duration-200 group-hover:opacity-100"
+        style={{ background: `linear-gradient(90deg, transparent, ${rarityInk}, transparent)` }}
       />
 
       <div className="relative overflow-hidden rounded-md">
@@ -173,16 +181,18 @@ export function ListingRow({
 }) {
   const name = sanitizeLabel(listing.nft.name, `${sanitizeLabel(listing.nft.collectionName, "Unknown")} #${listing.tokenId}`);
   const inPool = listing.status === "active";
+  const rarityInk = RARITY_COLOR[rarityFromOdds(listing.weight, totalWeight)];
   return (
     <button
       onClick={() => onOpen(listing.id)}
       data-testid={`listing-row-${listing.id}`}
       className={`group relative grid w-full ${ROW_GRID} items-center gap-3 border-b border-line-subtle px-3 py-2.5 text-left transition-colors duration-150 last:border-b-0 hover:border-line hover:bg-elevated/70 focus-visible:bg-elevated/70 sm:px-4`}
     >
-      {/* Hover marker — absolute, so the row never reflows under the pointer. */}
+      {/* Persistent rarity rail; brightens under the pointer. Never reflows. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-y-2 left-0 w-[3px] rounded-r-xs bg-secondary opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
+        className="pointer-events-none absolute inset-y-2 left-0 w-[3px] rounded-r-xs opacity-40 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
+        style={{ background: rarityInk }}
       />
 
       <div className="size-11 overflow-hidden rounded-md ring-1 ring-line-subtle">

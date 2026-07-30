@@ -5,6 +5,8 @@ param(
     [Parameter(Mandatory = $true)] [string]$CanaryCollection,
     [Parameter(Mandatory = $true)] [string]$CanaryRequestId,
     [Parameter(Mandatory = $true)] [string[]]$PublicCollections,
+    [Parameter(Mandatory = $true)] [string]$ExpectedOwner,
+    [switch]$EoaOwnerRiskAccepted,
     [Parameter(Mandatory = $true)] [string]$RpcUrl,
     [string]$OutputPath = "release/mainnet-post-canary-collections.json"
 )
@@ -62,11 +64,17 @@ foreach ($address in @($Fwa, $Whitelist, $Coordinator, $CanaryCollection) + $Pub
     if ((Get-Code $address) -eq "0x") { throw "Missing deployed bytecode at $address" }
 }
 
-$safeOwner = (Get-View $Fwa "owner()(address)").ToLowerInvariant()
-if ($safeOwner -eq $zero -or (Get-Code $safeOwner) -eq "0x") { throw "FWA owner must be a deployed Safe contract" }
+$owner = (Get-View $Fwa "owner()(address)").ToLowerInvariant()
+$expectedOwnerNormalized = $ExpectedOwner.ToLowerInvariant()
+if ($ExpectedOwner -notmatch $addressPattern -or $ExpectedOwner -eq $zero -or $owner -ne $expectedOwnerNormalized) {
+    throw "FWA owner does not match ExpectedOwner"
+}
+if ((Get-Code $owner) -eq "0x" -and -not $EoaOwnerRiskAccepted) {
+    throw "EOA ownership requires -EoaOwnerRiskAccepted"
+}
 foreach ($owned in @($Whitelist, $Coordinator)) {
-    $owner = (Get-View $owned "owner()(address)").ToLowerInvariant()
-    if ($owner -ne $safeOwner) { throw "Owner mismatch at $owned`: expected $safeOwner, got $owner" }
+    $actualOwner = (Get-View $owned "owner()(address)").ToLowerInvariant()
+    if ($actualOwner -ne $owner) { throw "Owner mismatch at $owned`: expected $owner, got $actualOwner" }
 }
 
 if ((Get-View $Fwa "acquisitionsEnabled()(bool)") -ne "true") { throw "Canary acquisitions must still be enabled" }
@@ -123,7 +131,7 @@ $payload = [ordered]@{
     generatedAtUtc = [DateTime]::UtcNow.ToString("o")
     broadcast = $false
     executable = $true
-    owner = $safeOwner
+    owner = $owner
     canaryProof = [ordered]@{
         collection = $CanaryCollection
         requestId = $requestIdArg
@@ -138,7 +146,7 @@ $payload = [ordered]@{
     notes = @(
         "This file contains calldata only and never broadcasts.",
         "The exact canary request was read from FWA as Fulfilled and linked to cached drand beacon randomness.",
-        "Re-run this script immediately before Safe execution; do not execute stale output."
+        "Re-run this script immediately before owner execution; do not execute stale output."
     )
 }
 

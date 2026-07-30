@@ -18,6 +18,7 @@ export function PurchaseResultSurface({
   onClose,
   onNext,
   batchLabel,
+  animated = false,
 }: {
   listing: Listing;
   ticket?: AcquisitionTicket;
@@ -25,6 +26,9 @@ export function PurchaseResultSurface({
   onClose?: () => void;
   onNext?: () => void;
   batchLabel?: string;
+  /** Pack-opening choreography (reveal overlay only — the permalink route
+      renders the same surface statically and stays idempotent). */
+  animated?: boolean;
 }) {
   const account = useAccountState();
   const [shareOpen, setShareOpen] = useState(false);
@@ -42,11 +46,11 @@ export function PurchaseResultSurface({
     <div className="w-full" data-testid="purchase-result-surface">
       <div className="grid gap-8 lg:grid-cols-[minmax(18rem,0.78fr)_minmax(0,1.22fr)] lg:gap-12">
         <div className="flex flex-col items-center lg:sticky lg:top-6 lg:self-start">
-          <div className="relative w-full max-w-[24rem]">
+          <div className={`relative w-full max-w-[24rem] ${animated ? "anim-reveal-burst" : ""}`}>
             <div aria-hidden className="absolute -inset-12 rounded-full bg-secondary/18 blur-3xl" />
-            <div className="relative overflow-hidden rounded-2xl border border-accent/40 bg-panel shadow-[12px_16px_0_-8px_rgba(115,84,245,.72),0_38px_90px_rgba(0,0,0,.62)]">
+            <div className="relative overflow-hidden rounded-2xl border border-accent/40 bg-panel shadow-[12px_16px_0_-8px_color-mix(in_srgb,var(--hwa-secondary)_72%,transparent),0_38px_90px_rgba(0,0,0,.62)]">
               <div className="border-b border-line bg-inset/95 px-4 py-3">
-                <div className="flex items-center justify-between gap-3 font-mono text-[9px] uppercase tracking-[0.13em] text-faint">
+                <div className="flex items-center justify-between gap-3 font-mono text-3xs uppercase tracking-[0.13em] text-faint">
                   <span><span className="text-accent">HWA</span> · VERIFIED DRAW</span>
                   <span>GRADE <strong className="text-ink">{listing.isCrown ? "CROWN" : "10"}</strong></span>
                 </div>
@@ -57,7 +61,7 @@ export function PurchaseResultSurface({
                   </div>
                   <span className="num font-mono text-2xs text-dim">#{listing.tokenId.toString()}</span>
                 </div>
-                <div className="mt-3 grid grid-cols-3 gap-3 border-t border-line-subtle pt-2 font-mono text-[8px] uppercase tracking-wide text-faint">
+                <div className="mt-3 grid grid-cols-3 gap-3 border-t border-line-subtle pt-2 font-mono text-3xs uppercase tracking-wide text-faint">
                   <span>Backing<strong className="mt-0.5 block text-dim"><Hype wei={listing.backing} maxDecimals={3} /></strong></span>
                   <span>Class<strong className="mt-0.5 block text-chain">NFT reward</strong></span>
                   <span>Odds<strong className="mt-0.5 block text-accent">{totalWeight ? formatOddsPercent(listing.weight, totalWeight) : "recorded"}</strong></span>
@@ -80,11 +84,11 @@ export function PurchaseResultSurface({
           </div>
         </div>
 
-        <div className="min-w-0">
+        <div className={`min-w-0 ${animated ? "reveal-cascade" : ""}`}>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               {batchLabel && <div className="mlabel mb-2 text-secondary-readable">{batchLabel}</div>}
-              <h1 className="purchase-success-gradient text-4xl font-black tracking-tight sm:text-5xl">
+              <h1 className="purchase-success-gradient text-4xl font-extrabold tracking-tight sm:text-5xl">
                 {awaitingChoice ? "Purchase Successful" : "Acquisition Result"}
               </h1>
               <h2 className="mt-2 text-2xl font-semibold text-ink sm:text-3xl">{name}</h2>

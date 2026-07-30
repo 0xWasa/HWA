@@ -16,10 +16,10 @@ import { Hype } from "@/components/ui/Hype";
 import { Panel } from "@/components/ui/Panel";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SkeletonRow } from "@/components/ui/Skeleton";
-import { Tag } from "@/components/ui/Tag";
 import { NFTImage } from "@/components/nft/NFTImage";
 import { TicketProgress } from "@/components/tx/TicketProgress";
 import { SettlementDrawer } from "./SettlementDrawer";
+import { ProtocolPrelaunch } from "@/components/ui/ProtocolPrelaunch";
 
 type TabId = "deposited" | "allocated" | "pending" | "settled" | "claims";
 
@@ -35,7 +35,7 @@ const OUTCOME_LABEL: Record<NonNullable<Listing["settlement"]>, string> = {
 
 export function PositionsScreen() {
   const account = useAccountState();
-  const { exitWritesEnabled } = useProtocol();
+  const { exitWritesEnabled, prelaunch } = useProtocol();
   const { data: snapshot } = usePoolSnapshot();
   const { data: positions, isLoading } = usePositions();
   const action = useProtocolAction();
@@ -62,6 +62,18 @@ export function PositionsScreen() {
       claims: claimsCount,
     };
   }, [positions]);
+
+  if (prelaunch) {
+    return (
+      <Shell>
+        <ProtocolPrelaunch
+          title="No mainnet positions exist yet."
+          detail="Deposits, allocations, settlements and claims will be read directly from the deployed HWA contracts. The pre-launch interface does not invent wallet positions."
+          compact
+        />
+      </Shell>
+    );
+  }
 
   if (account.status !== "connected") {
     return (
@@ -217,7 +229,7 @@ export function PositionsScreen() {
                 return (
                   <PositionRow key={l.id.toString()} listing={l} highlight>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-2xs">
-                      <Tag tone="blue">allocated to you</Tag>
+                      <span className="stamp stamp--blue">allocated to you</span>
                       <span className="text-mute">
                         Standing bid{" "}
                         <Hype
@@ -251,7 +263,7 @@ export function PositionsScreen() {
                 return (
                   <PositionRow key={`dep-${l.id.toString()}`} listing={l}>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-2xs">
-                      <Tag tone="amber">your deposit — acquired</Tag>
+                      <span className="stamp stamp--amber stamp--tilt-r">your deposit — acquired</span>
                       {purchaserExclusive ? (
                         <span className="text-mute">
                           purchaser deciding · your options open in <Countdown until={winEnd} />
@@ -341,7 +353,7 @@ export function PositionsScreen() {
                 {positions.settled.map((l) => (
                   <PositionRow key={l.id.toString()} listing={l} muted>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-2xs text-mute">
-                      <Tag tone="neutral">{l.settlement ? OUTCOME_LABEL[l.settlement] : "Settled"}</Tag>
+                      <span className="stamp stamp--flat">{l.settlement ? OUTCOME_LABEL[l.settlement] : "Settled"}</span>
                       <span>
                         Backing was <Hype wei={l.backing} maxDecimals={3} />
                       </span>

@@ -87,9 +87,9 @@ export function StatCard({
               <span
                 className={`num rounded-xs px-1.5 py-0.5 font-mono text-2xs font-semibold ${
                   up
-                    ? "bg-green/12 text-green"
+                    ? "tick-up bg-green/12"
                     : down
-                      ? "bg-red/12 text-red"
+                      ? "tick-down bg-red/12"
                       : "bg-control text-mute"
                 }`}
               >

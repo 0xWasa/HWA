@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "testedAtUtc": "2026-07-28T22:28:22.0732067Z",
+  "provider": "alchemy",
+  "endpointHost": "hyperliquid-mainnet.g.alchemy.com",
+  "endpointFingerprintSha256": "edcbb9bf9aacf9f28d3f1f05c40baf12cd9673bc35671820435bff4766d0008d",
+  "chainId": 999,
+  "headBlock": 41705484,
+  "archiveDepthBlocks": 1000000,
+  "historicalBlock": 40705484,
+  "historicalBlockReadable": true,
+  "historicalStateReadable": true,
+  "getLogsRangeBlocks": 1000,
+  "emptyRangeProbeResultCount": 0,
+  "historicalEventProbeAddress": "0x5555555555555555555555555555555555555555",
+  "historicalEventProbeCount": 239,
+  "requestCount": 16,
+  "latencyMs": {
+    "average": 62.61,
+    "p95": 278.61,
+    "max": 278.61
+  },
+  "result": "passed"
+}

@@ -1,13 +1,19 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useListing, usePoolSnapshot } from "@/state/queries";
 import { PurchaseResultSurface } from "@/components/acquisitions/PurchaseResultSurface";
+import { PressureMotif } from "@/components/ui/PressureMotif";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useRevealQueue } from "./useRevealQueue";
 
 const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
+/** Pack-opening stages. Tests poll [data-reveal-stage]; timings stay private. */
+type RevealStage = "sealed" | "flipping" | "revealed";
+const SEAL_HOLD_MS = 900;
+const FLIP_MS = 580;
 
 /** Persistent FWA-like purchase result with all settlement outcomes inline. */
 export function RevealOverlay() {
@@ -47,6 +53,39 @@ function RevealDialog({
   const { data: snapshot } = usePoolSnapshot();
   const panelRef = useRef<HTMLDivElement>(null);
   const restoreRef = useRef<HTMLElement | null>(null);
+  const [stage, setStage] = useState<RevealStage>("sealed");
+
+  // Pack-opening choreography: sealed card holds, then flips into the result.
+  // Restarts for every card of a batch; reduced motion jumps straight to the
+  // result; the metadata-failed fallback never stays sealed.
+  const listingReady = listing !== undefined;
+  useEffect(() => {
+    if (!listingReady) {
+      if (!isLoading) setStage("revealed");
+      return;
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setStage("revealed");
+      return;
+    }
+    setStage("sealed");
+  }, [listingId, listingReady, isLoading]);
+
+  // Stage-driven timers: skipping can only ever advance, never regress.
+  useEffect(() => {
+    if (stage === "sealed") {
+      const t = window.setTimeout(() => setStage("flipping"), SEAL_HOLD_MS);
+      return () => window.clearTimeout(t);
+    }
+    if (stage === "flipping") {
+      const t = window.setTimeout(() => setStage("revealed"), FLIP_MS);
+      return () => window.clearTimeout(t);
+    }
+  }, [stage]);
+
+  const skipSeal = useCallback(() => {
+    setStage((current) => (current === "sealed" ? "flipping" : current));
+  }, []);
 
   useEffect(() => {
     const panel = panelRef.current;
@@ -94,6 +133,7 @@ function RevealDialog({
       aria-label="Purchase successful"
       data-testid="reveal-overlay"
       data-listing-id={listingId.toString()}
+      data-reveal-stage={stage}
     >
       <div aria-hidden className="grid-paper pointer-events-none fixed inset-0 opacity-50" />
       <div aria-hidden className="aurora pointer-events-none fixed inset-0 opacity-45" />
@@ -121,14 +161,51 @@ function RevealDialog({
             </div>
           </div>
         ) : listing ? (
-          <PurchaseResultSurface
-            listing={listing}
-            ticket={ticket}
-            snapshot={snapshot}
-            onClose={onDismiss}
-            onNext={hasNext ? onNext : undefined}
-            batchLabel={total > 1 ? `DRAW ${index} OF ${total}` : "VERIFIABLE DRAW COMPLETE"}
-          />
+          <div className={`reveal-flip-scene relative ${stage !== "revealed" ? "min-h-[34rem]" : ""}`}>
+            <div className="reveal-result-face" inert={stage === "sealed" ? true : undefined}>
+              <PurchaseResultSurface
+                listing={listing}
+                ticket={ticket}
+                snapshot={snapshot}
+                onClose={onDismiss}
+                onNext={hasNext ? onNext : undefined}
+                batchLabel={total > 1 ? `DRAW ${index} OF ${total}` : "VERIFIABLE DRAW COMPLETE"}
+                animated
+              />
+            </div>
+            {stage !== "revealed" && (
+              <div
+                className="pointer-events-none absolute inset-0 z-10 grid place-items-center"
+                aria-hidden={stage === "flipping" ? true : undefined}
+              >
+                <button
+                  type="button"
+                  onClick={skipSeal}
+                  aria-label="Reveal result"
+                  data-testid="reveal-seal"
+                  className="reveal-seal-card randomness-card-back pointer-events-auto relative block aspect-[0.78] w-full max-w-[19rem] cursor-pointer rounded-2xl border border-secondary/45 outline-none focus-visible:border-accent"
+                >
+                  <PressureMotif
+                    tone="violet"
+                    wall={false}
+                    className="pointer-events-none absolute inset-0 size-full opacity-60"
+                  />
+                  <span className="absolute inset-x-0 top-5 text-center font-display text-lg font-extrabold tracking-[0.3em] text-secondary-readable">
+                    HWA
+                  </span>
+                  <span className="absolute inset-0 grid place-items-center font-display text-7xl font-extrabold text-ink/85">
+                    ?
+                  </span>
+                  <span className="stamp stamp--violet absolute bottom-14 left-1/2 -translate-x-1/2">
+                    Sealed
+                  </span>
+                  <span className="mlabel absolute inset-x-0 bottom-5 text-center text-faint">
+                    TAP TO REVEAL
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="grid min-h-[28rem] place-items-center text-center">
             <div>

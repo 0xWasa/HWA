@@ -38,6 +38,8 @@ L'indexeur fournit découverte et historique. Les données critiques sont relues
 
 ```text
 NFT_METADATA_ALLOWED_HOSTS=metadata.example,cdn.example
+NFT_METADATA_TRUSTED_CLIENT_IP_HEADER=x-real-ip
+NFT_METADATA_RATE_LIMIT_PER_MINUTE=600
 NFT_IPFS_GATEWAY_BASE_URL=https://ipfs.io/ipfs/
 ```
 

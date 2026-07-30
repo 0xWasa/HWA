@@ -30,12 +30,16 @@ after the first mint would produce an incomplete wallet inventory.
 ```powershell
 npm run render:mainnet
 npm run build
-goldsky subgraph deploy hwa-hyperevm/1.0.0 --path .
+npm run publish:mainnet
 ```
 
-The last command is an external publication and must only run after the mainnet
-manifest and deployment block have been reviewed. Put the resulting public query
-URL in `NEXT_PUBLIC_INDEXER_URL`; never expose the Goldsky deployment API key.
+The pinned Goldsky CLI is a build-only dependency. `publish:mainnet` requires
+`GOLDSKY_API_KEY`, a semantic `GOLDSKY_SUBGRAPH_VERSION` and the explicit gate
+`GOLDSKY_MAINNET_PUBLISH_CONFIRMED=true`. It rebuilds from the receipt-bound
+chain-999 manifest before performing the external publication. The command must
+only run after the final FWA, Genesis NFT and collection deployment blocks have
+been reviewed. Put the resulting public query URL in
+`NEXT_PUBLIC_INDEXER_URL`; never expose the Goldsky deployment API key.
 
 ## Security boundary
 

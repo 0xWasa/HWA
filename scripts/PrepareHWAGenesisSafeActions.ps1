@@ -75,7 +75,16 @@ if (-not $OfflineTemplate) {
     if ([int](Get-View "currentSupply()(uint256)") -ne 0) { throw "Genesis Safe action package requires a fresh zero-supply collection" }
     if ([int](Get-View "highestMintedTokenId()(uint256)") -ne 0) { throw "Genesis token sequence is not fresh" }
     if ((Get-View "snapshotFrozen()(bool)") -ne "false") { throw "Genesis snapshot is already frozen" }
-    if ((Get-View "baseURI()(string)") -ne $BaseUri) { throw "Genesis base URI differs from the remotely attested URI" }
+    $onchainBaseUriRaw = Get-View "baseURI()(string)"
+    # `cast call` renders a dynamic Solidity string as a JSON-quoted scalar. Decode that
+    # representation before comparing it with the remotely attested URI; fixed-width values
+    # such as addresses, integers and booleans above are emitted without quotes.
+    $onchainBaseUri = if ($onchainBaseUriRaw.StartsWith('"') -and $onchainBaseUriRaw.EndsWith('"')) {
+        $onchainBaseUriRaw | ConvertFrom-Json
+    } else {
+        $onchainBaseUriRaw
+    }
+    if ($onchainBaseUri -cne $BaseUri) { throw "Genesis base URI differs from the remotely attested URI" }
     $validation = [ordered]@{
         performed = $true
         chainId = 999

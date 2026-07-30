@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 2,
+  "generatedAtUtc": "2026-07-29T12:26:01.5607075Z",
+  "canonical": true,
+  "visualApproval": {
+    "status": "approved",
+    "collectionVersion": "v3",
+    "direction": "PRESSURE FIELD",
+    "renderer": "HWA-GEN-3.0.0",
+    "sourceArtAggregateSha256": "96b80e5c8a06b07407d92b58dbf7865aab242439bdfdb5d8436e370cd2915648",
+    "approvalDate": "2026-07-27"
+  },
+  "supply": 333,
+  "equalEconomicUnits": true,
+  "hosting": {
+    "mode": "versioned HTTPS VPS",
+    "template": false,
+    "publicOrigin": "https://assets.hwa.fun",
+    "versionPath": "hwa-genesis/v3/96b80e5c8a06b07407d92b58dbf7865aab242439bdfdb5d8436e370cd2915648",
+    "imageBaseUri": "https://assets.hwa.fun/hwa-genesis/v3/96b80e5c8a06b07407d92b58dbf7865aab242439bdfdb5d8436e370cd2915648/images/",
+    "tokenBaseUri": "https://assets.hwa.fun/hwa-genesis/v3/96b80e5c8a06b07407d92b58dbf7865aab242439bdfdb5d8436e370cd2915648/metadata/",
+    "packageRoot": "release/hwa-genesis-v3-mainnet-20260729",
+    "publicDirectory": "release/hwa-genesis-v3-mainnet-20260729/public",
+    "deploymentManifest": "release/hwa-genesis-v3-mainnet-20260729/public/hwa-genesis/v3/96b80e5c8a06b07407d92b58dbf7865aab242439bdfdb5d8436e370cd2915648/deployment-manifest.json",
+    "hostedMetadataAggregateSha256": "b164f01afb7067a42be70afe37dda0a23ef9e637eefc2ae8e949c7b400db2e3f",
+    "requiredCacheControl": "public, max-age=31536000, immutable",
+    "requiredReplication": "primary VPS plus two independent backups; hash-verified restore drill"
+  },
+  "tokenUriCompatibility": {
+    "contract": "HWAGenesisNFT",
+    "contractShape": "baseURI + unpadded decimal tokenId",
+    "metadataFileNames": "1..333 with no extension"
+  },
+  "deploymentAllowed": true,
+  "blockers": [],
+  "mainnetDeployment": {
+    "chainId": 999,
+    "deployerAndOwner": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+    "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+    "deploymentTransaction": "0x964673093fc9f2974838fd84356dcd45b8a392936478df867c3f03b38179c208",
+    "mintTransactions": [
+      "0x58b6b98dd10d1018b8dd95869a6f1b0df3bb59a745104e9357c384dad698821c",
+      "0xeeb9f01b2ecada3ce6e8988d4d0538d24a611fc5f16873ae555976ef71866d0c",
+      "0x9e463cbcf85661400caee439e3de250fe43a4ce563a9bd8fff72f580b6189121",
+      "0xe8184082772a8201a681052fecf2b7a3a0df97f70573a2115c4d4c2c36af6b4c",
+      "0x88d751be125ec30964145a000cac0fd5530b8feb07ef52584000e7226c42fc8f",
+      "0xb1a580d212ef840e75df412ef9b91b11e3a1592f3e366cd726294abd0f4d6193",
+      "0x7d35c1b3a5b74becbf236f71ad45ef046036edef382c7811b0c85df1bb29dab7"
+    ],
+    "freezeTransaction": "0x0d92abcf9a1e9dabd64ff745da643d2ef7b82bcd18857679fe7227fe3020a30f",
+    "currentSupply": 333,
+    "highestMintedTokenId": 333,
+    "snapshotFrozen": true
+  }
+}

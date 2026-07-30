@@ -87,6 +87,7 @@ export async function loadManifest(url: string, expectedChainId: 998 | 999): Pro
   if (!url) return { status: "absent" };
   try {
     const res = await fetch(url, { cache: "no-store" });
+    if (res.status === 404) return { status: "absent" };
     if (!res.ok) return { status: "invalid", reason: `HTTP ${res.status}` };
     const json: unknown = await res.json();
     const parsed = DeploymentManifestSchema.safeParse(json);

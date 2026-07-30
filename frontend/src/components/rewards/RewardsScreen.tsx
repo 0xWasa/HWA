@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { shortAddress, timeLeft } from "@/lib/format";
 import { formatHwa } from "@/lib/units";
-import { useAccountState } from "@/protocol/provider";
+import { useAccountState, useProtocol } from "@/protocol/provider";
 import { useProtocolAction } from "@/state/actions";
 import { usePositions, useRewards } from "@/state/queries";
 import { Button } from "@/components/ui/Button";
@@ -15,9 +15,11 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Tag } from "@/components/ui/Tag";
 import type { RewardsSnapshot } from "@/protocol/types";
+import { ProtocolPrelaunch } from "@/components/ui/ProtocolPrelaunch";
 
 export function RewardsScreen() {
   const account = useAccountState();
+  const { prelaunch } = useProtocol();
   const { data: rewards, isLoading } = useRewards();
   const { data: positions } = usePositions();
   const action = useProtocolAction();
@@ -29,6 +31,18 @@ export function RewardsScreen() {
     const t = setInterval(() => tick((n) => n + 1), 1_000);
     return () => clearInterval(t);
   }, []);
+
+  if (prelaunch) {
+    return (
+      <Shell>
+        <ProtocolPrelaunch
+          title="HWA rewards start at launch."
+          detail="Emission, purchaser epochs and claimable balances remain unavailable until the reviewed rewards contracts are deployed and activated. No yield or APR is simulated."
+          compact
+        />
+      </Shell>
+    );
+  }
 
   if (isLoading || !rewards) {
     return (

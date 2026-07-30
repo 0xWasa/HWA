@@ -1,6 +1,7 @@
 param(
     [string]$Path = ".env.mainnet.local",
     [switch]$FinalizeDeployedSafe,
+    [switch]$FinalizeSingleOwner,
     [string]$RpcUrl = "https://rpc.hyperliquid.xyz/evm"
 )
 
@@ -11,8 +12,13 @@ if (-not (Test-Path -LiteralPath $resolvedPath)) { throw "Mainnet env file not f
 
 $zero = "0x0000000000000000000000000000000000000000"
 $safe = "0x75818fd0a2Ff801F974C9a5d23616fbd38b15f4C"
+$singleOwner = "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9"
+if ($FinalizeDeployedSafe -and $FinalizeSingleOwner) {
+    throw "Choose exactly one owner mode; Safe and single-owner finalization are mutually exclusive"
+}
 $ownerRecipient = $zero
 $safeConfirmed = "false"
+$eoaOwnerConfirmed = "false"
 if ($FinalizeDeployedSafe) {
     $cast = Join-Path $projectRoot ".tools\foundry\cast.exe"
     if (-not (Test-Path -LiteralPath $cast)) { throw "Foundry cast not found at $cast" }
@@ -29,9 +35,29 @@ if ($FinalizeDeployedSafe) {
     $ownerRecipient = $safe
     $safeConfirmed = "true"
 }
+if ($FinalizeSingleOwner) {
+    $cast = Join-Path $projectRoot ".tools\foundry\cast.exe"
+    if (-not (Test-Path -LiteralPath $cast)) { throw "Foundry cast not found at $cast" }
+    $privateKeyLine = [IO.File]::ReadAllLines($resolvedPath) |
+        Where-Object { $_ -match '^PRIVATE_KEY=' } |
+        Select-Object -First 1
+    if (-not $privateKeyLine) { throw "PRIVATE_KEY is missing from the ignored mainnet env" }
+    $privateKey = $privateKeyLine.Substring("PRIVATE_KEY=".Length).Trim()
+    if ([string]::IsNullOrWhiteSpace($privateKey)) { throw "PRIVATE_KEY is empty" }
+    $derivedOwner = (& $cast wallet address --private-key $privateKey 2>&1 | Out-String).Trim()
+    $privateKey = $null
+    $chainId = (& $cast chain-id --rpc-url $RpcUrl 2>&1 | Out-String).Trim()
+    $code = (& $cast code $singleOwner --rpc-url $RpcUrl 2>&1 | Out-String).Trim()
+    if ($chainId -ne "999" -or $derivedOwner.ToLowerInvariant() -ne $singleOwner.ToLowerInvariant() -or $code -ne "0x") {
+        throw "The explicit chain-999 single-owner attestation failed"
+    }
+    $ownerRecipient = $singleOwner
+    $eoaOwnerConfirmed = "true"
+}
 $publicValues = [ordered]@{
     FWA_CHAIN_ID = "999"
     HWA_SAFE_DEPLOYMENT_CONFIRMED = $safeConfirmed
+    MAINNET_EOA_OWNER_CONFIRMED = $eoaOwnerConfirmed
     HWA_SAFE_SIGNER_1 = "0x645b7e2A32cfF5e131a3D6Cf16155e006fe74F5c"
     HWA_SAFE_SIGNER_2 = "0x487F29A5C4eE0669D40d77Cd78F5b6A95046fECB"
     HWA_SAFE_SIGNER_3 = "0x10B327d693F223399F2D8151B2B97a66818FF681"
@@ -49,6 +75,24 @@ $publicValues = [ordered]@{
     MAINNET_FWA_MAX_INITIAL_FDV_HYPE_WEI = "700000000000000000000"
     FWA_LP_RANGE_WIDTH_TICKS = "3600"
     PROJECTX_WHYPE = "0x5555555555555555555555555555555555555555"
+}
+if ($FinalizeSingleOwner) {
+    # Explicitly detach the active config from the abandoned Safe-owned empty Genesis stack.
+    $publicValues.FWA_SPLITTER_SNAPSHOT_NFT = $zero
+    $publicValues.FWA_SPLITTER_MAX_TOKEN_ID = "0"
+    $publicValues.FWA_SPLITTER_ADDRESS = $zero
+    $publicValues.FWA_ADDRESS = $zero
+    $publicValues.FWA_VRF_SERVICE_ADDRESS = $zero
+    $publicValues.FWA_DRAND_REGISTRY_ADDRESS = $zero
+    $publicValues.FWA_DRAND_BN254_COORDINATOR_ADDRESS = $zero
+    $publicValues.FWA_WHITELIST_ADDRESS = $zero
+    $publicValues.FWA_TOKEN_ADDRESS = $zero
+    $publicValues.FWA_REWARDS_ADDRESS = $zero
+    $publicValues.FWA_PROJECTX_ADAPTER_ADDRESS = $zero
+    $publicValues.FWA_PROJECTX_POOL_ADDRESS = $zero
+    $publicValues.FWA_PROJECTX_LIQUIDITY_LOCKER_ADDRESS = $zero
+    $publicValues.HWA_GENESIS_NFT_FINALIZATION_CONFIRMED = "false"
+    $publicValues.FWA_SPLITTER_FREEZE_CONFIRMED = "false"
 }
 
 $lines = [Collections.Generic.List[string]]::new()
@@ -77,8 +121,11 @@ $utf8NoBom = New-Object Text.UTF8Encoding($false)
 [IO.File]::WriteAllLines($resolvedPath, $lines, $utf8NoBom)
 Write-Host "Synchronized $($publicValues.Count) public HWA mainnet fields in $resolvedPath."
 Write-Host "Private keys and provider credentials were preserved and not printed."
-if ($FinalizeDeployedSafe) {
+if ($FinalizeSingleOwner) {
+    Write-Host "The funded deployer EOA was attested live and is now the explicit owner and treasury recipient."
+    Write-Host "All addresses from the abandoned Safe-owned stack were reset to zero in the active config."
+} elseif ($FinalizeDeployedSafe) {
     Write-Host "The deployed 2-of-3 Safe was attested live and is now the owner and treasury recipient."
 } else {
-    Write-Host "Owner and treasury recipient fields remain zero until -FinalizeDeployedSafe passes."
+    Write-Host "Owner and treasury recipient fields remain zero until one explicit finalization mode passes."
 }

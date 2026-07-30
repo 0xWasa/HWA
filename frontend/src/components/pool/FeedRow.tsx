@@ -58,7 +58,7 @@ export function FeedRow({
         {/* Odds only mean something while the position is selectable; otherwise the
             slot carries the status in the same wording as the status chip. */}
         {inPool ? (
-          <span className="num font-mono text-2xs text-mute">
+          <span className="num font-mono text-2xs text-chain/90">
             {formatOddsPercent(listing.weight, totalWeight)}
           </span>
         ) : (

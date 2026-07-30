@@ -152,7 +152,7 @@ export function SettlementDrawer({
                 windowOpen ? "border-accent/40 bg-accent/8" : "border-amber/40 bg-amber/8"
               }`}
             >
-              <div className={`text-[9px] uppercase tracking-wide ${windowOpen ? "text-accent" : "text-amber"}`}>
+              <div className={`text-3xs uppercase tracking-wide ${windowOpen ? "text-accent" : "text-amber"}`}>
                 {windowOpen ? "Your exclusive window" : "Window elapsed"}
               </div>
               <div className={`text-xs font-semibold ${windowOpen ? "text-accent" : "text-amber"}`}>
@@ -170,7 +170,7 @@ export function SettlementDrawer({
         )}
 
         <div className="space-y-1.5" role="radiogroup" aria-label="Settlement choice">
-          {options.map((o) => {
+          {options.map((o, doorIndex) => {
             const active = choice === o.kind;
             return (
               <button
@@ -180,16 +180,24 @@ export function SettlementDrawer({
                 disabled={o.disabled}
                 data-testid={`settle-${o.kind}`}
                 onClick={() => setChoice(o.kind)}
-                className={`w-full rounded-sm border p-2.5 text-left transition-colors ${
+                className={`w-full rounded-data border p-2.5 text-left transition-[color,background-color,border-color,transform] duration-200 ease-(--ease-squish) ${
                   active
                     ? "border-accent bg-accent/8"
                     : o.disabled
                       ? "cursor-not-allowed border-line opacity-45"
-                      : "border-line bg-inset hover:border-line-strong"
+                      : "border-line bg-inset hover:-translate-y-px hover:border-line-strong"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className={`text-xs font-semibold ${active ? "text-accent" : "text-ink"}`}>{o.title}</span>
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span
+                      aria-hidden
+                      className={`mlabel shrink-0 ${active ? "text-accent" : "text-faint"}`}
+                    >
+                      {String(doorIndex + 1).padStart(2, "0")}
+                    </span>
+                    <span className={`truncate text-xs font-semibold ${active ? "text-accent" : "text-ink"}`}>{o.title}</span>
+                  </span>
                   {active && <span aria-hidden className="size-1.5 rounded-full bg-accent" />}
                 </div>
                 <div className="mt-1 grid grid-cols-2 gap-2 text-2xs">
@@ -199,7 +207,7 @@ export function SettlementDrawer({
                   </div>
                   <div>
                     <span className="text-faint">You get </span>
-                    <span className="text-dim">{o.get}</span>
+                    <span className="text-green/90">{o.get}</span>
                   </div>
                 </div>
                 <div className="mt-1 text-2xs leading-snug text-mute">{o.detail}</div>

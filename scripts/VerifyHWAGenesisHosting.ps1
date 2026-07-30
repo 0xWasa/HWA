@@ -72,7 +72,8 @@ if ($Remote) {
                     if ([int]$response.StatusCode -ne 200) { throw "Remote GET returned $([int]$response.StatusCode): $($resource.Url)" }
                     $mime = $response.Content.Headers.ContentType.MediaType
                     if ($mime -ne $resource.Mime) { throw "Unexpected Content-Type '$mime': $($resource.Url)" }
-                    $cache = ($response.Headers.CacheControl | Out-String).Trim()
+                    $cacheControl = $response.Headers.CacheControl
+                    $cache = if ($null -eq $cacheControl) { "" } else { $cacheControl.ToString() }
                     if ($cache -notmatch 'max-age=31536000' -or $cache -notmatch 'immutable') {
                         throw "Missing immutable one-year Cache-Control: $($resource.Url)"
                     }
@@ -104,7 +105,8 @@ $attestation = [ordered]@{
 }
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $attestationFile) | Out-Null
-[System.IO.File]::WriteAllText($attestationFile, ($attestation | ConvertTo-Json -Depth 5), $utf8NoBom)
+$attestationJson = (($attestation | ConvertTo-Json -Depth 5) -replace "`r`n", "`n") + "`n"
+[System.IO.File]::WriteAllText($attestationFile, $attestationJson, $utf8NoBom)
 Write-Host "Verified all 333 local Genesis images and metadata files."
 if ($Remote) { Write-Host "Verified all 666 remote HTTPS resources with MIME, cache and SHA-256 checks." }
 else { Write-Host "Remote verification was not requested; deployment remains blocked." -ForegroundColor Yellow }

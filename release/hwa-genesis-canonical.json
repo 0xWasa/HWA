@@ -1,6 +1,6 @@
 {
     "schemaVersion":  2,
-    "generatedAtUtc":  "2026-07-27T18:08:31.9978872Z",
+    "generatedAtUtc":  "2026-07-28T21:05:21.4490260Z",
     "canonical":  true,
     "visualApproval":  {
                            "status":  "approved",
@@ -14,15 +14,15 @@
     "equalEconomicUnits":  true,
     "hosting":  {
                     "mode":  "versioned HTTPS VPS",
-                    "template":  true,
-                    "publicOrigin":  "https://assets.example.invalid",
+                    "template":  false,
+                    "publicOrigin":  "https://assets.hwa.fun",
                     "versionPath":  "hwa-genesis/v3/96b80e5c8a06b07407d92b58dbf7865aab242439bdfdb5d8436e370cd2915648",
-                    "imageBaseUri":  "https://assets.example.invalid/hwa-genesis/v3/96b80e5c8a06b07407d92b58dbf7865aab242439bdfdb5d8436e370cd2915648/images/",
-                    "tokenBaseUri":  "https://assets.example.invalid/hwa-genesis/v3/96b80e5c8a06b07407d92b58dbf7865aab242439bdfdb5d8436e370cd2915648/metadata/",
+                    "imageBaseUri":  "https://assets.hwa.fun/hwa-genesis/v3/96b80e5c8a06b07407d92b58dbf7865aab242439bdfdb5d8436e370cd2915648/images/",
+                    "tokenBaseUri":  "https://assets.hwa.fun/hwa-genesis/v3/96b80e5c8a06b07407d92b58dbf7865aab242439bdfdb5d8436e370cd2915648/metadata/",
                     "packageRoot":  "release/hwa-genesis-v3-hosting",
                     "publicDirectory":  "release/hwa-genesis-v3-hosting/public",
                     "deploymentManifest":  "release/hwa-genesis-v3-hosting/public/hwa-genesis/v3/96b80e5c8a06b07407d92b58dbf7865aab242439bdfdb5d8436e370cd2915648/deployment-manifest.json",
-                    "hostedMetadataAggregateSha256":  "b708168ae49ac4df5732eb7319babf7dd66c37686e31b4c048460195cf40d43e",
+                    "hostedMetadataAggregateSha256":  "b164f01afb7067a42be70afe37dda0a23ef9e637eefc2ae8e949c7b400db2e3f",
                     "requiredCacheControl":  "public, max-age=31536000, immutable",
                     "requiredReplication":  "primary VPS plus two independent backups; hash-verified restore drill"
                 },
@@ -33,7 +33,6 @@
                               },
     "deploymentAllowed":  false,
     "blockers":  [
-                     "SET_REAL_GENESIS_HTTPS_ORIGIN",
                      "UPLOAD_EXACT_PACKAGE_TO_IMMUTABLE_VERSION_PATH",
                      "VERIFY_ALL_333_REMOTE_IMAGES_AND_METADATA",
                      "ATTEST_FINAL_HTTPS_BASE_URI_BEFORE_GENESIS_DEPLOYMENT"

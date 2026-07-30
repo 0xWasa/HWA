@@ -40,6 +40,7 @@ export function PurchaseSidebar({
   const [view, setView] = useState<FeedView>("recent");
   const [sort, setSort] = useState<SortKey>("date");
   const [dir, setDir] = useState<"asc" | "desc">("desc");
+  const { prelaunch } = useProtocol();
 
   // "Recent" is the acquisition feed (what was bought and how it settled);
   // the other tabs are listing feeds.
@@ -123,7 +124,14 @@ export function PurchaseSidebar({
           WebkitMaskImage: "linear-gradient(to bottom, black calc(100% - 2.5rem), transparent 100%)",
         }}
       >
-        {isLoading && !feed ? (
+        {prelaunch ? (
+          <div className="px-5 py-8 text-center">
+            <div className="mlabel text-amber">PRE-LAUNCH TAPE</div>
+            <p className="mt-2 text-xs leading-relaxed text-mute">
+              Verified deposits and draws will stream here after the mainnet manifest is published.
+            </p>
+          </div>
+        ) : isLoading && !feed ? (
           Array.from({ length: 7 }).map((_, i) => <SkeletonRow key={i} cols={2} />)
         ) : !feed || feed.items.length === 0 ? (
           <p className="px-4 py-6 text-center text-xs text-mute">Nothing in this feed yet.</p>
@@ -149,7 +157,7 @@ export function PurchaseSidebar({
 const DRIFT_PRESETS = [500, 1_000, 2_000] as const;
 
 export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
-  const { writesEnabled } = useProtocol();
+  const { writesEnabled, prelaunch } = useProtocol();
   const account = useAccountState();
   const [quantity, setQuantity] = useState(1);
   const [driftBps, setDriftBps] = useState<number>(FWA_PARAMS.defaultDriftBps);
@@ -175,6 +183,7 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
   }, [positions]);
 
   const blocker = ((): { label: string; sub?: string } | null => {
+    if (prelaunch) return { label: "Launch pending", sub: "Mainnet contracts are not deployed." };
     if (!snapshot) return { label: "Loading pool…" };
     if (!acquisitionsOpen)
       return {
@@ -187,7 +196,12 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
   })();
 
   const ticketStatus = blocker
-    ? { label: "MARKET CLOSED", shell: "border-amber/25 bg-amber/8", dot: "bg-amber", text: "text-amber" }
+    ? {
+        label: prelaunch ? "PRE-LAUNCH" : "MARKET CLOSED",
+        shell: "border-amber/25 bg-amber/8",
+        dot: "bg-amber",
+        text: "text-amber",
+      }
     : quote.isError
       ? { label: "QUOTE OFFLINE", shell: "border-red/25 bg-red/8", dot: "bg-red", text: "text-red" }
       : quote.freshness === "refreshing"
@@ -226,13 +240,13 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
           <div className="flex min-w-0 items-center gap-2.5">
             <span
               aria-hidden
-              className="order-ticket-mark grid size-8 shrink-0 place-items-center rounded-md border border-accent/25 bg-accent/8 font-mono text-xs font-black text-accent"
+              className="order-ticket-mark grid size-8 shrink-0 place-items-center rounded-md border border-accent/25 bg-accent/8 font-mono text-xs font-bold text-accent"
             >
               ↗
             </span>
             <div className="min-w-0">
               <div className="mlabel text-accent">DRAW TICKET</div>
-              <div className="mt-1 truncate text-3xs text-mute">One entry · one random NFT position</div>
+              <div className="mt-1 truncate text-3xs text-mute">Pay HYPE · receive one random NFT position</div>
             </div>
           </div>
           <span className={`flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 ${ticketStatus.shell}`}>
@@ -249,8 +263,11 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
             accent
           />
           <TicketMetric label="POOL DEPTH" value={snapshot ? formatHype(snapshot.totalBacking) : "—"} suffix="HYPE" />
-          <TicketMetric label="ODDS MODEL" value="INVERSE" suffix="WEIGHT" />
+          <TicketMetric label="DRAW ODDS" value="INVERSE" suffix="BACKING" />
         </div>
+
+        {/* Ticket stub tear line */}
+        <div aria-hidden className="ticket-perfo my-0.5" />
 
         {/* Quantity + freshness */}
         <div className="flex items-end justify-between gap-4">
@@ -267,10 +284,10 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
         {/* Drift tolerance */}
         <div className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-1 text-2xs text-mute">
-            Settlement guard
+            Max settlement drift
             <InfoTip>
-              The pool changes while your randomness is in flight. Settlement refunds if the pool value at processing
-              drifts against you beyond this tolerance. Protocol default: 10%.
+              The pool can move while randomness is in flight. Your entry is refunded if its settlement value moves
+              against you by more than this limit. Protocol default: 10%.
             </InfoTip>
           </span>
           <div className="flex gap-1">
@@ -342,7 +359,7 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
               {insufficient
                 ? "Insufficient HYPE balance"
                 : quote.data
-                  ? `${quantity} NFT${quantity > 1 ? "s" : ""} · ${formatHype(quote.data.total)} HYPE`
+                  ? `Review draw · ${quantity} NFT${quantity > 1 ? "s" : ""} · ${formatHype(quote.data.total)} HYPE`
                   : "Loading quote…"}
             </span>
           </Button>
@@ -369,8 +386,8 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
               NFT ·{" "}
             </>
           ) : null}
-          one <span className="font-medium text-dim">randomly selected</span> position per entry · lower backing means
-          higher draw weight.
+          one <span className="font-medium text-dim">verifiably random</span> position per entry · lower-backed NFTs
+          have higher draw odds.
           {connected && balance !== undefined && (
             <span className={insufficient ? "text-red" : ""}>
               {" "}
@@ -410,7 +427,7 @@ function TicketMetric({
         className={`num mt-1 flex min-w-0 items-baseline gap-1 font-mono text-2xs font-bold ${accent ? "text-accent" : "text-ink"}`}
       >
         <span className="truncate">{value}</span>
-        <span className="shrink-0 text-[0.45rem] font-medium text-mute">{suffix}</span>
+        <span className="shrink-0 text-3xs font-medium text-mute">{suffix}</span>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 # HWA pre-launch readiness
 
-Date: 2026-07-27  
+Last verified: 2026-07-28
 Candidate state: code-complete and locally verified; external production ceremony pending  
 Chain: HyperEVM mainnet `999`  
 Broadcast status: **none performed by this release preparation**
@@ -20,7 +20,7 @@ mainnet contract currently present is the previously approved Safe.
 
 - Safe `0x75818fd0a2Ff801F974C9a5d23616fbd38b15f4C`, version 1.4.1, threshold 2-of-3.
 - Deployment wallet `0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9`; observed nonce `0` and balance
-  `16.675 HYPE` at this check. Operational ceiling remains `20 HYPE`.
+  `16.675 HYPE` at chain-999 block `41,698,955`. Operational ceiling remains `20 HYPE`.
 - `$HWA`: fixed 1 billion supply and 640 HYPE target FDV inside the signed 600-700 HYPE band.
 - Project X V3: 1% pool, one-sided launch, LP position minted directly to the irrevocable locker.
 - External HWA buys remain closed until a separate manual Safe action; no timer exists.
@@ -28,10 +28,13 @@ mainnet contract currently present is the previously approved Safe.
   `96b80e5c8a06b07407d92b58dbf7865aab242439bdfdb5d8436e370cd2915648`.
 - Genesis initial custody: four Safe mints `100/100/100/33`, followed by a one-way snapshot freeze.
 - Randomness: on-chain verified drand evmnet BN254; transport submitters cannot choose the word.
+- Collection rollout: Hypio is the sole canary; PiP & Friends and Odd Otties are wave 1; Hypurr is
+  indexed but closed; legacy Catbal is deferred because its on-chain `tokenURI` is empty.
 
 ## Latest reproducible gate
 
-`release/release-gate-last-run.json` reports `prepared`, `broadcastRequested: false`:
+`release/release-gate-last-run.json`, generated on 2026-07-28, reports `prepared`,
+`broadcastRequested: false`:
 
 - 169/169 Solidity tests passed, including stateful invariants;
 - production bytecode sizes passed;
@@ -70,11 +73,15 @@ return session:
 
 1. Choose the app and asset hostnames, upload the immutable Genesis package, enable TLS, then obtain
    the fresh 666/666 remote hosting attestation.
-2. Select a production log/archive RPC, record its provider/range, and obtain the fresh archive/log
-   attestation. The browser receives only the restricted same-origin proxy route.
-3. Re-attest and freeze the exact mainnet addresses for Hypios, PiP & Friends, Odd Otties, Catbal and
-   the single low-value canary collection. Hypurr remains a later, separately capped promotion.
-4. Configure the public indexer endpoint, Project X trade URL, metadata host allowlist and app domain.
+2. Bring up the hardened app/indexer stack on the VPS and keep it private until its local healthchecks
+   and TLS checks pass.
+3. Obtain the production archive/log RPC credential and produce a fresh passing probe. The browser
+   receives only the restricted same-origin proxy route. The exact
+   collection addresses, deployment blocks, code hashes, supplies and metadata surfaces are already
+   frozen in `release/hwa-mainnet-collections-attestation.json`.
+4. Configure the public indexer endpoint and app domain. Project X and collection metadata routing
+   are already frozen; contract-address log allowlisting is populated from the final deployment
+   receipts.
 5. Obtain the user's exact phrase **`deploy hyperevm`**. Only then turn on deployment confirmations
    for one phase at a time.
 6. Immediately before the token transaction, regenerate the nonce-bound 640 HYPE price selection;
@@ -83,6 +90,21 @@ return session:
    and freeze, then produce the chain-999 manifest.
 8. Start and monitor two independent drand submitters, pass the mainnet release gate with no skip,
    and run the low-value canary before any public collection or token-buy opening.
+
+## Work that can be completed while the VPS is pending
+
+No additional contract or product implementation is required. The useful parallel work is limited
+to provisioning external credentials without exposing them in chat or Git:
+
+1. create a dedicated HyperEVM archive/log RPC credential and store it only in the ignored
+   `.env.mainnet.local` file;
+2. create or confirm the Goldsky production credential in the same ignored file;
+3. reserve the final app and asset hostnames, without publishing DNS until the VPS healthcheck is
+   green.
+
+Everything else either depends on the final HTTPS host, depends on contract addresses that do not
+exist until deployment, or is intentionally nonce-bound and must be regenerated immediately before
+the authorized launch transaction.
 
 ## Launch boundary
 

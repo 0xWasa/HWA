@@ -12,19 +12,20 @@ import { RowChevron } from "./ListingCard";
  */
 type Outcome = { label: string; className: string };
 
-/** Not a SettlementOutcome — the state before one exists. */
-const PENDING: Outcome = { label: "Pending claim", className: "text-amber bg-amber/12" };
+/** Not a SettlementOutcome — the state before one exists. Labels are wording
+    contracts shared with chips elsewhere; only the stamp frame is styled. */
+const PENDING: Outcome = { label: "Pending claim", className: "stamp stamp--amber" };
 
 /* Keyed by the union so a new SettlementOutcome fails the build instead of
    silently falling through to "Pending claim". */
 const OUTCOME: Record<SettlementOutcome, Outcome> = {
-  kept: { label: "NFT reward", className: "text-secondary-readable bg-secondary/14" },
-  relisted: { label: "Relisted", className: "text-blue bg-blue/12" },
-  bid_accepted: { label: "Bid accepted", className: "text-green bg-green/12" },
-  bid_accepted_tokens: { label: "Bid as $HWA", className: "text-green bg-green/12" },
-  depositor_reclaim_nft: { label: "Depositor took NFT", className: "text-mute bg-control" },
-  depositor_reclaim_backing: { label: "Depositor took HYPE", className: "text-mute bg-control" },
-  finalized: { label: "Finalized", className: "text-mute bg-control" },
+  kept: { label: "NFT reward", className: "stamp stamp--violet stamp--tilt-r" },
+  relisted: { label: "Relisted", className: "stamp stamp--blue stamp--flat" },
+  bid_accepted: { label: "Bid accepted", className: "stamp stamp--green stamp--tilt-r" },
+  bid_accepted_tokens: { label: "Bid as $HWA", className: "stamp stamp--green" },
+  depositor_reclaim_nft: { label: "Depositor took NFT", className: "stamp stamp--flat" },
+  depositor_reclaim_backing: { label: "Depositor took HYPE", className: "stamp stamp--flat" },
+  finalized: { label: "Finalized", className: "stamp stamp--flat" },
 };
 
 export function AcquisitionFeedRow({
@@ -66,9 +67,7 @@ export function AcquisitionFeedRow({
             acquired <Hype wei={listing.acquiredFor} maxDecimals={4} unit={false} /> HYPE
           </span>
         )}
-        <span className={`mlabel inline-flex items-center rounded-xs px-1.5 py-1 ${outcome.className}`}>
-          {outcome.label}
-        </span>
+        <span className={outcome.className}>{outcome.label}</span>
       </div>
 
       <RowChevron />

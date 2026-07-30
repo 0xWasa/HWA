@@ -39,8 +39,7 @@ color; rarity may color a label or a short rail only.
 
 Three cuts, self-hosted through `next/font` (`src/app/fonts.ts`):
 
-- **Sora** — display: wordmark, `h1`/`h2`, `.font-display`. Tracking `-0.02em`.
-- **Manrope** — UI and body copy (14px default, 16px `text-md` for names/prose).
+- **Manrope** — display, wordmark, UI and body copy (14px default, 16px `text-md` for names/prose).
 - **JetBrains Mono** — every amount, id, hash, and the `.mlabel` micro-label
   (10px/600), with `tabular-nums` via `.num`. Sort chips drop to `text-3xs` (9px).
 
@@ -121,3 +120,58 @@ the deployment manifest.
 Unchanged by the reskin: one randomly selected position, risk of loss,
 `indexed ≠ confirmed`, `submitted ≠ success`, no invented yields, HYPE only
 (never Ξ/ETH), HyperEVM ≠ HyperCore, mock data always labeled.
+
+## Pressure Desk pass (2026-07-29)
+
+Direction: "a Hyperliquid terminal invaded by a slightly chaotic NFT card game."
+See DESIGN_DIRECTION_2026-07-29.md for the diagnosis and guardrails.
+
+### New tokens
+
+- Motion ramp (`:root`): `--dur-fast` 120ms / `--dur-base` 200ms / `--dur-slow` 340ms,
+  `--ease-squish` (press/rebound overshoot), `--ease-spring` (thumb/pop). Every new
+  transition picks from the ramp — never invent a duration inline.
+- `--radius-data` (6px): data surfaces (tables, tickets, option rows) use `rounded-data`;
+  generous radii stay reserved for cards and capsules.
+
+### New primitives
+
+- `.stamp` (+ `--amber/--red/--green/--blue/--chain/--violet/--accent/--gold`,
+  `--tilt-r`, `--flat`): rubber-stamped state labels — mono, bordered, ~1.5° crooked.
+  The label TEXT is a wording contract shared with tests; only the frame is styled.
+  Reduced motion straightens stamps.
+- `.tick-up` / `.tick-down`: terminal green/red with ▲/▼ prefixes for signed deltas
+  (StatCard chips). Never used on non-signed values.
+- `.deck-tilt`: grid container whose children lean ±0.4° alternately and straighten
+  (+lift) on hover/focus — the "cards invading the terminal" signature. Static under
+  reduced motion (everything level).
+- `.ticket-perfo`: dashed tear line with side notches — the acquisition ticket stub.
+- `PressureMotif` (ui/PressureMotif.tsx): decorative Genesis contour-rings-vs-wall SVG,
+  aria-hidden, deterministic, zero data. Tones: accent/violet/amber/mist/chain. Used by
+  ProtocolPrelaunch (amber, "LAUNCH WALL"), EmptyState (mist, no wall), the randomness
+  deck and the reveal seal (violet).
+- `.logo-squish`: the soft HWA wordmark squashes on hover/press only — never idle.
+
+### Choreography
+
+- `.btn3d` now squashes (scale 0.985/0.955) into its press and rebounds via
+  `--ease-squish`; hover lifts 1px. `--flat` keeps zero motion.
+- Reveal pack-opening (`RevealOverlay`): `[data-reveal-stage]` = sealed → flipping →
+  revealed. Sealed card (`.reveal-seal-card`, `reveal-seal` testid) slams in, holds
+  900ms (tap to skip), flips 580ms, then `.reveal-cascade` staggers the result column
+  and `anim-reveal-burst` pops the graded card. The permalink route renders the same
+  surface with `animated=false` and stays idempotent. Reduced motion jumps straight to
+  revealed. Skipping can only advance the machine, never regress it.
+- Randomness deck escalation: `[data-deck-phase]` quickens the sealed scanline from
+  phase 2 and `deck-charging` breathes the center card — anticipation without any fake
+  countdown or predetermined outcome.
+- Deposit docking: `deposit-card-complete` overshoots into place and
+  `deposit-core-dock` flashes the pool core as it "receives" the card.
+- `QtySlider` thumb springs (`--ease-spring`) and its number pops (`.anim-step-pop`)
+  on every step change.
+
+### Honesty rules (unchanged, restated)
+
+Stamps and motifs never carry invented numbers. Prelaunch/degraded/empty states keep
+their exact copy and gate order. `prefers-reduced-motion` remains a global kill switch;
+new JS-driven animation must check `matchMedia` before animating.

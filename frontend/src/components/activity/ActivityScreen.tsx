@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { shortAddress, timeAgo } from "@/lib/format";
 import { formatHwa } from "@/lib/units";
-import { useAccountState } from "@/protocol/provider";
+import { useAccountState, useProtocol } from "@/protocol/provider";
 import type { ActivityItem, ActivityType } from "@/protocol/types";
 import { useActivity, useCollections, useConnectionHealth } from "@/state/queries";
 import { Button } from "@/components/ui/Button";
@@ -14,6 +14,7 @@ import { Segmented } from "@/components/ui/Segmented";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SkeletonRow } from "@/components/ui/Skeleton";
 import { Tag } from "@/components/ui/Tag";
+import { ProtocolPrelaunch } from "@/components/ui/ProtocolPrelaunch";
 
 const PAGE = 30;
 
@@ -63,6 +64,7 @@ const TYPE_PRESENTATION: Record<ActivityType, { label: string; tone: "accent" | 
 
 export function ActivityScreen() {
   const account = useAccountState();
+  const { prelaunch } = useProtocol();
   const [scope, setScope] = useState<"global" | "user">("global");
   const [groupId, setGroupId] = useState<string | null>(null);
   const [collection, setCollection] = useState<string | null>(null);
@@ -82,6 +84,23 @@ export function ActivityScreen() {
     collections: collection ? [collection as `0x${string}`] : undefined,
     limit,
   });
+
+  if (prelaunch) {
+    return (
+      <div className="mx-auto w-full max-w-[1280px] space-y-3 px-3 py-5 sm:px-6">
+        <PageHeader
+          eyebrow="ON-CHAIN TAPE"
+          title="Activity"
+          description="A readable event trail for deposits, draws, settlements and claims."
+        />
+        <ProtocolPrelaunch
+          title="The on-chain tape starts with block one."
+          detail="Activity will be indexed from the reviewed deployment block. Until the contracts exist, there are no events to display and no simulated feed is substituted."
+          compact
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-[1280px] space-y-3 px-3 py-5 sm:px-6">
@@ -165,7 +184,7 @@ export function ActivityScreen() {
         <>
           <div className="overflow-x-auto rounded-md border border-line bg-panel" data-testid="activity-feed">
             <div className="min-w-[560px]">
-              <div className="grid grid-cols-[110px_minmax(0,1fr)_110px_90px_90px_60px] gap-3 border-b border-line px-3 py-1.5 text-[10px] uppercase tracking-wide text-faint">
+              <div className="grid grid-cols-[110px_minmax(0,1fr)_110px_90px_90px_60px] gap-3 border-b border-line px-3 py-1.5 text-2xs uppercase tracking-wide text-faint">
                 <span>Event</span>
                 <span>Detail</span>
                 <span className="text-right">Amount</span>

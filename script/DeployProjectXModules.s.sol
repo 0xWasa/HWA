@@ -8,6 +8,7 @@ import {FWARewardsHyperEVM} from "../src/hyperevm/FWARewardsHyperEVM.sol";
 import {FWATokenHyperEVM} from "../src/hyperevm/FWATokenHyperEVM.sol";
 import {HWAProjectXLiquidityLocker} from "../src/hyperevm/HWAProjectXLiquidityLocker.sol";
 import {SplitterHyperEVM} from "../src/hyperevm/SplitterHyperEVM.sol";
+import {MainnetOwnerPolicy} from "./MainnetOwnerPolicy.sol";
 
 interface VmProjectXModulesDeploy {
     function envUint(string calldata name) external returns (uint256 value);
@@ -79,8 +80,9 @@ contract DeployProjectXModules {
         address expectedWhype = block.chainid == MAINNET ? MAINNET_WHYPE : TESTNET_WHYPE;
 
         if (finalOwner == address(0) || legacyRecipient == address(0)) revert InvalidAddress();
-        if (block.chainid == MAINNET && (finalOwner.code.length == 0 || legacyRecipient != finalOwner)) {
-            revert InvalidContract();
+        if (block.chainid == MAINNET) {
+            MainnetOwnerPolicy.validateDeploymentOwner(finalOwner, deployer, vm.envBool("MAINNET_EOA_OWNER_CONFIRMED"));
+            if (legacyRecipient != finalOwner) revert InvalidContract();
         }
         if (token.owner() != deployer || locker.owner() != deployer) revert UnauthorizedDeployer();
         if (

@@ -153,19 +153,26 @@ remote hash/MIME/cache attestation. `release/hwa-genesis-canonical.json` is the 
 
 ## 7. Initial collection allowlist
 
-The contracts below were checked on chain 999 for code, ERC-721 support and the displayed supply.
-Only Hypio is opened for the first canary. The other four require a separate post-canary Safe batch.
+The contracts below were re-attested on chain 999 at block `41,698,655` for code, ERC-721 support,
+creation receipt, displayed supply and a representative `tokenURI`. Only Hypio is opened for the
+first canary. PiP & Friends and Odd Otties require a separate post-canary Safe batch. Hypurr is
+pre-indexed but remains closed. The exact legacy Catbal contract is deferred because its metadata
+surface is empty. The machine-readable evidence is
+`release/hwa-mainnet-collections-attestation.json`.
 
-| Stage | Collection | Contract | Supply observed | Notes |
-|---|---|---|---:|---|
-| Canary | Hypio | `0x63eb9d77d083ca10c304e28d5191321977fd0bfb` | 5,405 | first live listing/acquisition only |
-| Wave 1 | PiP & Friends | `0xbc4a26ba78ce05e8bcbf069bbb87fb3e1dac8df8` | 7,777 | open after canary |
-| Wave 1 | Odd Otties | `0x43a9652e2b3ce8970e8d33d8c34252a59a6596aa` | 3,333 | open after canary |
-| Wave 1 | Catbal | `0x8027f4306f85aa03325574879170fbca365b9f52` | 1,755 | immutable EIP-1167 proxy target `0x09a26fc8fcef18192e267d7a6da9dfb4be81dd6a` |
-| Wave 2 | Hypurr | `0x9125e2d6827a00b0f8330d6ef7bef07730bac685` | 4,600 | higher-value collection; open last with a conservative operational cap |
+| Stage | Collection | Contract | Deployment block | Supply observed | Notes |
+|---|---|---|---:|---:|---|
+| Canary | Hypio | `0x63eb9d77d083ca10c304e28d5191321977fd0bfb` | 390,921 | 5,405 | first live listing/acquisition only; IPFS metadata |
+| Wave 1 | PiP & Friends | `0xbc4a26ba78ce05e8bcbf069bbb87fb3e1dac8df8` | 3,727,372 | 7,777 | open after canary; `static.drip.trade` metadata |
+| Wave 1 | Odd Otties | `0x43a9652e2b3ce8970e8d33d8c34252a59a6596aa` | 1,835,630 | 3,333 | open after canary; `otties.mypinata.cloud` metadata |
+| Deferred | Catbal | `0x8027f4306f85aa03325574879170fbca365b9f52` | 13,231,668 | 1,755 | immutable EIP-1167 target `0x09a26f...dd6a`; `tokenURI(1)` is empty, so it is not indexed or allowlisted at launch |
+| Indexed, closed | Hypurr | `0x9125e2d6827a00b0f8330d6ef7bef07730bac685` | 15,060,098 | 4,600 | higher-value collection; open later through a separate reviewed Safe action |
 
-The production manifest must additionally record each deployment block and every metadata hostname.
-No frontend label, ticker or marketplace URL is sufficient authority for an allowlist action.
+The production manifest records the deployment blocks above and every metadata hostname. The
+ignored mainnet environment now contains Hypio as canary, PiP/Otties as the post-canary public
+batch, and Hypurr as an indexed-but-closed collection. No frontend label, ticker or marketplace URL
+is sufficient authority for an allowlist action. Catbal can be reconsidered after choosing a
+metadata-bearing contract; the two Illumeownati contracts are not silently substituted.
 
 ## 8. Remaining mainnet blockers
 
@@ -200,9 +207,9 @@ deployer nonce, select that row and reproduce the FDV independently before broad
 
 ## 9. Freeze ceremony
 
-Before any chain-999 broadcast:
+Before any remaining chain-999 broadcast:
 
-1. deploy the prepared Safe only after an explicit deployment authorization;
+1. re-verify the already deployed Safe, its owners and its 2-of-3 threshold;
 2. verify every address independently in two tools and confirm Safe threshold/signers on-chain;
 3. publish and review the final Genesis metadata, mint all 333 IDs to the Safe, then freeze it;
 4. confirm the launch FDV, calculate token ordering, price, tick, range and FDV twice independently;

@@ -16,7 +16,7 @@ $projectRoot = [System.IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
 $roots = @(
     "src", "test", "script", "scripts", "hyperevm-fork-test", "fork-test",
     "frontend/src", "frontend/e2e", "frontend/public/genesis/v1", "frontend/public/genesis/v2",
-    "frontend/public/genesis/v3", "frontend/public/genesis/v3-explorations",
+    "frontend/public/genesis/v3", "frontend/public/genesis/v3-explorations", "frontend/public/brand",
     "indexer/src", "indexer/scripts", "indexer/abis",
     "vendor/fwa-reference-union",
     "FWA_ETHEREUM_REFERENCE/FWA/sources", "FWA_ETHEREUM_REFERENCE/FWAVRFService/sources",
@@ -34,11 +34,12 @@ $rootFiles = @(
     "HWA_VPS_HOSTING_RUNBOOK_2026-07-27.md",
     "HWA_VPS_APP_RUNBOOK_2026-07-27.md",
     "ops/nginx/hwa-genesis-v3.conf.example",
-    "ops/nginx/hwa-app.conf.example", "docker-compose.production.yml",
+    "ops/nginx/hwa-app.conf.example", "ops/nginx/hwa-production.conf", "docker-compose.production.yml",
     "frontend/public/genesis/concepts/hwa-genesis-colossal-v1.png",
     "release/hwa-safe-mainnet-preparation.json",
     "release/hwa-safe-mainnet-deployment.json",
     "release/hwa-launch-economics-preparation.json",
+    "release/hwa-mainnet-collections-attestation.json",
     "release/hwa-projectx-launch-price-selection.json",
     "release/hwa-genesis-custody-recipients.json",
     "release/hwa-genesis-canonical.json",
@@ -55,6 +56,7 @@ $rootFiles = @(
     "frontend/eslint.config.mjs", "frontend/playwright.config.ts", "frontend/tsconfig.json",
     "indexer/package.json", "indexer/package-lock.json", "indexer/schema.graphql",
     "indexer/subgraph.template.yaml", "release/release-gate-last-run.json",
+    "release/log-rpc-probe-999.json",
     "release/AUDIT_REPORT_2026-07-26.md",
     "release/audit-findings-2026-07-26.json",
     "release/REMEDIATION_REPORT_2026-07-26.md",
@@ -76,7 +78,7 @@ $rootFiles = @(
     "release/release-gate-testnet-v2-live-2026-07-27.json",
     "release/testnet-attestation-998.json", "release/testnet-attestation-projectx-998.json"
 )
-$extensions = @(".sol", ".ts", ".tsx", ".mjs", ".ps1", ".json", ".graphql", ".yaml", ".toml", ".md", ".svg", ".html", ".png")
+$extensions = @(".sol", ".ts", ".tsx", ".mjs", ".py", ".ps1", ".json", ".graphql", ".yaml", ".toml", ".md", ".svg", ".html", ".png", ".ico")
 $files = New-Object System.Collections.Generic.List[System.IO.FileInfo]
 foreach ($root in $roots) {
     $resolved = Join-Path $projectRoot $root
@@ -125,5 +127,6 @@ $payload = [ordered]@{
 }
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $resolvedOutput) | Out-Null
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-[System.IO.File]::WriteAllText($resolvedOutput, ($payload | ConvertTo-Json -Depth 6), $utf8NoBom)
+$json = (($payload | ConvertTo-Json -Depth 6) -replace "`r`n", "`n") + "`n"
+[System.IO.File]::WriteAllText($resolvedOutput, $json, $utf8NoBom)
 Write-Host "Wrote audit manifest for $($payload.fileCount) files to $resolvedOutput"

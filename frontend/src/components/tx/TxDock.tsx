@@ -71,7 +71,10 @@ function TxCard({ tx, onDismiss }: { tx: TrackedTransaction; onDismiss: () => vo
     >
       <div className="mb-1.5 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="truncate text-xs font-medium text-ink">{tx.label}</div>
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="truncate text-xs font-medium text-ink">{tx.label}</span>
+            {done && <span className="stamp stamp--green shrink-0">Filled</span>}
+          </div>
           {tx.hash && (
             <div className="mt-0.5">
               <HashLink value={tx.hash} kind="tx" />
@@ -97,11 +100,11 @@ function TxCard({ tx, onDismiss }: { tx: TrackedTransaction; onDismiss: () => vo
             return (
               <div key={s.phase} className="flex flex-1 flex-col gap-1">
                 <div
-                  className={`h-[3px] rounded-full ${
+                  className={`h-[3px] rounded-full transition-colors duration-300 ${
                     reached ? "bg-green" : "bg-control"
                   } ${current ? "anim-pulse" : ""}`}
                 />
-                <span className={`text-[9px] leading-none ${reached ? "text-green" : "text-faint"}`}>{s.label}</span>
+                <span className={`text-3xs leading-none transition-colors duration-300 ${reached ? "text-green" : "text-faint"}`}>{s.label}</span>
               </div>
             );
           })}
@@ -113,7 +116,7 @@ function TxCard({ tx, onDismiss }: { tx: TrackedTransaction; onDismiss: () => vo
           {tx.error?.raw && (
             <details className="mt-1">
               <summary className="cursor-pointer text-2xs text-mute hover:text-dim">Technical details</summary>
-              <code className="num mt-1 block break-all font-mono text-[10px] text-faint">{tx.error.raw}</code>
+              <code className="num mt-1 block break-all font-mono text-2xs text-faint">{tx.error.raw}</code>
             </details>
           )}
           {(tx.phase === "timeout" || tx.phase === "rejected") && (

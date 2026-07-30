@@ -252,3 +252,42 @@ describe("ViemProtocolClient settlement slippage guard", () => {
     ).rejects.toMatchObject({ code: "WALLET_NOT_CONNECTED" });
   });
 });
+
+describe("ViemProtocolClient NFT metadata hydration", () => {
+  it("hydrates direct listing deep links and resolves an unmanifested collection identity", async () => {
+    const collection = "0x0000000000000000000000000000000000000099" as const;
+    const depositor = "0x0000000000000000000000000000000000000020" as const;
+    const client = new ViemProtocolClient(manifest, "http://localhost:8545", 999);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ name: "Tiny Hyper Cat #780", imageUrl: "data:image/svg+xml;base64,PHN2Zy8+" }),
+      })),
+    );
+    const readContract = vi.fn(async ({ functionName }: { functionName: string }) => {
+      if (functionName === "listings") {
+        return [collection, depositor, "0x0000000000000000000000000000000000000000", 780n, 10n, 3n, 0n, 0n, 1n, 0n, 1] as const;
+      }
+      if (functionName === "pendingFees") return 0n;
+      if (functionName === "stuckNFTRecipient") return "0x0000000000000000000000000000000000000000";
+      if (functionName === "name") return "TinyHyperCats";
+      if (functionName === "symbol") return "THC";
+      if (functionName === "tokenURI") return "data:application/json;base64,e30=";
+      throw new Error(`Unexpected read: ${functionName}`);
+    });
+    Object.assign(client, { pub: { readContract } });
+
+    await expect(client.getListing(93n)).resolves.toMatchObject({
+      id: 93n,
+      tokenId: 780n,
+      nft: {
+        name: "Tiny Hyper Cat #780",
+        collectionName: "TinyHyperCats",
+        collectionSymbol: "THC",
+        imageUrl: "data:image/svg+xml;base64,PHN2Zy8+",
+      },
+    });
+    expect(readContract).toHaveBeenCalledWith(expect.objectContaining({ functionName: "tokenURI", args: [780n] }));
+  });
+});
