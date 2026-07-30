@@ -603,3 +603,58 @@ describe("ViemProtocolClient NFT metadata hydration", () => {
     expect(readContract).toHaveBeenCalledWith(expect.objectContaining({ functionName: "tokenURI", args: [780n] }));
   });
 });
+
+describe("ViemProtocolClient swap quoting", () => {
+  // Live mainnet pool state, wHYPE/HWA at the 1% tier: spot is 822,383 HWA per
+  // wHYPE and a 1 wHYPE buy fills at 812,478. That gap is what pins the maths
+  // here, because a quote that drifts from the venue mis-sets the slippage
+  // floor, and the floor is the only thing standing between a trader and a
+  // sandwich on a market that moves double digits in minutes.
+  const SQRT_P = 71848321534485703177456971898997n;
+  const LIQUIDITY = 433857376235755102553485n;
+  const WHYPE = "0x5555555555555555555555555555555555555555";
+
+  function client() {
+    const c = new ViemProtocolClient(
+      { ...manifest, contracts: { ...manifest.contracts, token: "0x00000000000000000000000000000000000000aa", projectXAdapter: "0x00000000000000000000000000000000000000bb" } } as DeploymentManifest,
+      "http://localhost:8545",
+      999,
+    );
+    const readContract = vi.fn(async ({ functionName }: { functionName: string }) => {
+      switch (functionName) {
+        case "ROUTER": return "0x00000000000000000000000000000000000000cc";
+        case "WHYPE": return WHYPE;
+        case "POOL": return "0x00000000000000000000000000000000000000dd";
+        case "POOL_FEE": return 10_000;
+        case "slot0": return [SQRT_P, 0, 0, 0, 0, 0, true];
+        case "liquidity": return LIQUIDITY;
+        case "token0": return WHYPE;
+        default: throw new Error(`Unexpected read: ${functionName}`);
+      }
+    });
+    Object.assign(c, { pub: { readContract } });
+    return c;
+  }
+
+  it("prices a buy within a hair of the venue and always below spot", async () => {
+    const quote = await client().quoteSwap({ side: "buy", amountIn: 10n ** 18n, slippageBps: 100 });
+    const out = Number(quote.amountOut) / 1e18;
+    expect(out).toBeGreaterThan(810_000);
+    expect(out).toBeLessThan(815_000);
+    // The 1% pool fee alone puts impact above 100bps; it can never be negative.
+    expect(quote.priceImpactBps).toBeGreaterThan(100);
+    expect(quote.feeBps).toBe(100);
+  });
+
+  it("floors the output by the requested slippage so a swap is never unguarded", async () => {
+    const quote = await client().quoteSwap({ side: "buy", amountIn: 10n ** 18n, slippageBps: 250 });
+    expect(quote.minOut).toBe((quote.amountOut * 9_750n) / 10_000n);
+    expect(quote.minOut).toBeGreaterThan(0n);
+  });
+
+  it("refuses to quote an amount the pool cannot fill", async () => {
+    await expect(client().quoteSwap({ side: "buy", amountIn: 0n, slippageBps: 100 })).rejects.toMatchObject({
+      code: "NOT_ELIGIBLE",
+    });
+  });
+});

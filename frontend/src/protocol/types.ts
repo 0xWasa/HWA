@@ -373,6 +373,7 @@ export type TxKind =
   | "claim_crown"
   | "claim_splitter"
   | "claim_rewards"
+  | "approve_token"
   | "swap";
 
 export interface TrackedTransaction {

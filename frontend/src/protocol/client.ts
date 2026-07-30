@@ -56,6 +56,8 @@ export interface ProtocolClient {
   // ---- quoting (on-chain, pre-transaction) -----------------------------
   quoteAcquisition(input: { quantity: number; driftToleranceBps: number }): Promise<AcquisitionQuote>;
   quoteSwap(input: { side: SwapSide; amountIn: bigint; slippageBps: number }): Promise<SwapQuote>;
+  /** HWA the venue may pull for a sale. Zero means an approval is needed first. */
+  tradeAllowance(account: Address): Promise<bigint>;
 
   // ---- writes ----------------------------------------------------------
   approveNFT(input: { collection: Address; tokenId: bigint }): Promise<TrackedTransaction>;
@@ -75,6 +77,7 @@ export interface ProtocolClient {
     withdrawCredit?: boolean;
     claimAccruedMinOut?: bigint;
   }): Promise<TrackedTransaction>;
+  approveTradeToken(amount: bigint): Promise<TrackedTransaction>;
   swap(input: { quote: SwapQuote }): Promise<TrackedTransaction>;
 
   // ---- transaction tracking -------------------------------------------

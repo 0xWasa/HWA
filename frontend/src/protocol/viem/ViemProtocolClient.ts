@@ -54,7 +54,10 @@ import {
   fwaCoreAbi,
   fwaRewardsAbi,
   LISTING_STATUS_BY_CODE,
+  projectXAdapterAbi,
   v3PoolAbi,
+  v3PoolLiquidityAbi,
+  v3RouterAbi,
   splitterAbi,
 } from "./abi";
 import { buildPoolMarketHistory, type PoolSwapSample } from "./market";
@@ -321,6 +324,7 @@ export class ViemProtocolClient implements ProtocolClient {
   private receiptWatchers = new Set<string>();
   private metadataCache = new Map<string, Promise<{ name?: string; imageUrl?: string }>>();
   private metadataStore = readMetadataStore();
+  private venueCache?: { router: Address; whype: Address; pool: Address; fee: number; token: Address };
   private collectionMetadataCache = new Map<string, Promise<{ name?: string; symbol?: string }>>();
   private poolSwapCache?: { pool: Address; throughBlock: bigint; samples: PoolSwapSample[] };
 
@@ -2213,12 +2217,164 @@ export class ViemProtocolClient implements ProtocolClient {
     };
   }
 
-  async quoteSwap(_input: { side: SwapSide; amountIn: bigint; slippageBps: number }): Promise<SwapQuote> {
-    throw new ProtocolError("NOT_ELIGIBLE", "Public swaps use the reviewed Project X interface after the owner opens buys.");
+  /**
+   * Venue addresses taken from the protocol's own adapter, never from a
+   * manifest entry, so the app cannot route through a different market than the
+   * one the buyback and the HWA settlements already use.
+   */
+  private async venue(): Promise<{ router: Address; whype: Address; pool: Address; fee: number; token: Address }> {
+    if (this.venueCache) return this.venueCache;
+    const adapter = this.manifest.contracts.projectXAdapter;
+    const token = this.manifest.contracts.token;
+    if (!adapter || !token) throw new ProtocolError("NOT_ELIGIBLE", "The HWA market is not configured for this deployment.");
+    const [router, whype, pool, fee] = await Promise.all([
+      this.pub.readContract({ address: adapter, abi: projectXAdapterAbi, functionName: "ROUTER" }),
+      this.pub.readContract({ address: adapter, abi: projectXAdapterAbi, functionName: "WHYPE" }),
+      this.pub.readContract({ address: adapter, abi: projectXAdapterAbi, functionName: "POOL" }),
+      this.pub.readContract({ address: adapter, abi: projectXAdapterAbi, functionName: "POOL_FEE" }),
+    ]);
+    this.venueCache = { router, whype, pool, fee: Number(fee), token };
+    return this.venueCache;
   }
 
-  async swap(_input: { quote: SwapQuote }): Promise<TrackedTransaction> {
-    throw new ProtocolError("NOT_ELIGIBLE", "Public swaps use the reviewed Project X interface after the owner opens buys.");
+  async quoteSwap(input: { side: SwapSide; amountIn: bigint; slippageBps: number }): Promise<SwapQuote> {
+    if (input.amountIn <= 0n) throw new ProtocolError("NOT_ELIGIBLE", "Enter an amount to quote.");
+    const { pool, whype, fee } = await this.venue();
+    const [slot0, liquidity, token0] = await Promise.all([
+      this.pub.readContract({ address: pool, abi: v3PoolAbi, functionName: "slot0" }),
+      this.pub.readContract({ address: pool, abi: v3PoolLiquidityAbi, functionName: "liquidity" }),
+      this.pub.readContract({ address: pool, abi: v3PoolAbi, functionName: "token0" }),
+    ]);
+    const sqrtP = slot0[0];
+    const L = liquidity;
+    if (L === 0n || sqrtP === 0n) throw new ProtocolError("NOT_ELIGIBLE", "The pool has no liquidity at the current price.");
+
+    // Which side of the pair HYPE sits on is read, not assumed.
+    const hypeIsToken0 = sameAddress(token0, whype);
+    const spendingHype = input.side === "buy";
+    const zeroForOne = spendingHype ? hypeIsToken0 : !hypeIsToken0;
+
+    const Q96 = 2n ** 96n;
+    const afterFee = (input.amountIn * BigInt(1_000_000 - fee)) / 1_000_000n;
+    let amountOut: bigint;
+    if (zeroForOne) {
+      // token0 in: the price walks down, output is token1.
+      const sqrtNew = (L * sqrtP) / (L + (afterFee * sqrtP) / Q96);
+      amountOut = (L * (sqrtP - sqrtNew)) / Q96;
+    } else {
+      // token1 in: the price walks up, output is token0.
+      const sqrtNew = sqrtP + (afterFee * Q96) / L;
+      amountOut = (L * Q96 * (sqrtNew - sqrtP)) / (sqrtP * sqrtNew);
+    }
+    if (amountOut <= 0n) throw new ProtocolError("NOT_ELIGIBLE", "The pool cannot fill an amount this small.");
+
+    // Impact against the spot price, fee included: what the trade costs versus
+    // trading an infinitesimal amount at the current tick.
+    const spotOut = zeroForOne
+      ? (input.amountIn * sqrtP * sqrtP) / (Q96 * Q96)
+      : (input.amountIn * Q96 * Q96) / (sqrtP * sqrtP);
+    const priceImpactBps = spotOut > 0n ? Number(((spotOut - amountOut) * 10_000n) / spotOut) : 0;
+
+    return {
+      side: input.side,
+      amountIn: input.amountIn,
+      amountOut,
+      minOut: (amountOut * BigInt(10_000 - input.slippageBps)) / 10_000n,
+      slippageBps: input.slippageBps,
+      priceImpactBps: Math.max(0, priceImpactBps),
+      feeBps: fee / 100,
+      quotedAt: nowSec(),
+    };
+  }
+
+  /** Allowance the router needs before an HWA sale can be submitted. */
+  async tradeAllowance(account: Address): Promise<bigint> {
+    const { router, token } = await this.venue();
+    return this.pub.readContract({ address: token, abi: erc20Abi, functionName: "allowance", args: [account, router] });
+  }
+
+  async approveTradeToken(amount: bigint): Promise<TrackedTransaction> {
+    const { wallet, account } = await this.connectedWallet();
+    const { router, token } = await this.venue();
+    return this.executeWrite("approve_token", "Approve HWA for trading", { amount: amount.toString() }, () =>
+      wallet.writeContract({ account, address: token, abi: erc20Abi, functionName: "approve", args: [router, amount] }),
+    );
+  }
+
+  async swap(input: { quote: SwapQuote }): Promise<TrackedTransaction> {
+    const { wallet, account } = await this.connectedWallet();
+    const { router, whype, fee, token } = await this.venue();
+    const { side, amountIn, minOut } = input.quote;
+    if (minOut <= 0n) {
+      // Never submit an unguarded swap: without a floor a sandwich can take the
+      // whole trade, and this market moves double digits in minutes.
+      throw new ProtocolError("NOT_ELIGIBLE", "This trade has no minimum output. Refresh the quote before submitting.");
+    }
+    const deadline = BigInt(nowSec() + 600);
+
+    if (side === "buy") {
+      // Native HYPE in: the router wraps it, and the pool delivers HWA straight
+      // to the buyer. Any route that parks HWA on the router first reverts.
+      return this.executeWrite("swap", "Buy HWA", { amountIn: amountIn.toString(), minOut: minOut.toString() }, () =>
+        wallet.writeContract({
+          account,
+          address: router,
+          abi: v3RouterAbi,
+          functionName: "exactInputSingle",
+          args: [{
+            tokenIn: whype,
+            tokenOut: token,
+            fee,
+            recipient: account,
+            deadline,
+            amountIn,
+            amountOutMinimum: minOut,
+            sqrtPriceLimitX96: 0n,
+          }],
+          value: amountIn,
+        }),
+      );
+    }
+
+    const allowance = await this.pub.readContract({
+      address: token,
+      abi: erc20Abi,
+      functionName: "allowance",
+      args: [account, router],
+    });
+    if (allowance < amountIn) {
+      throw new ProtocolError("NOT_ELIGIBLE", "Approve HWA for trading before selling.");
+    }
+    // Selling returns wHYPE to the router, which unwraps it to native HYPE for
+    // the seller in the same transaction.
+    const swapCall = encodeFunctionData({
+      abi: v3RouterAbi,
+      functionName: "exactInputSingle",
+      args: [{
+        tokenIn: token,
+        tokenOut: whype,
+        fee,
+        recipient: router,
+        deadline,
+        amountIn,
+        amountOutMinimum: minOut,
+        sqrtPriceLimitX96: 0n,
+      }],
+    });
+    const unwrapCall = encodeFunctionData({
+      abi: v3RouterAbi,
+      functionName: "unwrapWETH9",
+      args: [minOut, account],
+    });
+    return this.executeWrite("swap", "Sell HWA", { amountIn: amountIn.toString(), minOut: minOut.toString() }, () =>
+      wallet.writeContract({
+        account,
+        address: router,
+        abi: v3RouterAbi,
+        functionName: "multicall",
+        args: [[swapCall, unwrapCall]],
+      }),
+    );
   }
 
   async approveNFT(input: { collection: Address; tokenId: bigint }): Promise<TrackedTransaction> {

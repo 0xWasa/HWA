@@ -92,6 +92,15 @@ export class MockProtocolClient implements ProtocolClient {
     return this.lag(this.engine.quoteSwap(input.side, input.amountIn, input.slippageBps), 120);
   }
 
+  /** The mock venue pulls nothing, so a sale never waits on an approval. */
+  async tradeAllowance(_account: Address) {
+    return 2n ** 255n;
+  }
+
+  async approveTradeToken(_amount: bigint) {
+    return this.engine.swap({ side: "sell", amountIn: 0n, amountOut: 0n, minOut: 0n, slippageBps: 0, priceImpactBps: 0, feeBps: 0, quotedAt: 0 });
+  }
+
   async swap(input: { quote: SwapQuote }) {
     return this.engine.swap(input.quote);
   }

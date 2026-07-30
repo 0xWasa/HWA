@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { QUOTE_FRESH_MS, QUOTE_REFRESH_MS } from "@/protocol/params";
 import { useProtocol } from "@/protocol/provider";
-import type { ActivityQuery, ListingsQuery } from "@/protocol/types";
+import type { ActivityQuery, Address, ListingsQuery } from "@/protocol/types";
 
 /**
  * Data hooks — thin, typed wrappers over the ProtocolClient. Serialization of
@@ -161,6 +161,16 @@ export function useSwapQuote(side: "buy" | "sell", amountIn: bigint | null, slip
     enabled: !!client && amountIn !== null && amountIn > 0n,
     refetchInterval: 10_000,
     retry: 0,
+  });
+}
+
+/** How much HWA the venue may pull. Selling waits on this the first time. */
+export function useTradeAllowance(account: Address | undefined) {
+  const { client } = useProtocol();
+  return useQuery({
+    queryKey: ["tradeAllowance", account ?? ""],
+    queryFn: () => client!.tradeAllowance(account!),
+    enabled: !!client && !!account,
   });
 }
 
