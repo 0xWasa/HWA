@@ -105,6 +105,80 @@ function upstreamConfig(): { url: URL; headers: Record<string, string> } | null 
   }
 }
 
+type RpcTemplate = { result?: unknown; error?: unknown };
+type CachedLogs = { expiresAt: number; templates: RpcTemplate[] };
+const MAX_LOG_CACHE_ENTRIES = 512;
+const logCache = new Map<string, CachedLogs>();
+const logInflight = new Map<string, Promise<RpcTemplate[]>>();
+
+function logCacheKey(calls: JsonRpcRequest[]): string {
+  return JSON.stringify(calls.map((call) => call.params[0]));
+}
+
+function pruneLogCache(now: number): void {
+  for (const [key, entry] of logCache) if (entry.expiresAt <= now) logCache.delete(key);
+  while (logCache.size >= MAX_LOG_CACHE_ENTRIES) logCache.delete(logCache.keys().next().value ?? "");
+}
+
+async function fetchLogTemplates(
+  calls: JsonRpcRequest[],
+  upstream: { url: URL; headers: Record<string, string> },
+): Promise<RpcTemplate[]> {
+  const forwarded = calls.map((call, index) => ({ ...call, id: index + 1 }));
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+  try {
+    const response = await fetch(upstream.url, {
+      method: "POST",
+      headers: upstream.headers,
+      body: JSON.stringify(forwarded.length === 1 ? forwarded[0] : forwarded),
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    const raw = await response.text();
+    if (Buffer.byteLength(raw, "utf8") > MAX_RESPONSE_BYTES) throw new Error("upstream response too large");
+    if (!response.ok) throw new Error(`upstream HTTP ${response.status}`);
+    const parsed = JSON.parse(raw) as unknown;
+    const responses = Array.isArray(parsed) ? parsed : [parsed];
+    return forwarded.map((_, index) => {
+      const item = responses.find(
+        (candidate): candidate is { id: JsonRpcId; result?: unknown; error?: unknown } =>
+          !!candidate && typeof candidate === "object" && !Array.isArray(candidate) &&
+          (candidate as { id?: unknown }).id === index + 1,
+      );
+      if (!item || (!("result" in item) && !("error" in item))) throw new Error("invalid upstream response");
+      return "error" in item ? { error: item.error } : { result: item.result };
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function cachedLogs(
+  calls: JsonRpcRequest[],
+  upstream: { url: URL; headers: Record<string, string> },
+): Promise<RpcTemplate[]> {
+  const key = logCacheKey(calls);
+  const now = Date.now();
+  const cached = logCache.get(key);
+  if (cached && cached.expiresAt > now) return cached.templates;
+  const existing = logInflight.get(key);
+  if (existing) return existing;
+  const request = fetchLogTemplates(calls, upstream)
+    .then((templates) => {
+      if (templates.every((template) => !("error" in template))) {
+        pruneLogCache(Date.now());
+        logCache.set(key, {
+          expiresAt: Date.now() + envUint("HYPEREVM_LOG_RPC_CACHE_TTL_MS", 30_000),
+          templates,
+        });
+      }
+      return templates;
+    })
+    .finally(() => logInflight.delete(key));
+  logInflight.set(key, request);
+  return request;
+}
 export async function POST(request: NextRequest) {
   const contentLength = Number.parseInt(request.headers.get("content-length") ?? "0", 10);
   if (contentLength > MAX_BODY_BYTES) return noStore({ error: "request too large" }, 413);
@@ -129,28 +203,17 @@ export async function POST(request: NextRequest) {
     return noStore({ error: "unsupported JSON-RPC request" }, 400);
   }
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+  const validCalls = calls as JsonRpcRequest[];
   try {
-    const response = await fetch(upstream.url, {
-      method: "POST",
-      headers: upstream.headers,
-      body: JSON.stringify(body),
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    const raw = await response.text();
-    if (Buffer.byteLength(raw, "utf8") > MAX_RESPONSE_BYTES) return noStore({ error: "upstream response too large" }, 502);
-    if (!response.ok) return noStore({ error: "upstream unavailable", status: response.status }, 502);
-    try {
-      return noStore(JSON.parse(raw));
-    } catch {
-      return noStore({ error: "invalid upstream response" }, 502);
-    }
+    const templates = await cachedLogs(validCalls, upstream);
+    const payload = validCalls.map((call, index) => ({
+      jsonrpc: "2.0" as const,
+      id: call.id,
+      ...templates[index]!,
+    }));
+    return noStore(Array.isArray(body) ? payload : payload[0]);
   } catch {
     return noStore({ error: "upstream unavailable" }, 502);
-  } finally {
-    clearTimeout(timer);
   }
 }
 

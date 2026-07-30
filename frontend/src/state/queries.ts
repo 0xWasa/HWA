@@ -17,7 +17,8 @@ export function usePoolSnapshot() {
     queryKey: ["pool"],
     queryFn: () => client!.getPoolSnapshot(),
     enabled: !!client,
-    refetchInterval: 6_000,
+    refetchInterval: 15_000,
+    staleTime: 10_000,
   });
 }
 
@@ -66,8 +67,8 @@ export function useActivity(query: ActivityQuery) {
     ],
     queryFn: () => client!.getActivity(query),
     enabled: !!client,
-    refetchInterval: 30_000,
-    staleTime: 15_000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
     placeholderData: (prev) => prev,
   });
 }
@@ -116,7 +117,8 @@ export function useNativeBalance() {
     queryKey: ["balance", account.address ?? ""],
     queryFn: () => client!.getNativeBalance(account.address!),
     enabled: !!client && account.status === "connected" && !!account.address,
-    refetchInterval: 8_000,
+    refetchInterval: 20_000,
+    staleTime: 10_000,
   });
 }
 
@@ -126,7 +128,8 @@ export function useSettlementInfo(listingId: bigint | null) {
     queryKey: ["settlement", listingId === null ? "" : listingId.toString()],
     queryFn: () => client!.getSettlementInfo(listingId!),
     enabled: !!client && listingId !== null,
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
   });
 }
 
@@ -136,7 +139,8 @@ export function useTokenMarket() {
     queryKey: ["tokenMarket", account.address ?? ""],
     queryFn: () => client!.getTokenMarket(account.address),
     enabled: !!client,
-    refetchInterval: 15_000,
+    refetchInterval: 30_000,
+    staleTime: 15_000,
   });
 }
 
@@ -166,8 +170,8 @@ export function useConnectionHealth() {
     queryKey: ["health"],
     queryFn: () => client!.getConnectionHealth(),
     enabled: !!client,
-    refetchInterval: 30_000,
-    staleTime: 15_000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
     retry: 1,
   });
 }
@@ -187,13 +191,13 @@ export type QuoteFreshness = "fresh" | "stale" | "refreshing";
  * Acquisition quote with explicit freshness. Auto-refreshes while mounted
  * unless the scenario freezes it (staleQuote); manual refresh always works.
  */
-export function useAcquisitionQuote(quantity: number, driftToleranceBps: number) {
+export function useAcquisitionQuote(quantity: number, driftToleranceBps: number, enabled = true) {
   const { client, scenario } = useProtocol();
   const frozen = scenario?.freezeQuote ?? false;
   const query = useQuery({
     queryKey: ["quote", quantity, driftToleranceBps],
     queryFn: () => client!.quoteAcquisition({ quantity, driftToleranceBps }),
-    enabled: !!client,
+    enabled: !!client && enabled,
     refetchInterval: frozen ? false : QUOTE_REFRESH_MS,
     refetchOnWindowFocus: !frozen,
     retry: 0,

@@ -47,4 +47,4 @@ export function randomnessSecurityBufferSec(chainId: number): number {
 /** Quote is presented as stale after this many ms without refresh. */
 export const QUOTE_FRESH_MS = 20_000;
 /** Quotes auto-refresh at this cadence while the acquire panel is visible. */
-export const QUOTE_REFRESH_MS = 8_000;
+export const QUOTE_REFRESH_MS = 15_000;

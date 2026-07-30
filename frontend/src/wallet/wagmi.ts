@@ -19,7 +19,7 @@ export const wagmiConfig = createConfig({
     [hyperevmTestnet.id]: fallback([
       http(env.chainId === 998 && env.rpcUrl ? env.rpcUrl : "https://rpcs.chain.link/hyperevm/testnet", {
         batch: { batchSize: 40, wait: 20 },
-        retryCount: 2,
+        retryCount: 1,
         retryDelay: 500,
       }),
       http("https://rpc.hyperliquid-testnet.xyz/evm", {
@@ -30,7 +30,7 @@ export const wagmiConfig = createConfig({
     ]),
     [hyperevmMainnet.id]: http(env.chainId === 999 && env.rpcUrl ? env.rpcUrl : undefined, {
       batch: { batchSize: 40, wait: 20 },
-      retryCount: 2,
+      retryCount: 1,
       retryDelay: 500,
     }),
   },

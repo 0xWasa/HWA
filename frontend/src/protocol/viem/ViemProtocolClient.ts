@@ -69,6 +69,7 @@ const MAX_LOG_DISCOVERY_BLOCK_SPAN = 50_000_000n;
 const MARKET_HISTORY_BLOCK_WINDOW = 100_000n;
 const MARKET_LOG_WINDOW_BATCH_SIZE = 20;
 const MAX_ACCOUNT_LOG_RESULTS = 5_000;
+const MULTICALL3_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11" as Address;
 const HWA_TOKEN_NAME = "Hyper World Assets";
 const HWA_TOKEN_SYMBOL = "HWA";
 const HWA_TOKEN_DECIMALS = 18;
@@ -92,7 +93,9 @@ const POOL_SWAP_EVENT = parseAbiItem(
 // JSON-RPC batch instead of spending one HTTP request per field.
 const RPC_TRANSPORT_OPTIONS = {
   batch: { batchSize: 40, wait: 20 },
-  retryCount: 2,
+  // One bounded retry is enough for a user-facing read. More retries multiply
+  // provider load during an outage and can turn throttling into a retry storm.
+  retryCount: 1,
   retryDelay: 500,
 } as const;
 
@@ -381,10 +384,14 @@ export class ViemProtocolClient implements ProtocolClient {
   }
 
   private async hydrateIndexedListing(row: GraphListingRow, includeMetadata = true): Promise<Listing | null> {
-    const listing = includeMetadata
-      ? await this.getListing(BigInt(row.listingId), row.tokenURI)
-      : await this.getListingTelemetry(BigInt(row.listingId));
+    // List surfaces need the live economic tuple but not the detail-only fee,
+    // recovery and ownerOf reads. This keeps discovery truthful with one
+    // on-chain call per row instead of four or five.
+    const listing = await this.getListingTelemetry(BigInt(row.listingId));
     if (!listing) return null;
+    if (includeMetadata) {
+      listing.nft = await this.resolveListingNFT(listing.collection, listing.tokenId, row.tokenURI);
+    }
     listing.listedAt = Number(row.listedAt);
     // Economic fields stay on-chain-derived. The indexer contributes only the event timestamp and,
     // when requested, its tokenURI snapshot as a display-only metadata hint.
@@ -698,30 +705,56 @@ export class ViemProtocolClient implements ProtocolClient {
   }
 
   async getPoolSnapshot(): Promise<PoolSnapshot> {
-    const [block, priced, activeCount, stagedCount, activeBackingTotal, totalWeight, weightedBackingTotal, pending, slippageBps, surchargeBps, minBacking, maxBatch, settlementWindow, finalizeWindow, settlementDiscountBps, onchainAcquisitionsEnabled, withdrawOnly, topId, topPot, topShare, topThreshold] =
-      await Promise.all([
-        this.pub.getBlock(),
-        this.readQuote(),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "activeListingCount" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "stagedCount" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "activeBackingTotal" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "totalWeight" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "weightedBackingTotal" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "pendingAcquisitionCount" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "selectionSlippageBps" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "surchargeBps" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "minBacking" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "maxAcquisitionsPerTx" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "settlementWindow" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "finalizeWindow" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "settlementDiscountBps" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "acquisitionsEnabled" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "withdrawOnly" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "topListingId" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "topListingPot" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "topListingShareBps" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "topThresholdBps" }),
-      ]);
+    const contracts = [
+      "activeListingCount",
+      "stagedCount",
+      "activeBackingTotal",
+      "totalWeight",
+      "weightedBackingTotal",
+      "pendingAcquisitionCount",
+      "selectionSlippageBps",
+      "surchargeBps",
+      "minBacking",
+      "maxAcquisitionsPerTx",
+      "settlementWindow",
+      "finalizeWindow",
+      "settlementDiscountBps",
+      "acquisitionsEnabled",
+      "withdrawOnly",
+      "topListingId",
+      "topListingPot",
+      "topListingShareBps",
+      "topThresholdBps",
+    ].map((functionName) => ({ address: this.core, abi: fwaCoreAbi, functionName })) as never;
+    const [block, priced, state] = await Promise.all([
+      this.pub.getBlock(),
+      this.readQuote(),
+      this.pub.multicall({ contracts, allowFailure: false, multicallAddress: MULTICALL3_ADDRESS }),
+    ]);
+    const [
+      activeCount,
+      stagedCount,
+      activeBackingTotal,
+      totalWeight,
+      weightedBackingTotal,
+      pending,
+      slippageBps,
+      surchargeBps,
+      minBacking,
+      maxBatch,
+      settlementWindow,
+      finalizeWindow,
+      settlementDiscountBps,
+      onchainAcquisitionsEnabled,
+      withdrawOnly,
+      topId,
+      topPot,
+      topShare,
+      topThreshold,
+    ] = state as readonly [
+      bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint,
+      bigint, bigint, bigint, boolean, boolean, bigint, bigint, bigint, bigint,
+    ];
     const [fee, vrf, total] = priced.quote;
     return {
       chainId: this.chainId,
@@ -865,7 +898,9 @@ export class ViemProtocolClient implements ProtocolClient {
     const search = query.search?.trim().toLowerCase();
     let items = snapshot.filter((listing) => {
       if (query.view === "pool" && listing.status !== "active") return false;
-      if (query.view === "top" && !listing.isCrown) return false;
+      if (query.view === "deposits" && listing.status !== "active" && listing.status !== "staged") return false;
+      if (query.view === "top" && (listing.status !== "active" || !listing.isCrown)) return false;
+      if (query.view === "recent" && listing.status === "withdrawn") return false;
       if (query.collections?.length && !query.collections.some((address) => sameAddress(address, listing.collection))) return false;
       if (query.statuses?.length && !query.statuses.includes(listing.status)) return false;
       if (query.rarities?.length && !query.rarities.includes(rarityFromOdds(listing.weight, totalWeight))) return false;
@@ -887,7 +922,9 @@ export class ViemProtocolClient implements ProtocolClient {
   private async getIndexedListings(query: ListingsQuery): Promise<Page<Listing>> {
     const where: string[] = [];
     if (query.view === "pool") where.push('status: "active"');
-    if (query.view === "top") where.push("isCrown: true");
+    if (query.view === "deposits") where.push('status_in: ["active", "staged"]');
+    if (query.view === "top") where.push('status: "active"', "isCrown: true");
+    if (query.view === "recent") where.push('status_not: "withdrawn"');
     if (query.statuses?.length) {
       where.push(`status_in: [${query.statuses.map((status) => JSON.stringify(status)).join(", ")}]`);
     }
@@ -1332,7 +1369,7 @@ export class ViemProtocolClient implements ProtocolClient {
         if (!sameAddress(acquisition[0], account)) return null;
         let requestedAt = 0;
         try {
-          requestedAt = Number((await logPub.getBlock({ blockNumber: acquisition[1] })).timestamp);
+          requestedAt = Number((await this.pub.getBlock({ blockNumber: acquisition[1] })).timestamp);
         } catch {
           requestedAt = nowSec();
         }
@@ -1839,7 +1876,10 @@ export class ViemProtocolClient implements ProtocolClient {
     const deployedBlock = BigInt(deploymentBlock);
     if (deployedBlock > head) return undefined;
     const historyFloor = head > MARKET_HISTORY_BLOCK_WINDOW ? head - MARKET_HISTORY_BLOCK_WINDOW : 0n;
-    const firstBlock = deployedBlock > historyFloor ? deployedBlock : historyFloor;
+    // Stable provider-sized boundaries make the same historical requests
+    // reusable by the server cache across browsers and refreshes.
+    const alignedHistoryFloor = (historyFloor / this.logRpcMaxBlockRange) * this.logRpcMaxBlockRange;
+    const firstBlock = deployedBlock > alignedHistoryFloor ? deployedBlock : alignedHistoryFloor;
 
     const samePool = sameAddress(this.poolSwapCache?.pool, pool);
     const previous = samePool ? this.poolSwapCache : undefined;
@@ -1905,16 +1945,24 @@ export class ViemProtocolClient implements ProtocolClient {
     const pool = this.manifest.contracts.projectXPool;
     if (!token || !pool) return { moduleActive: false, symbol: "HWA" };
     let user: TokenMarket["user"];
-    const [externalBuysEnabled, token0, token1, slot0, totalSupply, tokenName, tokenSymbol, tokenDecimals] = await Promise.all([
-      this.pub.readContract({ address: token, abi: erc20Abi, functionName: "externalBuysEnabled" }),
-      this.pub.readContract({ address: pool, abi: v3PoolAbi, functionName: "token0" }),
-      this.pub.readContract({ address: pool, abi: v3PoolAbi, functionName: "token1" }),
-      this.pub.readContract({ address: pool, abi: v3PoolAbi, functionName: "slot0" }),
-      this.pub.readContract({ address: token, abi: erc20Abi, functionName: "totalSupply" }),
-      this.pub.readContract({ address: token, abi: erc20Abi, functionName: "name" }),
-      this.pub.readContract({ address: token, abi: erc20Abi, functionName: "symbol" }),
-      this.pub.readContract({ address: token, abi: erc20Abi, functionName: "decimals" }),
+    const [marketState, samples] = await Promise.all([
+      this.pub.multicall({
+        contracts: [
+          { address: token, abi: erc20Abi, functionName: "externalBuysEnabled" },
+          { address: pool, abi: v3PoolAbi, functionName: "token0" },
+          { address: pool, abi: v3PoolAbi, functionName: "token1" },
+          { address: pool, abi: v3PoolAbi, functionName: "slot0" },
+          { address: token, abi: erc20Abi, functionName: "totalSupply" },
+          { address: token, abi: erc20Abi, functionName: "name" },
+          { address: token, abi: erc20Abi, functionName: "symbol" },
+          { address: token, abi: erc20Abi, functionName: "decimals" },
+        ],
+        allowFailure: false,
+        multicallAddress: MULTICALL3_ADDRESS,
+      }),
+      this.getPoolSwapSamples(pool).catch(() => undefined),
     ]);
+    const [externalBuysEnabled, token0, token1, slot0, totalSupply, tokenName, tokenSymbol, tokenDecimals] = marketState;
     if (tokenName !== HWA_TOKEN_NAME || tokenSymbol !== HWA_TOKEN_SYMBOL || tokenDecimals !== HWA_TOKEN_DECIMALS) {
       throw new ProtocolError("CONTRACT_MISCONFIGURED", "The configured market token is not Hyper World Assets ($HWA).");
     }
@@ -1924,15 +1972,9 @@ export class ViemProtocolClient implements ProtocolClient {
     }
     const price = hypePerHwaFromSqrtPrice(slot0[0], hwaIsToken0);
     const history =
-      price === undefined
+      price === undefined || samples === undefined
         ? undefined
-        : await this.getPoolSwapSamples(pool)
-            .then((samples) =>
-              samples === undefined
-                ? undefined
-                : buildPoolMarketHistory(samples, hwaIsToken0, price, Math.floor(Date.now() / 1_000)),
-            )
-            .catch(() => undefined);
+        : buildPoolMarketHistory(samples, hwaIsToken0, price, Math.floor(Date.now() / 1_000));
     if (account) {
       const [hypeBalance, tokenBalance] = await Promise.all([
         this.pub.getBalance({ address: account }),
