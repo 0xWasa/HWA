@@ -5,6 +5,7 @@ import { usePublicClient, useWriteContract } from "wagmi";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { MigrationClaimPanel } from "@/components/rewards/MigrationClaimPanel";
 import { Panel, Stat } from "@/components/ui/Panel";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Tag } from "@/components/ui/Tag";
@@ -167,6 +168,10 @@ export function LegacyPositionsScreen() {
         description="The v1 market is frozen. Recover each deposited NFT together with its escrowed HYPE backing directly from the original contract."
         meta={legacyFwa ? `v1 core ${shortAddress(legacyFwa, 6)} · HyperEVM mainnet` : "v1 recovery is available on mainnet"}
       />
+
+      {/* v1 holders land here, not on /rewards: the token migration claim
+          belongs next to the NFT and backing recovery. */}
+      <MigrationClaimPanel />
 
       <div className="grid gap-px overflow-hidden rounded-md border border-line bg-line-subtle sm:grid-cols-4">
         <div className="bg-panel p-3"><Stat label="V1 pool" value="WITHDRAW ONLY" sub="deposits and acquisitions disabled" tone="amber" /></div>

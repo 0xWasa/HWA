@@ -86,7 +86,7 @@ export function MigrationClaimPanel() {
   }
 
   return (
-    <Panel title="HWA v1 â†’ v2 migration" actions={<Tag tone={claimed ? "accent" : "neutral"}>1:1 Â· no expiry</Tag>}>
+    <Panel title="HWA v1 â†’ v2 migration" actions={<Tag tone={claimed ? "accent" : "neutral"}>1:1 · no expiry</Tag>}>
       <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
         <div>
           <div className="text-2xs uppercase tracking-wide text-mute">Your snapshot allocation</div>

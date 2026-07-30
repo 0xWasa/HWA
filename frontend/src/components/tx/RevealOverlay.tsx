@@ -10,9 +10,11 @@ import { useRevealQueue } from "./useRevealQueue";
 const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
-/** Pack-opening stages. Tests poll [data-reveal-stage]; timings stay private. */
-type RevealStage = "sealed" | "flipping" | "revealed";
-const SEAL_HOLD_MS = 900;
+/** Pack-opening stages. Tests poll [data-reveal-stage]; timings stay private.
+ *  "charging" is the slot-machine build-up before the card turns over. */
+type RevealStage = "sealed" | "charging" | "flipping" | "revealed";
+const SEAL_HOLD_MS = 700;
+const CHARGE_MS = 1_150;
 const FLIP_MS = 580;
 
 /** Persistent FWA-like purchase result with all settlement outcomes inline. */
@@ -74,7 +76,11 @@ function RevealDialog({
   // Stage-driven timers: skipping can only ever advance, never regress.
   useEffect(() => {
     if (stage === "sealed") {
-      const t = window.setTimeout(() => setStage("flipping"), SEAL_HOLD_MS);
+      const t = window.setTimeout(() => setStage("charging"), SEAL_HOLD_MS);
+      return () => window.clearTimeout(t);
+    }
+    if (stage === "charging") {
+      const t = window.setTimeout(() => setStage("flipping"), CHARGE_MS);
       return () => window.clearTimeout(t);
     }
     if (stage === "flipping") {
@@ -84,7 +90,7 @@ function RevealDialog({
   }, [stage]);
 
   const skipSeal = useCallback(() => {
-    setStage((current) => (current === "sealed" ? "flipping" : current));
+    setStage((current) => (current === "sealed" || current === "charging" ? "flipping" : current));
   }, []);
 
   useEffect(() => {
@@ -162,7 +168,10 @@ function RevealDialog({
           </div>
         ) : listing ? (
           <div className={`reveal-flip-scene relative ${stage !== "revealed" ? "min-h-[34rem]" : ""}`}>
-            <div className="reveal-result-face" inert={stage === "sealed" ? true : undefined}>
+            <div
+              className="reveal-result-face"
+              inert={stage === "sealed" || stage === "charging" ? true : undefined}
+            >
               <PurchaseResultSurface
                 listing={listing}
                 ticket={ticket}
@@ -173,6 +182,14 @@ function RevealDialog({
                 animated
               />
             </div>
+            {/* Payoff burst: fires once, on the frame the face lands. */}
+            {stage === "revealed" && (
+              <div aria-hidden className="reveal-burst pointer-events-none absolute inset-0 z-20">
+                {Array.from({ length: 14 }).map((_, i) => (
+                  <span key={i} className="reveal-spark" style={{ "--i": i } as React.CSSProperties} />
+                ))}
+              </div>
+            )}
             {stage !== "revealed" && (
               <div
                 className="pointer-events-none absolute inset-0 z-10 grid place-items-center"
@@ -196,8 +213,19 @@ function RevealDialog({
                   <span className="absolute inset-0 grid place-items-center font-display text-7xl font-extrabold text-ink/85">
                     ?
                   </span>
-                  <span className="stamp stamp--violet absolute bottom-14 left-1/2 -translate-x-1/2">
-                    Sealed
+                  {/* Slot-machine reel: only during the charge, never showing a
+                      real listing, so nothing is predicted before allocation. */}
+                  {stage === "charging" && (
+                    <span aria-hidden className="reveal-reel absolute inset-x-6 bottom-24 top-24 overflow-hidden rounded-lg">
+                      <span className="reveal-reel-track">
+                        {["?", "★", "◆", "?", "▲", "◇", "?", "●"].map((glyph, i) => (
+                          <span key={i} className="reveal-reel-cell">{glyph}</span>
+                        ))}
+                      </span>
+                    </span>
+                  )}
+                  <span className={`stamp absolute bottom-14 left-1/2 -translate-x-1/2 ${stage === "charging" ? "stamp--accent" : "stamp--violet"}`}>
+                    {stage === "charging" ? "Drawing" : "Sealed"}
                   </span>
                   <span className="mlabel absolute inset-x-0 bottom-5 text-center text-faint">
                     TAP TO REVEAL
