@@ -35,6 +35,7 @@ export function useListings(query: ListingsQuery) {
       query.direction,
       query.cursor ?? "0",
       query.limit,
+      query.includeMetadata ?? true,
     ],
     queryFn: () => client!.getListings(query),
     enabled: !!client,

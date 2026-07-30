@@ -500,6 +500,8 @@ export interface ListingsQuery {
   direction: "asc" | "desc";
   cursor?: string;
   limit: number;
+  /** Skip display-only token metadata for large telemetry/distribution reads. */
+  includeMetadata?: boolean;
 }
 
 export interface ActivityQuery {
