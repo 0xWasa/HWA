@@ -66,8 +66,10 @@ const statePath = process.env.FWA_DRAND_STATE_PATH?.trim()
 const temporaryStatePath = `${statePath}.tmp`;
 const coordinator = required("FWA_DRAND_BN254_COORDINATOR_ADDRESS");
 const registry = required("FWA_DRAND_REGISTRY_ADDRESS");
+const core = required("FWA_ADDRESS");
 assertAddress(coordinator, "FWA_DRAND_BN254_COORDINATOR_ADDRESS");
 assertAddress(registry, "FWA_DRAND_REGISTRY_ADDRESS");
+assertAddress(core, "FWA_ADDRESS");
 const deploymentBlock = positiveBigInt("FWA_DRAND_DEPLOYMENT_BLOCK", "0");
 if (deploymentBlock === 0n) throw new Error("FWA_DRAND_DEPLOYMENT_BLOCK must be set");
 const finalityBlocks = positiveBigInt("FWA_DRAND_FINALITY_BLOCKS", "3");
@@ -85,12 +87,21 @@ if (!/^[a-z0-9-]{1,64}$/u.test(logRpcApiKeyHeader)) throw new Error("Invalid HYP
 const fairnessAlertBlocks = positiveBigInt("FWA_DRAND_FAIRNESS_ALERT_BLOCKS", "120");
 const heartbeatIntervalMs = Number(positiveBigInt("FWA_DRAND_HEARTBEAT_INTERVAL_MS", "180000"));
 if (!Number.isSafeInteger(heartbeatIntervalMs) || heartbeatIntervalMs < 30_000) throw new Error("Invalid heartbeat interval");
+const acquisitionProcessBatch = positiveBigInt("FWA_ACQUISITION_PROCESS_BATCH", "16");
+if (acquisitionProcessBatch === 0n) throw new Error("FWA_ACQUISITION_PROCESS_BATCH must be positive");
 const submitterKey = required("FWA_DRAND_SUBMITTER_PRIVATE_KEY");
 const forge = foundryBinary("forge", "FOUNDRY_FORGE");
 const cast = foundryBinary("cast", "FOUNDRY_CAST");
 const derived = spawnSync(cast, ["wallet", "address", "--private-key", submitterKey], { cwd: root, encoding: "utf8" });
 if (derived.error?.code === "ENOENT") throw new Error(`Foundry cast not found: ${cast}`);
 if (derived.status !== 0) throw new Error("Invalid FWA_DRAND_SUBMITTER_PRIVATE_KEY");
+const processCalldataResult = spawnSync(
+  cast,
+  ["calldata", "processAcquisitions(uint256)", acquisitionProcessBatch.toString()],
+  { cwd: root, encoding: "utf8" },
+);
+if (processCalldataResult.status !== 0) throw new Error("Could not encode processAcquisitions");
+const processCalldata = processCalldataResult.stdout.trim();
 
 const once = process.argv.includes("--once");
 const proveLatest = process.argv.includes("--prove-latest");
@@ -103,10 +114,12 @@ if (validateConfig) {
     chainId: CHAIN_ID.toString(),
     coordinator,
     registry,
+    core,
     deploymentBlock: deploymentBlock.toString(),
     submitter: derived.stdout.trim(),
     statePath,
     heartbeatIntervalMs,
+    acquisitionProcessBatch: acquisitionProcessBatch.toString(),
     forge,
     cast,
   }, null, 2));
@@ -247,6 +260,18 @@ function fulfill(requestId, beacon) {
   });
 }
 
+async function processReadyAcquisitions() {
+  const simulated = await rpc("eth_call", [{ to: core, data: processCalldata }, "latest"]);
+  const processable = BigInt(simulated);
+  if (processable === 0n) return;
+
+  broadcast("script/ProcessHyperEVMAcquisitions.s.sol:ProcessHyperEVMAcquisitions", {
+    FWA_ADDRESS: core,
+    FWA_ACQUISITION_PROCESS_BATCH: acquisitionProcessBatch.toString(),
+  });
+  console.log(`processed acquisitions count=${processable}`);
+}
+
 async function maintainHeartbeat() {
   const encoded = await rpc("eth_call", [{ to: registry, data: "0x1ea7d16a" }, "latest"]);
   const latestProvenRound = BigInt(encoded);
@@ -301,6 +326,7 @@ do {
   try {
     await scanRequests(state);
     await fulfillReady(state);
+    await processReadyAcquisitions();
     await maintainHeartbeat();
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));

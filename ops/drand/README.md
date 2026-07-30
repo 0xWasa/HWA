@@ -63,6 +63,8 @@ When a second independent host is intentionally deferred:
 4. Treat any fairness alert or relayer outage as a reason to close acquisitions
    through the prepared Safe action until service is restored.
 
-This exception accepts liveness/fairness risk only. The relayer remains
-permissionless and untrusted for randomness integrity: every beacon signature
-is still verified by the registry and coordinator on-chain.
+This exception accepts liveness/fairness risk only. The relayer remains permissionless and
+untrusted for randomness integrity: every beacon signature is still verified by the registry and
+coordinator on-chain. The same unprivileged submitter also calls `processAcquisitions` after a word
+is ready so the canonical FIFO advances without requiring a user transaction; the core contract
+fixes ordering and selection.
