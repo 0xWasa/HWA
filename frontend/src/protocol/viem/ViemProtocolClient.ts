@@ -418,33 +418,6 @@ export class ViemProtocolClient implements ProtocolClient {
     return this.listingFromTelemetry(id, raw);
   }
 
-  /**
-   * One aggregate per chunk instead of one for the whole pool.
-   *
-   * The read proxy caps request bodies at 64 KB. Past roughly 190 positions a
-   * single aggregate exceeded it, the proxy answered 413, and every view that
-   * hydrates listings came back empty rather than degraded. Chunks stay well
-   * inside the limit. A pool small enough to fit still costs one call.
-   *
-   * Sequential on purpose. The transport coalesces concurrent requests into one
-   * HTTP body by COUNT, not bytes, so firing the chunks together simply
-   * reassembled the oversized body that this split exists to avoid.
-   */
-  private async multicallChunked(contracts: readonly unknown[], size = 80): Promise<readonly unknown[]> {
-    const run = (batch: readonly unknown[]) =>
-      this.pub.multicall({
-        contracts: batch as never,
-        allowFailure: false,
-        multicallAddress: MULTICALL3_ADDRESS,
-      }) as Promise<readonly unknown[]>;
-    if (contracts.length <= size) return run(contracts);
-    const out: unknown[] = [];
-    for (let i = 0; i < contracts.length; i += size) {
-      out.push(...(await run(contracts.slice(i, i + size))));
-    }
-    return out;
-  }
-
   private async hydrateIndexedListings(rows: GraphListingRow[], includeMetadata = true): Promise<Listing[]> {
     if (rows.length === 0) return [];
     const contracts = [
@@ -456,7 +429,11 @@ export class ViemProtocolClient implements ProtocolClient {
       })),
       { address: this.core, abi: fwaCoreAbi, functionName: "topListingId" },
     ] as never;
-    const state = await this.multicallChunked(contracts as readonly unknown[]);
+    const state = await this.pub.multicall({
+      contracts,
+      allowFailure: false,
+      multicallAddress: MULTICALL3_ADDRESS,
+    }) as readonly unknown[];
     const topId = state[state.length - 1] as bigint;
     const items = await Promise.all(
       rows.map(async (row, index) => {

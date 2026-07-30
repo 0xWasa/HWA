@@ -207,51 +207,6 @@ describe("ViemProtocolClient indexer boundary", () => {
     expect(page.items[0]?.listedAt).toBe(1_700_000_000);
     expect(page.items[0]?.isCrown).toBe(true);
   });
-  it("splits a pool-sized hydration across aggregates so the read proxy never sees an oversized body", async () => {
-    const rows = Array.from({ length: 200 }, (_, i) => ({
-      id: `${i + 1}`,
-      listingId: `${i + 1}`,
-      status: "active",
-      collection: "0x0000000000000000000000000000000000000010",
-      tokenId: `${i + 1}`,
-      depositor: "0x0000000000000000000000000000000000000020",
-      purchaser: null,
-      backing: "1000",
-      weight: "100",
-      listedAt: "1700000000",
-      allocatedAt: null,
-      acquiredFor: null,
-      settlement: null,
-      isCrown: false,
-    }));
-    vi.stubGlobal("fetch", vi.fn(async () => response({ listings: rows })));
-    const client = new ViemProtocolClient(manifest, "http://localhost:8545", 999, "https://indexer.example/graphql");
-    const row = [
-      "0x0000000000000000000000000000000000000010",
-      "0x0000000000000000000000000000000000000020",
-      "0x0000000000000000000000000000000000000000",
-      1n, 100n, 1_000n, 0n, 0n, 1n, 0n, 1,
-    ] as const;
-    const readContract = vi.fn(async ({ functionName }: { functionName: string }) => {
-      if (functionName === "totalWeight") return 20_000n;
-      throw new Error(`Unexpected read: ${functionName}`);
-    });
-    // Answer per call, not per position: only the real topListingId entry
-    // returns the id, whichever chunk it lands in.
-    const multicall = vi.fn(async ({ contracts }: { contracts: { functionName: string }[] }) =>
-      contracts.map((c) => (c.functionName === "topListingId" ? 1n : row)),
-    );
-    Object.assign(client, { pub: { readContract, multicall } });
-
-    const page = await client.getListings({ view: "pool", sort: "value", direction: "desc", limit: 500, includeMetadata: false });
-
-    // 201 contracts (200 listings + topListingId) must not go out as one body.
-    expect(multicall.mock.calls.length).toBeGreaterThan(1);
-    for (const call of multicall.mock.calls) {
-      expect(call[0]!.contracts.length).toBeLessThanOrEqual(80);
-    }
-    expect(page.items.length).toBe(200);
-  });
   it("carries the indexed settlement outcome that on-chain state cannot express", async () => {
     vi.stubGlobal(
       "fetch",

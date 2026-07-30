@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const MAX_BODY_BYTES = 64 * 1024;
+// A Multicall3 aggregate over a full pool is the largest legitimate body here:
+// past roughly 190 positions it crossed 64 KB, the proxy answered 413, and the
+// pool rendered empty. MAX_BATCH_SIZE still bounds the call count, which is
+// what actually costs the upstream.
+const MAX_BODY_BYTES = 512 * 1024;
 const MAX_BATCH_SIZE = 50;
 const MAX_RESPONSE_BYTES = 4 * 1024 * 1024;
 const UPSTREAM_TIMEOUT_MS = 12_000;
