@@ -67,6 +67,7 @@ const MIN_DEDICATED_LOG_RANGE_BLOCKS = 1_000n;
 const MAX_LOG_DISCOVERY_BLOCK_SPAN = 50_000_000n;
 // HyperEVM produces roughly one block per second; 100k blocks covers the 24h chart with headroom.
 const MARKET_HISTORY_BLOCK_WINDOW = 100_000n;
+const MARKET_LOG_WINDOW_BATCH_SIZE = 20;
 const MAX_ACCOUNT_LOG_RESULTS = 5_000;
 const HWA_TOKEN_NAME = "Hyper World Assets";
 const HWA_TOKEN_SYMBOL = "HWA";
@@ -1851,25 +1852,35 @@ export class ViemProtocolClient implements ProtocolClient {
       amount1: bigint;
     }> = [];
 
+    const windows: Array<{ fromBlock: bigint; toBlock: bigint }> = [];
     while (fromBlock <= head) {
-      const { toBlock } = nextLogDiscoveryWindow(fromBlock, head, this.logRpcMaxBlockRange);
-      const logs = await logPub.getLogs({ address: pool, event: POOL_SWAP_EVENT, fromBlock, toBlock });
-      for (const log of logs) {
-        if (
-          log.blockNumber !== null &&
-          log.args.sqrtPriceX96 !== undefined &&
-          log.args.amount0 !== undefined &&
-          log.args.amount1 !== undefined
-        ) {
-          pending.push({
-            blockNumber: log.blockNumber,
-            sqrtPriceX96: log.args.sqrtPriceX96,
-            amount0: log.args.amount0,
-            amount1: log.args.amount1,
-          });
+      const window = nextLogDiscoveryWindow(fromBlock, head, this.logRpcMaxBlockRange);
+      windows.push(window);
+      fromBlock = window.toBlock + 1n;
+    }
+    for (let offset = 0; offset < windows.length; offset += MARKET_LOG_WINDOW_BATCH_SIZE) {
+      const pages = await Promise.all(
+        windows.slice(offset, offset + MARKET_LOG_WINDOW_BATCH_SIZE).map((window) =>
+          logPub.getLogs({ address: pool, event: POOL_SWAP_EVENT, ...window }),
+        ),
+      );
+      for (const logs of pages) {
+        for (const log of logs) {
+          if (
+            log.blockNumber !== null &&
+            log.args.sqrtPriceX96 !== undefined &&
+            log.args.amount0 !== undefined &&
+            log.args.amount1 !== undefined
+          ) {
+            pending.push({
+              blockNumber: log.blockNumber,
+              sqrtPriceX96: log.args.sqrtPriceX96,
+              amount0: log.args.amount0,
+              amount1: log.args.amount1,
+            });
+          }
         }
       }
-      fromBlock = toBlock + 1n;
     }
 
     const blockNumbers = [...new Set(pending.map((sample) => sample.blockNumber.toString()))].map(BigInt);
