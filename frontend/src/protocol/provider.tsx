@@ -29,7 +29,12 @@ export interface AccountState {
   isWrongNetwork: boolean;
   /** Last switch request was refused by the wallet. */
   switchRefused: boolean;
+  /** Every wallet the browser announced, so the user picks rather than the
+   *  extension that happened to claim window.ethereum first. */
+  wallets: { id: string; name: string; icon?: string }[];
   connect: () => void;
+  /** Connect to one announced wallet by id. `connect` keeps the default. */
+  connectWallet: (walletId: string) => void;
   disconnect: () => void;
   switchToAppNetwork: () => Promise<boolean>;
 }
@@ -155,7 +160,11 @@ function MockProtocolRoot({ children }: { children: ReactNode }) {
       chainId: wallet?.status === "connected" ? wallet.chainId : undefined,
       isWrongNetwork: wallet?.status === "connected" && wallet.chainId !== appChainId,
       switchRefused: scenario?.refuseSwitch ?? false,
+      // The mock stands in for a single browser wallet, so there is nothing to
+      // pick between and the button stays one click.
+      wallets: [],
       connect: () => engine?.connectWallet(),
+      connectWallet: () => engine?.connectWallet(),
       disconnect: () => engine?.disconnectWallet(),
       switchToAppNetwork: async () => (engine ? engine.switchNetwork(appChainId) : false),
     }),
@@ -227,9 +236,18 @@ function ViemProtocolRoot({ children }: { children: ReactNode }) {
       chainId,
       isWrongNetwork: status === "connected" && chainId !== env.chainId,
       switchRefused,
+      wallets: connectors.map((c) => ({ id: c.id, name: c.name, icon: c.icon })),
+      // Several extensions fight over window.ethereum, so connectors[0] was
+      // whichever loaded first: a Rabby user got Phantom's prompt and no way to
+      // reach their own wallet. EIP-6963 announces each one separately, so the
+      // picker can name the one it wants.
       connect: () => {
-        const injected = connectors[0];
-        if (injected) connect({ connector: injected });
+        const chosen = connectors[0];
+        if (chosen) connect({ connector: chosen });
+      },
+      connectWallet: (walletId: string) => {
+        const chosen = connectors.find((c) => c.id === walletId);
+        if (chosen) connect({ connector: chosen });
       },
       disconnect: () => disconnect(),
       switchToAppNetwork: async () => {

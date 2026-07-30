@@ -27,10 +27,48 @@ export function WalletButton() {
   }, [open]);
 
   if (account.status === "disconnected") {
+    // One wallet stays one click. Several means the browser announced several,
+    // and picking for the user is how a Rabby holder ended up staring at a
+    // Phantom prompt with no way out.
+    if (account.wallets.length < 2) {
+      return (
+        <Button variant="secondary" onClick={account.connect} data-testid="connect-wallet">
+          Connect wallet
+        </Button>
+      );
+    }
     return (
-      <Button variant="secondary" onClick={account.connect} data-testid="connect-wallet">
-        Connect wallet
-      </Button>
+      <div ref={rootRef} className="relative">
+        <Button variant="secondary" onClick={() => setOpen((v) => !v)} data-testid="connect-wallet">
+          Connect wallet
+        </Button>
+        {open && (
+          <div
+            className="absolute right-0 z-50 mt-1.5 w-56 overflow-hidden rounded-lg border border-line bg-panel shadow-xl"
+            data-testid="wallet-picker"
+          >
+            {account.wallets.map((wallet) => (
+              <button
+                key={wallet.id}
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  account.connectWallet(wallet.id);
+                }}
+                className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-ink transition-colors hover:bg-elevated"
+              >
+                {wallet.icon ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={wallet.icon} alt="" className="size-5 shrink-0 rounded" />
+                ) : (
+                  <span className="size-5 shrink-0 rounded bg-control" />
+                )}
+                <span className="truncate">{wallet.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     );
   }
   if (account.status === "connecting") {
