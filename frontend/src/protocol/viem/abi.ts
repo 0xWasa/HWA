@@ -1,7 +1,7 @@
 /**
- * Minimal ABI â€” only the entries this frontend actually consumes, transcribed
+ * Minimal ABI — only the entries this frontend actually consumes, transcribed
  * from the verified Ethereum reference (FWA_ETHEREUM_REFERENCE/FWA/abi.json).
- * The HyperEVM port keeps FWA.sol unchanged (FWA_PARITY_MANIFEST.md Â§15), so
+ * The HyperEVM port keeps FWA.sol unchanged (FWA_PARITY_MANIFEST.md §15), so
  * these fragments are expected to remain stable; the deployment manifest stays
  * the only source of addresses.
  */
@@ -564,7 +564,7 @@ export const v3PoolAbi = [
   },
 ] as const;
 
-/** On-chain ListingStatus enum â†’ domain status. */
+/** On-chain ListingStatus enum → domain status. */
 export const LISTING_STATUS_BY_CODE = {
   0: undefined, // None
   1: "active",

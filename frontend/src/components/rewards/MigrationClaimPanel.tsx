@@ -86,12 +86,12 @@ export function MigrationClaimPanel() {
   }
 
   return (
-    <Panel title="HWA v1 â†’ v2 migration" actions={<Tag tone={claimed ? "accent" : "neutral"}>1:1 · no expiry</Tag>}>
+    <Panel title="HWA v1 → v2 migration" actions={<Tag tone={claimed ? "accent" : "neutral"}>1:1 · no expiry</Tag>}>
       <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
         <div>
           <div className="text-2xs uppercase tracking-wide text-mute">Your snapshot allocation</div>
           <div className="num mt-1 font-mono text-xl text-ink">
-            {account.status === "connected" && row !== undefined ? `${formatHwa(amount)} HWA` : "â€”"}
+            {account.status === "connected" && row !== undefined ? `${formatHwa(amount)} HWA` : "—"}
           </div>
           <p className="mt-1 text-2xs leading-relaxed text-mute">
             Old liquid HWA plus accrued v1 rewards were captured at block {snapshotBlock ?? "41,850,854"}. The Merkle root and allocation are immutable; claims stay open permanently.

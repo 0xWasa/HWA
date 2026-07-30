@@ -2175,7 +2175,7 @@ export class ViemProtocolClient implements ProtocolClient {
   async settle(input: { listingId: bigint; choice: SettlementChoice }): Promise<TrackedTransaction> {
     // `acceptBidAsTokens` spends the whole settlement payout buying HWA on a public pool. A zero
     // minimum is an unbounded-slippage order a sandwich bot can drain almost entirely, so it is
-    // refused as invalid input â€” before a wallet is even prompted â€” rather than signed.
+    // refused as invalid input — before a wallet is even prompted — rather than signed.
     if (input.choice.kind === "acceptBidTokens" && input.choice.minTokensOut <= 0n) {
       throw new ProtocolError(
         "PRICE_DRIFTED",
