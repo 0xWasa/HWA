@@ -7,17 +7,28 @@ import { z } from "zod";
  */
 
 const EnvSchema = z.object({
-  appEnv: z.enum(["development", "staging", "production"]).default("development"),
+  appEnv: z
+    .enum(["development", "staging", "production"])
+    .default("development"),
   dataMode: z.enum(["mock", "testnet", "mainnet"]).default("mock"),
   chainId: z
     .string()
     .default("998")
     .transform((v) => Number.parseInt(v, 10))
     .pipe(z.union([z.literal(998), z.literal(999)])),
-  rpcUrl: z.string().url().or(z.literal("")).default(""),
+  rpcUrl: z
+    .string()
+    .refine(
+      (value) => value === "" || value.startsWith("/") || URL.canParse(value),
+      "invalid RPC URL",
+    )
+    .default(""),
   logRpcUrl: z
     .string()
-    .refine((value) => value === "" || value.startsWith("/") || URL.canParse(value), "invalid log RPC URL")
+    .refine(
+      (value) => value === "" || value.startsWith("/") || URL.canParse(value),
+      "invalid log RPC URL",
+    )
     .default(""),
   logRpcMaxBlockRange: z.coerce.number().int().nonnegative().default(0),
   indexerUrl: z.string().url().or(z.literal("")).default(""),
@@ -26,7 +37,10 @@ const EnvSchema = z.object({
   // or by an absolute URL in hosted environments.
   manifestUrl: z
     .string()
-    .refine((value) => value === "" || value.startsWith("/") || URL.canParse(value), "invalid manifest URL")
+    .refine(
+      (value) => value === "" || value.startsWith("/") || URL.canParse(value),
+      "invalid manifest URL",
+    )
     .default(""),
 });
 
@@ -39,7 +53,8 @@ function readEnv(): AppEnv {
     chainId: process.env.NEXT_PUBLIC_HYPEREVM_CHAIN_ID ?? undefined,
     rpcUrl: process.env.NEXT_PUBLIC_HYPEREVM_RPC_URL ?? undefined,
     logRpcUrl: process.env.NEXT_PUBLIC_HYPEREVM_LOG_RPC_URL ?? undefined,
-    logRpcMaxBlockRange: process.env.NEXT_PUBLIC_HYPEREVM_LOG_RPC_MAX_BLOCK_RANGE ?? undefined,
+    logRpcMaxBlockRange:
+      process.env.NEXT_PUBLIC_HYPEREVM_LOG_RPC_MAX_BLOCK_RANGE ?? undefined,
     indexerUrl: process.env.NEXT_PUBLIC_INDEXER_URL ?? undefined,
     explorerUrl: process.env.NEXT_PUBLIC_EXPLORER_URL ?? undefined,
     manifestUrl: process.env.NEXT_PUBLIC_DEPLOYMENT_MANIFEST_URL ?? undefined,
@@ -69,4 +84,8 @@ export const isDev = env.appEnv === "development";
 
 /** Mock data must never masquerade as live mainnet data. */
 export const dataModeLabel =
-  env.dataMode === "mock" ? "MOCK DATA" : env.dataMode === "testnet" ? "HyperEVM Testnet" : "HyperEVM Mainnet";
+  env.dataMode === "mock"
+    ? "MOCK DATA"
+    : env.dataMode === "testnet"
+      ? "HyperEVM Testnet"
+      : "HyperEVM Mainnet";
