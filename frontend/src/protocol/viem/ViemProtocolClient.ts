@@ -7,7 +7,9 @@ import {
   decodeFunctionResult,
   encodeFunctionData,
   http,
+  HttpRequestError,
   parseAbiItem,
+  TimeoutError,
   type EIP1193Provider,
   type Hash,
   type PublicClient,
@@ -643,6 +645,23 @@ export class ViemProtocolClient implements ProtocolClient {
       return new ProtocolError(
         "RPC_DOWN",
         "Receipt confirmation timed out. The transaction outcome is unknown; check the explorer before retrying.",
+        message,
+      );
+    }
+    // A transport failure is not a revert. Once the write is broadcast, an
+    // upstream 429 or 5xx while awaiting the receipt says nothing about the
+    // transaction, which may still mine. Calling that "the on-chain call
+    // failed" invites a second submission of a deposit that already landed.
+    if (
+      error instanceof HttpRequestError ||
+      error instanceof TimeoutError ||
+      /HTTP request failed|too many requests|rate limit|socket hang up|ECONNRESET|Failed to fetch|Load failed/i.test(
+        message,
+      )
+    ) {
+      return new ProtocolError(
+        "RPC_DOWN",
+        "The RPC connection dropped, so the transaction outcome is unknown. Check the explorer before retrying.",
         message,
       );
     }

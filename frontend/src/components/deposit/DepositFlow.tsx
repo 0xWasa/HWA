@@ -30,8 +30,18 @@ import { DepositLaunchSequence } from "@/components/deposit/DepositLaunchSequenc
 import { ProtocolPrelaunch } from "@/components/ui/ProtocolPrelaunch";
 import { HWA_NFT_DEPOSITS_PAUSED } from "@/config/featureFlags";
 
-/** Unix seconds of the last "give me a clean form". Per-tab on purpose. */
-const DEPOSIT_RESET_KEY = "hwa.deposit.resetAt";
+/** Deposits the user has walked away from. Per-tab on purpose. */
+const DEPOSIT_RETIRED_KEY = "hwa.deposit.retired";
+
+function readRetired(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const parsed: unknown = JSON.parse(window.sessionStorage.getItem(DEPOSIT_RETIRED_KEY) ?? "null");
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === "string") : [];
+  } catch {
+    return [];
+  }
+}
 
 type DepositIntent = {
   collection: Address;
@@ -60,18 +70,18 @@ export function DepositFlow() {
   const [backing, setBacking] = useState<bigint | null>(null);
   const [submittedDeposit, setSubmittedDeposit] = useState<DepositIntent | null>(null);
   /**
-   * When the user last asked for a clean form. Everything older is retired.
+   * Deposits that must never be recovered again.
    *
-   * A single dismissed id was not enough: it only uncovered the previous
-   * deposit, pinning the page to an NFT already in escrow. A watermark retires
-   * all of them at once, and living in sessionStorage means reloading /deposit
-   * does not resurrect them from the persisted transaction list.
+   * One dismissed id was not enough: it only uncovered the previous deposit,
+   * pinning the page to an NFT already in escrow. A reset now retires the whole
+   * backlog. Ids rather than a timestamp, because updatedAt is rewritten on
+   * every phase change and a receipt landing after the reset would resurrect
+   * the deposit; sessionStorage rather than component state, because the
+   * transaction list is persisted and would otherwise survive a reload alone.
+   * A deposit submitted after the reset gets a fresh id, so resuming an
+   * interrupted deposit still works.
    */
-  const [flowResetAt, setFlowResetAt] = useState(() => {
-    if (typeof window === "undefined") return 0;
-    const raw = Number(window.sessionStorage.getItem(DEPOSIT_RESET_KEY));
-    return Number.isFinite(raw) ? raw : 0;
-  });
+  const [retiredTxIds, setRetiredTxIds] = useState<string[]>(readRetired);
 
   const selected: OwnedNFT | undefined = useMemo(
     () => owned?.find((n) => `${n.collection}:${n.tokenId}` === selectedKey),
@@ -106,14 +116,14 @@ export function DepositFlow() {
         ?.filter(
           (tx) =>
             tx.kind === "list_nft" &&
-            tx.updatedAt > flowResetAt &&
+            !retiredTxIds.includes(tx.id) &&
             Date.now() / 1000 - tx.updatedAt < 10 * 60 &&
             !["rejected", "reverted", "replaced", "timeout"].includes(tx.phase),
         )
         // Newest wins: resuming should land on the deposit the user was last on,
         // never on whichever happened to be first in the tracked list.
         .sort((a, b) => b.updatedAt - a.updatedAt)[0],
-    [flowResetAt, txs],
+    [retiredTxIds, txs],
   );
   const recoveredDeposit = useMemo<DepositIntent | null>(() => {
     // Recovery is for resuming an interrupted deposit, so it must never
@@ -249,12 +259,14 @@ export function DepositFlow() {
             // Retire every candidate the recovery could still latch onto, not
             // just the one on screen, otherwise "Deposit another" walks
             // backwards through the session instead of opening a fresh form.
-            const now = Math.floor(Date.now() / 1000);
-            setFlowResetAt(now);
+            const retired = [
+              ...new Set([...retiredTxIds, ...(txs ?? []).filter((t) => t.kind === "list_nft").map((t) => t.id)]),
+            ];
+            setRetiredTxIds(retired);
             try {
-              window.sessionStorage.setItem(DEPOSIT_RESET_KEY, String(now));
+              window.sessionStorage.setItem(DEPOSIT_RETIRED_KEY, JSON.stringify(retired));
             } catch {
-              /* private mode / quota — the in-memory watermark still holds */
+              /* private mode / quota — the in-memory list still holds */
             }
             setSubmittedDeposit(null);
             setSelectedKey(null);
