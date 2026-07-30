@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { DeploymentManifest } from "@/config/manifest";
-import type { Listing } from "@/protocol/types";
 import { nextLogDiscoveryWindow, ViemProtocolClient } from "./ViemProtocolClient";
 
 const manifest: DeploymentManifest = {
@@ -70,9 +69,7 @@ describe("ViemProtocolClient indexer boundary", () => {
     );
     const getLogs = vi.fn(async (_request: { fromBlock: bigint; toBlock: bigint }) => []);
     Object.assign(client, {
-      pub: {
-        getBlockNumber: vi.fn(async () => 20_500n),
-      },
+      pub: { getBlockNumber: vi.fn(async () => 20_500n) },
       logPub: {
         getLogs,
       },
@@ -142,6 +139,26 @@ describe("ViemProtocolClient indexer boundary", () => {
     });
   });
 
+  it("asks the indexer for active and staged rows only in the pool explorer", async () => {
+    let indexerQuery = "";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+        indexerQuery = (JSON.parse(String(init?.body)) as { query: string }).query;
+        return response({ listings: [] });
+      }),
+    );
+    const client = new ViemProtocolClient(manifest, "http://localhost:8545", 999, "https://indexer.example/graphql");
+    Object.assign(client, {
+      pub: {
+        readContract: vi.fn(async () => 0n),
+      },
+    });
+
+    await client.getListings({ view: "deposits", sort: "value", direction: "desc", limit: 1_000 });
+
+    expect(indexerQuery).toContain('status_in: ["active", "staged"]');
+  });
   it("uses the indexer for discovery but rehydrates listing state on-chain", async () => {
     vi.stubGlobal(
       "fetch",
@@ -169,27 +186,63 @@ describe("ViemProtocolClient indexer boundary", () => {
       ),
     );
     const client = new ViemProtocolClient(manifest, "http://localhost:8545", 999, "https://indexer.example/graphql");
-    const liveListing: Listing = {
-      id: 7n,
-      status: "active",
-      collection: "0x0000000000000000000000000000000000000010",
-      tokenId: 42n,
-      depositor: "0x0000000000000000000000000000000000000020",
-      backing: 1_001n,
-      weight: 100n,
-      listedAt: 0,
-      isCrown: false,
-      pendingFees: 0n,
-      nft: { name: "HYP #42", collectionName: "Hyper Test", collectionSymbol: "HYP" },
-    };
-    vi.spyOn(client, "getListing").mockResolvedValue(liveListing);
-    Object.assign(client, { pub: { readContract: vi.fn(async () => 7n) } });
+    const listing = [
+      "0x0000000000000000000000000000000000000010",
+      "0x0000000000000000000000000000000000000020",
+      "0x0000000000000000000000000000000000000000",
+      42n, 100n, 1_001n, 0n, 0n, 1n, 0n, 1,
+    ] as const;
+    const readContract = vi.fn(async ({ functionName }: { functionName: string }) => {
+      if (functionName === "totalWeight") return 100n;
+      throw new Error(`Unexpected read: ${functionName}`);
+    });
+    const multicall = vi.fn(async (_args: { contracts: unknown[] }) => [listing, 7n] as const);
+    Object.assign(client, { pub: { readContract, multicall } });
 
-    const page = await client.getListings({ view: "pool", sort: "value", direction: "desc", limit: 24 });
+    const page = await client.getListings({ view: "pool", sort: "value", direction: "desc", limit: 24, includeMetadata: false });
 
+    expect(multicall).toHaveBeenCalledOnce();
+    expect(multicall.mock.calls[0]![0].contracts).toHaveLength(2);
     expect(page.items[0]?.backing).toBe(1_001n);
     expect(page.items[0]?.listedAt).toBe(1_700_000_000);
     expect(page.items[0]?.isCrown).toBe(true);
+  });
+});
+
+
+describe("ViemProtocolClient RPC budget", () => {
+  it("reads the pool snapshot through one Multicall3 aggregation", async () => {
+    const client = new ViemProtocolClient(manifest, "http://localhost:8545", 999);
+    const multicall = vi.fn(async (_args: { contracts: unknown[] }) => [
+      2n, 1n, 1_000n, 20n, 500n, 1n, 100n, 200n, 10n, 5n,
+      86_400n, 604_800n, 8_500n, true, false, 7n, 9n, 100n, 1_000n,
+    ] as const);
+    Object.assign(client, {
+      pub: {
+        getBlock: vi.fn(async () => ({ number: 123n, timestamp: 1_700_000_000n })),
+        multicall,
+      },
+    });
+    const internals = client as unknown as {
+      readQuote(): Promise<{ quote: readonly [bigint, bigint, bigint]; gasPrice: bigint }>;
+    };
+    vi.spyOn(internals, "readQuote").mockResolvedValue({ quote: [11n, 2n, 13n], gasPrice: 1n });
+
+    await expect(client.getPoolSnapshot()).resolves.toMatchObject({
+      blockNumber: 123n,
+      activeListingCount: 2,
+      stagedListingCount: 1,
+      acquisitionFee: 11n,
+      serviceFee: 2n,
+      totalPrice: 13n,
+    });
+    expect(multicall).toHaveBeenCalledOnce();
+    expect(multicall).toHaveBeenCalledWith(expect.objectContaining({
+      allowFailure: false,
+      multicallAddress: "0xcA11bde05977b3631167028862bE2a173976CA11",
+      contracts: expect.arrayContaining([expect.objectContaining({ functionName: "activeListingCount" })]),
+    }));
+    expect(multicall.mock.calls[0]![0].contracts).toHaveLength(19);
   });
 });
 
@@ -216,9 +269,16 @@ describe("ViemProtocolClient HWA identity boundary", () => {
     });
   }
 
+
+  function marketMulticall(symbol: string) {
+    const read = marketReader(symbol);
+    return vi.fn(async ({ contracts }: { contracts: { functionName: string }[] }) =>
+      Promise.all(contracts.map((contract) => read(contract))),
+    );
+  }
   it("accepts the canonical Hyper World Assets metadata", async () => {
     const client = new ViemProtocolClient(marketManifest, "http://localhost:8545", 999);
-    Object.assign(client, { pub: { readContract: marketReader("HWA") } });
+    Object.assign(client, { pub: { multicall: marketMulticall("HWA") } });
 
     await expect(client.getTokenMarket()).resolves.toMatchObject({
       moduleActive: true,
@@ -230,7 +290,7 @@ describe("ViemProtocolClient HWA identity boundary", () => {
 
   it("fails closed when a manifest points to the legacy FWA token", async () => {
     const client = new ViemProtocolClient(marketManifest, "http://localhost:8545", 999);
-    Object.assign(client, { pub: { readContract: marketReader("FWA") } });
+    Object.assign(client, { pub: { multicall: marketMulticall("FWA") } });
 
     await expect(client.getTokenMarket()).rejects.toMatchObject({ code: "CONTRACT_MISCONFIGURED" });
   });

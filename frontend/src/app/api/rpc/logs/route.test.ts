@@ -59,6 +59,10 @@ describe("log RPC proxy", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ jsonrpc: "2.0", id: 1, result: [] });
     expect(fetchMock).toHaveBeenCalledOnce();
+    const cached = await POST(request({ ...call(), id: 9 }));
+    expect(cached.status).toBe(200);
+    expect(await cached.json()).toEqual({ jsonrpc: "2.0", id: 9, result: [] });
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 });
 

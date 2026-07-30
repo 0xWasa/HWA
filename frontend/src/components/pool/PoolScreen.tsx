@@ -23,6 +23,7 @@ import { RandomnessFlightDeck } from "@/components/tx/RandomnessFlightDeck";
 import { ProtocolPrelaunch } from "@/components/ui/ProtocolPrelaunch";
 
 const PAGE_SIZE = 24;
+const MAX_POOL_POSITIONS = 1_000;
 
 export function PoolScreen() {
   const router = useRouter();
@@ -31,24 +32,20 @@ export function PoolScreen() {
   const { prelaunch, writesEnabled } = useProtocol();
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [limit, setLimit] = useState(PAGE_SIZE);
+  const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE);
   const [filters, setFilters] = useState<
     Pick<ListingsQuery, "search" | "collections" | "rarities" | "sort" | "direction">
   >({ sort: "value", direction: "desc" });
 
-  const query: ListingsQuery = useMemo(() => ({ view: "deposits", limit, ...filters }), [limit, filters]);
+  // One authoritative active/staged inventory feeds both the hero deck and the
+  // explorer. The explorer reveals it in 24-card slices without refetching.
+  const query: ListingsQuery = useMemo(
+    () => ({ view: "deposits", limit: MAX_POOL_POSITIONS, ...filters }),
+    [filters],
+  );
 
   const { data: snapshot } = usePoolSnapshot();
   const { data: page, isLoading, isError, refetch } = useListings(query);
-  // Whole active pool, up to the client's explicit 1,000-row hydration bound.
-  // The strip hides rather than renormalising a partial window to a false 100%.
-  const { data: poolAll } = useListings({
-    view: "pool",
-    sort: "value",
-    direction: "desc",
-    limit: 1_000,
-    includeMetadata: false,
-  });
   const { data: collections } = useCollections();
   const { data: positions } = usePositions();
 
@@ -78,6 +75,7 @@ export function PoolScreen() {
   }, [router, pathname, searchParams]);
 
   const totalWeight = snapshot?.totalWeight ?? 0n;
+  const visibleListings = useMemo(() => page?.items.slice(0, visibleLimit) ?? [], [page?.items, visibleLimit]);
   const poolIsConfirmedEmpty = !prelaunch && snapshot !== undefined && snapshot.activeListingCount === 0;
 
   return (
@@ -97,7 +95,7 @@ export function PoolScreen() {
         <div className="relative z-10 grid h-full w-full lg:grid-cols-[minmax(0,1fr)_432px]">
           {/* left: stats bar + prize stack */}
           <div className="flex min-h-0 min-w-0 flex-col">
-            <HeroStatsBar snapshot={snapshot} listings={poolAll?.items} prelaunch={prelaunch} />
+            <HeroStatsBar snapshot={snapshot} listings={page?.items} prelaunch={prelaunch} />
             <PoolMissionHud snapshot={snapshot} inFlightCount={inFlightTickets.length} prelaunch={prelaunch} paused={!writesEnabled} />
             <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-hidden px-4 py-6 lg:py-2">
               {prelaunch ? (
@@ -109,7 +107,7 @@ export function PoolScreen() {
               ) : inFlightTickets.length > 0 ? (
                 <RandomnessFlightDeck tickets={inFlightTickets} snapshot={snapshot} />
               ) : (
-                <HeroPrizeStack listings={page?.items ?? poolAll?.items ?? []} snapshot={snapshot} onOpen={openListing} />
+                <HeroPrizeStack listings={page?.items ?? []} snapshot={snapshot} onOpen={openListing} />
               )}
             </div>
           </div>
@@ -236,7 +234,7 @@ export function PoolScreen() {
           </div>
           {page && (
             <span className="mlabel text-mute">
-              {page.items.length} of {page.total}
+              {visibleListings.length} of {page.total}
             </span>
           )}
         </div>
@@ -245,7 +243,7 @@ export function PoolScreen() {
           query={query}
           onChange={(patch) => {
             setFilters((f) => ({ ...f, ...patch }));
-            setLimit(PAGE_SIZE);
+            setVisibleLimit(PAGE_SIZE);
           }}
           collections={collections ?? []}
           viewMode={viewMode}
@@ -300,7 +298,7 @@ export function PoolScreen() {
             </div>
           ) : viewMode === "grid" ? (
             <div className="deck-tilt grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6" data-testid="listing-grid">
-              {page.items.map((l) => (
+              {visibleListings.map((l) => (
                 <ListingCard key={l.id.toString()} listing={l} totalWeight={totalWeight} onOpen={openListing} />
               ))}
             </div>
@@ -315,17 +313,17 @@ export function PoolScreen() {
                 <span className="text-right">Rarity</span>
                 <span className="text-right">Age</span>
               </div>
-              {page.items.map((l) => (
+              {visibleListings.map((l) => (
                 <ListingRow key={l.id.toString()} listing={l} totalWeight={totalWeight} onOpen={openListing} />
               ))}
             </div>
           )}
         </div>
 
-        {page?.nextCursor && (
+        {page && visibleListings.length < page.items.length && (
           <div className="mt-4 flex justify-center">
-            <Button variant="secondary" onClick={() => setLimit((n) => n + PAGE_SIZE)}>
-              Show more ({page.total - page.items.length} left)
+            <Button variant="secondary" onClick={() => setVisibleLimit((n) => n + PAGE_SIZE)}>
+              Show more ({page.items.length - visibleListings.length} left)
             </Button>
           </div>
         )}

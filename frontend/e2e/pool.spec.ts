@@ -13,6 +13,21 @@ test.describe("Pool exploration", () => {
     expect(await cards.count()).toBeGreaterThan(8);
   });
 
+  test("show more reveals every current pool position without limiting the hero deck", async ({ page }) => {
+    await page.goto("/?scenario=default");
+
+    const cards = page.locator('[data-testid^="listing-card-"]');
+    await expect(cards).toHaveCount(24);
+    const showMore = page.getByRole("button", { name: /Show more/ });
+    await expect(showMore).toBeVisible();
+
+    const heroTotal = Number(await page.getByTestId("hero-stage").getAttribute("data-total"));
+    expect(heroTotal).toBe(24);
+
+    await showMore.click();
+    await expect(cards).toHaveCount(27);
+    await expect(showMore).toHaveCount(0);
+  });
   test("browses the hero deck by drag, arrows and keyboard — never on hover", async ({ page }) => {
     await page.goto("/?scenario=default");
     const stage = page.getByTestId("hero-stage");
