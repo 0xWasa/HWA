@@ -279,6 +279,65 @@ contract FWATokenHyperEVMTest is TestBase {
         assertEq(uint256(uint24(upper - lower)), 400);
     }
 
+    function testFactoryFullRangeMirrorsFwaWhenHwaIsToken0() public {
+        address highWhype = address(0xF000000000000000000000000000000000000001);
+        MockHyperSwapERC20 codeSource = new MockHyperSwapERC20("Wrapped HYPE", "wHYPE");
+        vm.etch(highWhype, address(codeSource).code);
+        MockHyperSwapV3Factory freshFactory = new MockHyperSwapV3Factory();
+        freshFactory.setFeeAmount(10_000, 200);
+        MockHyperSwapV3PositionManager freshPositionManager =
+            new MockHyperSwapV3PositionManager(address(freshFactory), highWhype);
+
+        FWATokenHyperEVMFactory launchFactory = new FWATokenHyperEVMFactory(
+            "Hyper World Assets",
+            "HWA",
+            SUPPLY,
+            125_000_000 ether,
+            address(freshFactory),
+            address(freshPositionManager),
+            highWhype,
+            OWNER,
+            OWNER,
+            FEE_RECIPIENT,
+            TickMath.getSqrtPriceAtTick(0),
+            0
+        );
+
+        assertTrue(address(launchFactory.token()) < highWhype);
+        assertEq(uint256(int256(launchFactory.tickLower())), 0);
+        assertEq(uint256(int256(launchFactory.tickUpper())), 887_200);
+        assertEq(launchFactory.token().balanceOf(OWNER), SUPPLY - 125_000_000 ether);
+    }
+
+    function testFactoryFullRangeMirrorsFwaWhenHwaIsToken1() public {
+        address lowWhype = address(0x1000);
+        MockHyperSwapERC20 codeSource = new MockHyperSwapERC20("Wrapped HYPE", "wHYPE");
+        vm.etch(lowWhype, address(codeSource).code);
+        MockHyperSwapV3Factory freshFactory = new MockHyperSwapV3Factory();
+        freshFactory.setFeeAmount(10_000, 200);
+        MockHyperSwapV3PositionManager freshPositionManager =
+            new MockHyperSwapV3PositionManager(address(freshFactory), lowWhype);
+
+        FWATokenHyperEVMFactory launchFactory = new FWATokenHyperEVMFactory(
+            "Hyper World Assets",
+            "HWA",
+            SUPPLY,
+            125_000_000 ether,
+            address(freshFactory),
+            address(freshPositionManager),
+            lowWhype,
+            OWNER,
+            OWNER,
+            FEE_RECIPIENT,
+            TickMath.getSqrtPriceAtTick(0),
+            0
+        );
+
+        assertTrue(address(launchFactory.token()) > lowWhype);
+        assertEq(uint256(int256(launchFactory.tickLower()) + 887_200), 0);
+        assertEq(uint256(int256(launchFactory.tickUpper())), 0);
+        assertEq(launchFactory.token().balanceOf(OWNER), SUPPLY - 125_000_000 ether);
+    }
     function testFactoryRoundsAboveAlignedTickWhenPriceIsNotExactBoundary() public {
         address highWhype = address(0xF000000000000000000000000000000000000001);
         MockHyperSwapERC20 codeSource = new MockHyperSwapERC20("Wrapped HYPE", "wHYPE");
@@ -309,6 +368,17 @@ contract FWATokenHyperEVMTest is TestBase {
         assertEq(uint256(uint24(launchFactory.tickUpper())), 600);
     }
 
+    function testFundedDistributorCannotBeRevoked() public {
+        address distributor = address(0xD157);
+        vm.prank(OWNER);
+        token.setDistributor(distributor, true);
+        vm.prank(OWNER);
+        token.transfer(distributor, 1 ether);
+
+        vm.prank(OWNER);
+        vm.expectRevert(FWATokenHyperEVM.InvalidTransfer.selector);
+        token.setDistributor(distributor, false);
+    }
     function testOpeningRequiresCompleteMarketWiring() public {
         _launch();
         vm.prank(OWNER);

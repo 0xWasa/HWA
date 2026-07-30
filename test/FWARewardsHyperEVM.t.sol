@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
-import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
-import {FWARewards as FWARewardsReference} from "fwa-rewards-reference/src/FWARewards.sol";
-
 import {FWAHyperSwapAdapter} from "../src/hyperevm/FWAHyperSwapAdapter.sol";
 import {FWARewardsHyperEVM} from "../src/hyperevm/FWARewardsHyperEVM.sol";
 import {
@@ -15,7 +12,7 @@ import {
 } from "./mocks/MockHyperSwapV3.sol";
 import {TestBase} from "./utils/TestBase.sol";
 
-contract MockRewardsCore {
+contract MockRewardsCoreV2 {
     bool public rescueAllowed;
 
     function setRescueAllowed(bool allowed) external {
@@ -26,351 +23,212 @@ contract MockRewardsCore {
         return rescueAllowed;
     }
 
-    function register(FWARewardsHyperEVM rewards, uint256 requestId, address purchaser, uint256 fee, uint256 surcharge)
+    function start(FWARewardsHyperEVM rewards) external {
+        rewards.startEmission();
+    }
+
+    function register(FWARewardsHyperEVM rewards, uint256 id, address buyer, uint256 fee)
         external
         returns (uint256 slice, uint64 epoch)
     {
-        return rewards.registerAcquisition(requestId, purchaser, fee, surcharge);
+        return rewards.registerAcquisition(id, buyer, fee, 1_000);
     }
 
-    function settle(FWARewardsHyperEVM rewards, uint256 requestId) external payable {
-        rewards.settleAcquisition{value: msg.value}(requestId);
+    function settle(FWARewardsHyperEVM rewards, uint256 id) external payable {
+        rewards.settleAcquisition{value: msg.value}(id);
+    }
+
+    function refund(FWARewardsHyperEVM rewards, uint256 id) external {
+        rewards.refundAcquisition(id);
     }
 }
 
 contract FWARewardsHyperEVMTest is TestBase {
-    uint24 internal constant POOL_FEE = 10_000;
-    int24 internal constant TICK_SPACING = 200;
-
+    uint256 internal constant Q96 = 1 << 96;
     address internal constant OWNER = address(0xA11CE);
-    address internal constant CORE = address(0xF0A);
     address internal constant DEPOSITOR = address(0xDE00);
-    address internal constant PURCHASER = address(0xB0B);
+    address internal constant BUYER_A = address(0xB0B);
+    address internal constant BUYER_B = address(0xB0C);
 
     MockHyperSwapERC20 internal token;
     FWAHyperSwapAdapter internal adapter;
     FWARewardsHyperEVM internal rewards;
-    FWARewardsReference internal referenceRewards;
+    MockRewardsCoreV2 internal core;
 
     function setUp() public {
-        token = new MockHyperSwapERC20("Hyper World Assets", "HWA");
+        token = new MockHyperSwapERC20("HWA", "HWA");
         MockHyperSwapERC20 whype = new MockHyperSwapERC20("Wrapped HYPE", "wHYPE");
         MockHyperSwapV3Factory factory = new MockHyperSwapV3Factory();
         MockHypeSink sink = new MockHypeSink();
         MockHyperSwapV3Router router =
             new MockHyperSwapV3Router(address(factory), address(whype), token, payable(address(sink)));
-
         (address token0, address token1) =
             address(whype) < address(token) ? (address(whype), address(token)) : (address(token), address(whype));
-        MockHyperSwapV3Pool pool = new MockHyperSwapV3Pool(token0, token1, POOL_FEE, TICK_SPACING);
-        factory.setFeeAmount(POOL_FEE, TICK_SPACING);
-        factory.setPool(address(whype), address(token), POOL_FEE, address(pool));
-
+        MockHyperSwapV3Pool pool = new MockHyperSwapV3Pool(token0, token1, 10_000, 200);
+        factory.setFeeAmount(10_000, 200);
+        factory.setPool(address(whype), address(token), 10_000, address(pool));
         adapter =
-            new FWAHyperSwapAdapter(address(factory), address(router), address(whype), address(token), POOL_FEE, OWNER);
+            new FWAHyperSwapAdapter(address(factory), address(router), address(whype), address(token), 10_000, OWNER);
         rewards = new FWARewardsHyperEVM(address(token), address(adapter), OWNER);
-        referenceRewards = new FWARewardsReference(address(token), IPoolManager(address(1)), address(2), OWNER);
-
+        core = new MockRewardsCoreV2();
         vm.startPrank(OWNER);
         adapter.setRewardsBuyer(address(rewards));
-        rewards.setFWA(CORE);
-        referenceRewards.setFWA(CORE);
+        rewards.setFWA(address(core));
+        rewards.setEmission(50_000_000 ether, 50_000_000 ether);
         vm.stopPrank();
+        token.mint(address(rewards), 100_000_000 ether);
     }
 
-    function testConstructorAndCoreWiring() public view {
-        assertEq(rewards.token(), address(token));
-        assertEq(address(rewards.swapAdapter()), address(adapter));
-        assertEq(rewards.fwa(), CORE);
-        assertEq(adapter.rewardsBuyer(), address(rewards));
+    function _start() internal {
+        core.start(rewards);
     }
 
-    function testFuzzHotColdCurveMatchesReference(uint32 rawGap) public view {
-        uint256 gap = bound(rawGap, 0, 10_000);
-        assertEq(rewards.tokenShareBps(gap), referenceRewards.tokenShareBps(gap));
+    function _settle(uint256 id, address buyer, uint256 fee) internal returns (uint64 epoch) {
+        (uint256 slice, uint64 e) = core.register(rewards, id, buyer, fee);
+        vm.deal(address(core), address(core).balance + slice);
+        core.settle{value: slice}(rewards, id);
+        return e;
     }
 
-    function testListingEmissionAccountingMatchesReference() public {
-        uint256 depositorTotal = 15 days * 1 ether;
-        uint256 purchaserTotal = 150_000_000 ether;
-
-        vm.startPrank(OWNER);
-        rewards.setEmission(depositorTotal, purchaserTotal);
-        referenceRewards.setEmission(depositorTotal, purchaserTotal);
-        vm.stopPrank();
-
-        vm.startPrank(CORE);
-        rewards.onListingActivated(7, DEPOSITOR, 4 ether);
-        referenceRewards.onListingActivated(7, DEPOSITOR, 4 ether);
-        rewards.startEmission();
-        referenceRewards.startEmission();
-        vm.stopPrank();
-
-        vm.warp(block.timestamp + 1 days);
-
-        assertEq(rewards.sqrtBackingTotal(), referenceRewards.sqrtBackingTotal());
-        assertEq(rewards.pendingDepositorTokens(7), referenceRewards.pendingDepositorTokens(7));
-        assertEq(rewards.currentEpoch(), referenceRewards.currentEpoch());
-
-        (address depositorA, bool activeA, uint256 sqrtA, uint256 debtA) = rewards.listingRewards(7);
-        (address depositorB, bool activeB, uint256 sqrtB, uint256 debtB) = referenceRewards.listingRewards(7);
-        assertEq(depositorA, depositorB);
-        assertTrue(activeA == activeB);
-        assertEq(sqrtA, sqrtB);
-        assertEq(debtA, debtB);
+    function testReviewedSeasonBudgetsAreExact() public view {
+        uint256 total;
+        for (uint256 epoch; epoch < 45; ++epoch) {
+            total += rewards.seasonEpochCap(epoch);
+        }
+        assertEq(total, 100_000_000 ether);
+        assertEq(rewards.seasonBudget(0), 50_000_000 ether);
+        assertEq(rewards.seasonBudget(1), 30_000_000 ether);
+        assertEq(rewards.seasonBudget(2), 20_000_000 ether);
+        assertEq(rewards.seasonBudget(3), 0);
     }
 
-    function testAcquisitionAccountingMatchesThenClaimsThroughHyperSwap() public {
-        vm.startPrank(OWNER);
-        rewards.setForcedTokenShareBps(10_000);
-        referenceRewards.setForcedTokenShareBps(10_000);
-        vm.stopPrank();
-
-        uint256 fee = 1.1 ether;
-        uint256 sliceA;
-        uint256 sliceB;
-        uint64 epochA;
-        uint64 epochB;
-
-        vm.prank(CORE);
-        (sliceA, epochA) = rewards.registerAcquisition(42, PURCHASER, fee, 1_000);
-        vm.prank(CORE);
-        (sliceB, epochB) = referenceRewards.registerAcquisition(42, PURCHASER, fee, 1_000);
-
-        assertEq(sliceA, 0.1 ether);
-        assertEq(sliceA, sliceB);
-        assertEq(epochA, epochB);
-
-        vm.deal(CORE, sliceA + sliceB);
-        vm.prank(CORE);
-        rewards.settleAcquisition{value: sliceA}(42);
-        vm.prank(CORE);
-        referenceRewards.settleAcquisition{value: sliceB}(42);
-
-        assertEq(rewards.tokenBuyAllowance(PURCHASER), referenceRewards.tokenBuyAllowance(PURCHASER));
-        assertEq(rewards.tokenBuyAllowanceTotal(), referenceRewards.tokenBuyAllowanceTotal());
-        assertEq(rewards.acquisitionsInEpoch(epochA), referenceRewards.acquisitionsInEpoch(epochB));
-        assertEq(rewards.userAcquisitionsInEpoch(epochA, PURCHASER), 1);
-
-        vm.prank(PURCHASER);
-        uint256 tokenOut = rewards.claimAccruedTokens(0.2 ether);
-
-        assertEq(tokenOut, 0.2 ether);
-        assertEq(token.balanceOf(PURCHASER), 0.2 ether);
-        assertEq(rewards.tokenBuyAllowance(PURCHASER), 0);
-        assertEq(rewards.tokenBuyAllowanceTotal(), 0);
-        assertEq(address(rewards).balance, 0);
-        assertEq(address(adapter).balance, 0);
+    function testClaimsAndEmissionRemainClosedBeforeExplicitLaunch() public {
+        assertFalse(rewards.claimsEnabled());
+        assertEq(rewards.emissionStart(), 0);
+        vm.prank(DEPOSITOR);
+        vm.expectRevert(FWARewardsHyperEVM.ClaimsPaused.selector);
+        rewards.claimDepositorTokens(_single(1));
     }
 
-    function testCoreBuyForUsesExactInputAdapterAndTransfersRecipient() public {
-        vm.deal(CORE, 0.5 ether);
-        vm.prank(CORE);
-        uint256 tokenOut = rewards.buyFor{value: 0.5 ether}(PURCHASER, 1 ether);
-
-        assertEq(tokenOut, 1 ether);
-        assertEq(token.balanceOf(PURCHASER), 1 ether);
-        assertEq(token.balanceOf(address(rewards)), 0);
-        assertEq(address(rewards).balance, 0);
-        assertEq(address(adapter).balance, 0);
+    function testLowerOfLaunchAndTwapCapsFivePercentValue() public {
+        token.setSeasonQuotes(2 * Q96, 3 * Q96);
+        _start();
+        vm.prank(address(core));
+        rewards.onListingActivated(1, DEPOSITOR, 1 ether);
+        _settle(1, BUYER_A, 1 ether);
+        assertEq(rewards.effectiveSeasonQuoteX96(), 2 * Q96);
+        assertEq(rewards.epochSeasonalEmitted(0), 0.1 ether);
+        assertEq(rewards.pendingDepositorTokens(1), 0.05 ether);
+        assertEq(rewards.purchaserSeasonalEpochPot(0), 0.05 ether);
     }
 
-    function testRefundAcquisitionDrainsPendingEpochAndCannotRepeat() public {
-        vm.prank(CORE);
-        (, uint64 epoch) = rewards.registerAcquisition(91, PURCHASER, 1.1 ether, 1_000);
-        assertEq(rewards.pendingAcquisitionsInEpoch(epoch), 1);
-
-        vm.prank(CORE);
-        rewards.refundAcquisition(91);
-        assertEq(rewards.pendingAcquisitionsInEpoch(epoch), 0);
-        assertEq(rewards.acquisitionsInEpoch(epoch), 0);
-
-        vm.prank(CORE);
-        vm.expectRevert(FWARewardsHyperEVM.AcquisitionAlreadyTerminal.selector);
-        rewards.refundAcquisition(91);
+    function testFallingPriceNeverUnlocksMoreTokens() public {
+        token.setSeasonQuotes(4 * Q96, 1 * Q96);
+        _start();
+        vm.prank(address(core));
+        rewards.onListingActivated(1, DEPOSITOR, 1 ether);
+        _settle(1, BUYER_A, 2 ether);
+        assertEq(rewards.epochSeasonalEmitted(0), 0.1 ether);
     }
 
-    function testClosedEpochClaimIsUnitWeightedAndCannotRepeat() public {
-        vm.prank(OWNER);
-        rewards.setEmission(0, 150 ether);
-        token.mint(address(rewards), 20 ether);
-
-        vm.prank(CORE);
-        rewards.startEmission();
-        vm.prank(CORE);
-        (uint256 sliceA,) = rewards.registerAcquisition(101, PURCHASER, 1.1 ether, 1_000);
-        vm.prank(CORE);
-        (uint256 sliceB,) = rewards.registerAcquisition(102, DEPOSITOR, 1.1 ether, 1_000);
-        vm.deal(CORE, sliceA + sliceB);
-        vm.prank(CORE);
-        rewards.settleAcquisition{value: sliceA}(101);
-        vm.prank(CORE);
-        rewards.settleAcquisition{value: sliceB}(102);
-
-        vm.warp(rewards.emissionStart() + 3 days);
-        uint256[] memory epochs = new uint256[](1);
-        epochs[0] = 0;
-        vm.prank(PURCHASER);
-        uint256 claimed = rewards.claimEpochTokens(epochs);
-        assertEq(claimed, 5 ether);
-
-        vm.prank(PURCHASER);
-        vm.expectRevert(FWARewardsHyperEVM.AlreadyClaimed.selector);
-        rewards.claimEpochTokens(epochs);
+    function testUnavailableTwapUnlocksNothing() public {
+        token.setSeasonQuotes(2 * Q96, 0);
+        _start();
+        vm.prank(address(core));
+        rewards.onListingActivated(1, DEPOSITOR, 1 ether);
+        _settle(1, BUYER_A, 10 ether);
+        assertEq(rewards.epochSeasonalEmitted(0), 0);
     }
 
-    function testClosedEpochCannotClaimWhileRequestIsPending() public {
-        vm.prank(OWNER);
-        rewards.setEmission(0, 15 ether);
-        token.mint(address(rewards), 15 ether);
-        vm.prank(CORE);
-        rewards.startEmission();
-        vm.prank(CORE);
-        rewards.registerAcquisition(111, PURCHASER, 1.1 ether, 1_000);
+    function testProtocolSeedIsExcludedFromSeasonalDepositorRewards() public {
+        _start();
+        vm.prank(address(core));
+        rewards.onListingActivated(1, OWNER, 1 ether);
+        uint256 supply = token.totalSupply();
+        _settle(1, BUYER_A, 1 ether);
+        assertEq(rewards.seasonalSqrtBackingTotal(), 0);
+        assertEq(rewards.pendingDepositorTokens(1), 0);
+        assertEq(token.totalSupply(), supply - 0.025 ether);
+        assertEq(rewards.purchaserSeasonalEpochPot(0), 0.025 ether);
+    }
 
+    function testRefundedAcquisitionCreatesNoVolumeOrEmission() public {
+        _start();
+        (, uint64 epoch) = core.register(rewards, 1, BUYER_A, 4 ether);
+        core.refund(rewards, 1);
+        assertEq(rewards.settledHypeInEpoch(epoch), 0);
+        assertEq(rewards.epochSeasonalEmitted(epoch), 0);
+    }
+
+    function testPurchaserRewardsWeightActualHypeSpent() public {
+        _start();
+        vm.prank(address(core));
+        rewards.onListingActivated(1, DEPOSITOR, 1 ether);
+        _settle(1, BUYER_A, 1 ether);
+        _settle(2, BUYER_B, 3 ether);
         vm.warp(rewards.emissionStart() + 1 days + 1);
-        uint256[] memory epochs = new uint256[](1);
-        epochs[0] = 0;
-        vm.prank(PURCHASER);
-        vm.expectRevert(FWARewardsHyperEVM.EpochStillPending.selector);
-        rewards.claimEpochTokens(epochs);
+        rewards.finalizeEpoch(0);
+        vm.prank(OWNER);
+        rewards.enableClaims();
+        vm.prank(BUYER_A);
+        uint256 a = rewards.claimEpochTokens(_single(0));
+        vm.prank(BUYER_B);
+        uint256 b = rewards.claimEpochTokens(_single(0));
+        assertEq(b, a * 3);
+        assertEq(a + b, 0.1 ether);
     }
 
-    function testEmptyEpochSweepBurnsOnceAndRejectsNonEmptyEpoch() public {
-        vm.prank(OWNER);
-        rewards.setEmission(0, 15 ether);
-        token.mint(address(rewards), 15 ether);
-        vm.prank(CORE);
-        rewards.startEmission();
-        vm.warp(rewards.emissionStart() + 2 days + 1);
-
-        uint256 supplyBefore = token.totalSupply();
-        uint256 liabilityBefore = rewards.tokenLiability();
-        vm.prank(OWNER);
-        uint256 swept = rewards.sweepEmptyEpoch(0, PURCHASER);
-        assertEq(swept, 1 ether);
-        assertEq(token.balanceOf(PURCHASER), 0);
-        assertEq(token.totalSupply(), supplyBefore - swept);
-        assertEq(rewards.tokenLiability(), liabilityBefore - swept);
-
-        vm.prank(OWNER);
-        vm.expectRevert(FWARewardsHyperEVM.AlreadyClaimed.selector);
-        rewards.sweepEmptyEpoch(0, PURCHASER);
-
-        vm.prank(CORE);
-        (uint256 slice, uint64 epoch) = rewards.registerAcquisition(121, PURCHASER, 1.1 ether, 1_000);
-        vm.deal(CORE, slice);
-        vm.prank(CORE);
-        rewards.settleAcquisition{value: slice}(121);
-        vm.warp(block.timestamp + 1 days + 1);
-        vm.prank(OWNER);
-        vm.expectRevert(FWARewardsHyperEVM.EpochNotEmpty.selector);
-        rewards.sweepEmptyEpoch(epoch, PURCHASER);
+    function testUnusedDailyCapacityBurnsAndDoesNotCarry() public {
+        _start();
+        vm.warp(rewards.emissionStart() + 1 days + 1);
+        uint256 cap = rewards.seasonEpochCap(0);
+        uint256 supply = token.totalSupply();
+        uint256 burned = rewards.finalizeEpoch(0);
+        assertEq(burned, cap);
+        assertEq(token.totalSupply(), supply - cap);
+        assertTrue(rewards.epochFinalized(0));
     }
 
-    function testNewListingCannotFarmPreActivationEmissionAndDuplicateIdsDoNotDoubleClaim() public {
-        uint256 depositorTotal = 15 days * 1 ether;
-        vm.prank(OWNER);
-        rewards.setEmission(depositorTotal, 0);
-        token.mint(address(rewards), depositorTotal);
-        vm.prank(CORE);
-        rewards.startEmission();
-        vm.warp(rewards.emissionStart() + 1 days);
-
-        vm.prank(CORE);
-        rewards.onListingActivated(7, DEPOSITOR, 4 ether);
-        uint256[] memory one = new uint256[](1);
-        one[0] = 7;
-        vm.prank(DEPOSITOR);
-        vm.expectRevert(FWARewardsHyperEVM.NoTokenReward.selector);
-        rewards.claimDepositorTokens(one);
-
-        vm.warp(rewards.emissionStart() + 2 days);
-        uint256[] memory duplicate = new uint256[](2);
-        duplicate[0] = 7;
-        duplicate[1] = 7;
-        vm.prank(DEPOSITOR);
-        uint256 claimed = rewards.claimDepositorTokens(duplicate);
-        assertEq(claimed, 1 days * 1 ether);
-        assertEq(token.balanceOf(DEPOSITOR), claimed);
+    function testBuybackRewardsAreTrackedSeparately() public {
+        _start();
+        vm.prank(address(core));
+        rewards.onListingActivated(1, DEPOSITOR, 1 ether);
+        token.mint(address(rewards), 30 ether);
+        vm.prank(address(token));
+        rewards.onTokenReceived(10 ether, 20 ether);
+        assertEq(rewards.buybackDepositorRouted(), 10 ether);
+        assertEq(rewards.buybackPurchaserRouted(), 20 ether);
+        assertEq(rewards.purchaserEpochPot(0), 20 ether);
+        assertEq(rewards.purchaserSeasonalEpochPot(0), 0);
     }
 
-    function testEmptyPoolPausesDepositorBudgetUntilAListingIsActive() public {
-        uint256 depositorTotal = 15 days * 1 ether;
-        vm.prank(OWNER);
-        rewards.setEmission(depositorTotal, 0);
-        token.mint(address(rewards), depositorTotal);
-        vm.prank(CORE);
-        rewards.startEmission();
-
-        vm.warp(block.timestamp + 30 days);
-        assertEq(rewards.depositorEmissionRemaining(), depositorTotal);
-
-        vm.prank(CORE);
-        rewards.onListingActivated(8, DEPOSITOR, 1 ether);
-        assertEq(rewards.pendingDepositorTokens(8), 0);
-
-        vm.warp(block.timestamp + 1 days);
-        vm.prank(DEPOSITOR);
-        uint256 claimed = rewards.claimDepositorTokens(_single(8));
-        assertEq(claimed, 1 days * 1 ether);
-        assertEq(rewards.depositorEmissionRemaining(), depositorTotal - claimed);
+    function testColdGapCurveAndCanonicalConfig() public view {
+        assertEq(rewards.tokenShareBps(60), 0);
+        assertEq(rewards.tokenShareBps(3600), 10_000);
+        assertEq(rewards.tokenShareBps(1830), 5_000);
+        assertEq(rewards.seasonExcludedDepositor(), OWNER);
+        assertEq(rewards.tokenLiability(), 100_000_000 ether);
     }
 
-    function testEmissionCanOnlyBeConfiguredOnce() public {
+    function testEmissionConfigurationIsFixedAndOneShot() public {
+        FWARewardsHyperEVM fresh = new FWARewardsHyperEVM(address(token), address(adapter), OWNER);
         vm.prank(OWNER);
-        rewards.setEmission(15 ether, 15 ether);
-
+        vm.expectRevert(FWARewardsHyperEVM.InvalidConfig.selector);
+        fresh.setEmission(49_000_000 ether, 51_000_000 ether);
+        vm.prank(OWNER);
+        fresh.setEmission(50_000_000 ether, 50_000_000 ether);
         vm.prank(OWNER);
         vm.expectRevert(FWARewardsHyperEVM.EmissionAlreadyStarted.selector);
-        rewards.setEmission(15 ether, 15 ether);
+        fresh.setEmission(50_000_000 ether, 50_000_000 ether);
     }
 
-    function testRescueOnlyTransfersSurplusAndPreservesParticipantLiability() public {
-        MockRewardsCore mockCore = new MockRewardsCore();
-        FWARewardsHyperEVM protectedRewards = new FWARewardsHyperEVM(address(token), address(adapter), OWNER);
+    function testRescuePreservesEntireUnallocatedReserve() public {
+        token.mint(address(rewards), 5 ether);
+        core.setRescueAllowed(true);
         vm.prank(OWNER);
-        protectedRewards.setFWA(address(mockCore));
-        vm.prank(OWNER);
-        protectedRewards.setEmission(15 ether, 15 ether);
-        token.mint(address(protectedRewards), 35 ether);
-        mockCore.setRescueAllowed(true);
-
-        uint256 expectedSurplus = token.balanceOf(address(protectedRewards)) - protectedRewards.tokenLiability();
-        vm.prank(OWNER);
-        uint256 rescued = protectedRewards.rescueTokens(PURCHASER);
-        assertEq(rescued, expectedSurplus);
-        assertEq(token.balanceOf(address(protectedRewards)), protectedRewards.tokenLiability());
-        assertEq(protectedRewards.depositorRatePerSec(), 15 ether / protectedRewards.EMISSION_DURATION());
-        assertEq(protectedRewards.purchaserDailyPot(), 1 ether);
-
-        vm.prank(OWNER);
-        assertEq(protectedRewards.rescueTokens(PURCHASER), 0);
-    }
-
-    function testEmergencyAllowanceWithdrawalRequiresCoreWindDownAndPreservesSolvency() public {
-        MockRewardsCore mockCore = new MockRewardsCore();
-        FWARewardsHyperEVM emergencyRewards = new FWARewardsHyperEVM(address(token), address(adapter), address(this));
-        emergencyRewards.setFWA(address(mockCore));
-        emergencyRewards.setForcedTokenShareBps(10_000);
-
-        (uint256 slice,) = mockCore.register(emergencyRewards, 131, PURCHASER, 1.1 ether, 1_000);
-        vm.deal(address(mockCore), slice);
-        mockCore.settle{value: slice}(emergencyRewards, 131);
-        assertEq(address(emergencyRewards).balance, slice);
-
-        vm.prank(PURCHASER);
-        vm.expectRevert(FWARewardsHyperEVM.RescueNotAllowed.selector);
-        emergencyRewards.withdrawTokenBuyAllowanceAsETH();
-
-        mockCore.setRescueAllowed(true);
-        uint256 balanceBefore = PURCHASER.balance;
-        vm.prank(PURCHASER);
-        uint256 withdrawn = emergencyRewards.withdrawTokenBuyAllowanceAsETH();
-        assertEq(withdrawn, slice);
-        assertEq(PURCHASER.balance, balanceBefore + slice);
-        assertEq(emergencyRewards.tokenBuyAllowanceTotal(), 0);
-        assertEq(address(emergencyRewards).balance, 0);
+        uint256 amount = rewards.rescueTokens(BUYER_A);
+        assertEq(amount, 5 ether);
+        assertEq(token.balanceOf(address(rewards)), rewards.tokenLiability());
     }
 
     function _single(uint256 value) private pure returns (uint256[] memory values) {

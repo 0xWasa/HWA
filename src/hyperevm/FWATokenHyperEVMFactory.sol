@@ -12,6 +12,8 @@ import {HWAProjectXLiquidityLocker} from "./HWAProjectXLiquidityLocker.sol";
 ///      price between token deployment and the one-sided position mint.
 contract FWATokenHyperEVMFactory {
     int24 private constant POOL_TICK_SPACING = 200;
+    /// @dev A zero range width selects the widest valid one-sided Project X range.
+    int24 public constant FULL_RANGE = 0;
 
     FWATokenHyperEVM public immutable token;
     int24 public immutable tickLower;
@@ -50,7 +52,7 @@ contract FWATokenHyperEVMFactory {
             revert InvalidAddress();
         }
         int24 spacing = POOL_TICK_SPACING;
-        if (rangeWidth <= 0 || rangeWidth % spacing != 0) revert InvalidRangeWidth();
+        if (rangeWidth < 0 || rangeWidth % spacing != 0) revert InvalidRangeWidth();
 
         FWATokenHyperEVM launchedToken =
             new FWATokenHyperEVM(name, symbol, supply, lpSupply, factory, positionManager, whype, address(this));
@@ -59,16 +61,32 @@ contract FWATokenHyperEVMFactory {
 
         int24 currentTick = TickMath.getTickAtSqrtPrice(sqrtPriceX96);
         int24 floorTick = _floorToSpacing(currentTick, spacing);
+        int24 minTick = TickMath.minUsableTick(spacing);
+        int24 maxTick = TickMath.maxUsableTick(spacing);
         int24 lower;
         int24 upper;
         if (address(launchedToken) < whype) {
             // `getTickAtSqrtPrice` can return a spacing-aligned tick even when the price is
             // strictly above that tick. Only keep the floor when the boundary is exact.
             lower = sqrtPriceX96 == TickMath.getSqrtPriceAtTick(floorTick) ? floorTick : floorTick + spacing;
-            upper = lower + rangeWidth;
+            if (lower >= maxTick) revert InvalidRangeWidth();
+            if (rangeWidth == FULL_RANGE) {
+                upper = maxTick;
+            } else {
+                int256 candidate = int256(lower) + int256(rangeWidth);
+                if (candidate > int256(maxTick)) revert InvalidRangeWidth();
+                upper = int24(candidate);
+            }
         } else {
             upper = floorTick;
-            lower = upper - rangeWidth;
+            if (upper <= minTick) revert InvalidRangeWidth();
+            if (rangeWidth == FULL_RANGE) {
+                lower = minTick;
+            } else {
+                int256 candidate = int256(upper) - int256(rangeWidth);
+                if (candidate < int256(minTick)) revert InvalidRangeWidth();
+                lower = int24(candidate);
+            }
         }
 
         (uint256 tokenId,,) = launchedToken.launch(sqrtPriceX96, lower, upper, address(locker));
