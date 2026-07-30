@@ -53,6 +53,7 @@ import {
   v3PoolAbi,
   splitterAbi,
 } from "./abi";
+import { buildPoolMarketHistory, type PoolSwapSample } from "./market";
 import { hypePerHwaFromSqrtPrice } from "./price";
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
@@ -63,6 +64,8 @@ const MAX_REWARD_EPOCH_SCAN = 1_024;
 const MAX_UNINDEXED_SNAPSHOT_SCAN = 1_000n;
 const MIN_DEDICATED_LOG_RANGE_BLOCKS = 1_000n;
 const MAX_LOG_DISCOVERY_BLOCK_SPAN = 50_000_000n;
+// HyperEVM produces roughly one block per second; 100k blocks covers the 24h chart with headroom.
+const MARKET_HISTORY_BLOCK_WINDOW = 100_000n;
 const MAX_ACCOUNT_LOG_RESULTS = 5_000;
 const HWA_TOKEN_NAME = "Hyper World Assets";
 const HWA_TOKEN_SYMBOL = "HWA";
@@ -78,6 +81,9 @@ const NFT_ALLOCATED_EVENT = parseAbiItem(
 );
 const ACQUISITION_REQUESTED_EVENT = parseAbiItem(
   "event AcquisitionRequested(uint256 indexed requestId, address indexed purchaser, uint256 acquisitionFee, uint256 totalWeight)",
+);
+const POOL_SWAP_EVENT = parseAbiItem(
+  "event Swap(address indexed sender, address indexed recipient, int256 amount0, int256 amount1, uint160 sqrtPriceX96, uint128 liquidity, int24 tick)",
 );
 // Hyperliquid's public EVM RPC is IP-rate-limited. The live screen fans out
 // several independent contract reads at once, so coalesce them into a single
@@ -232,6 +238,7 @@ export class ViemProtocolClient implements ProtocolClient {
   private receiptWatchers = new Set<string>();
   private metadataCache = new Map<string, Promise<{ name?: string; imageUrl?: string }>>();
   private collectionMetadataCache = new Map<string, Promise<{ name?: string; symbol?: string }>>();
+  private poolSwapCache?: { pool: Address; throughBlock: bigint; samples: PoolSwapSample[] };
 
   constructor(
     private manifest: DeploymentManifest,
@@ -344,19 +351,47 @@ export class ViemProtocolClient implements ProtocolClient {
     return data.listings;
   }
 
-  private async hydrateIndexedListing(row: GraphListingRow): Promise<Listing | null> {
-    const listing = await this.getListing(BigInt(row.listingId));
+  private async getListingTelemetry(id: bigint): Promise<Listing | null> {
+    const raw = await this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "listings", args: [id] });
+    const status = LISTING_STATUS_BY_CODE[raw[10] as keyof typeof LISTING_STATUS_BY_CODE];
+    if (!status) return null;
+    const collection = this.collectionInfo(raw[0]);
+    return {
+      id,
+      status,
+      collection: raw[0],
+      depositor: raw[1],
+      purchaser: raw[2] !== ZERO_ADDRESS ? raw[2] : undefined,
+      tokenId: raw[3],
+      weight: raw[4],
+      backing: raw[5],
+      listedAt: 0,
+      allocatedAt: raw[9] > 0n ? Number(raw[9]) : undefined,
+      isCrown: false,
+      // This path is used only for aggregate odds/hero placeholders. Detail views re-read fees and recovery state.
+      pendingFees: 0n,
+      nft: {
+        name: `${collection?.symbol ?? "NFT"} #${raw[3].toString()}`,
+        collectionName: collection?.name,
+        collectionSymbol: collection?.symbol,
+      },
+    };
+  }
+
+  private async hydrateIndexedListing(row: GraphListingRow, includeMetadata = true): Promise<Listing | null> {
+    const listing = includeMetadata
+      ? await this.getListing(BigInt(row.listingId), row.tokenURI)
+      : await this.getListingTelemetry(BigInt(row.listingId));
     if (!listing) return null;
     listing.listedAt = Number(row.listedAt);
-    // Economic outcome, settlement and crown state stay on-chain-derived. Indexer values are
-    // discovery hints only and never overwrite a core/ownerOf read. getListing already hydrates
-    // display-only ERC-721 metadata so deep links and indexed lists share the exact same path.
+    // Economic fields stay on-chain-derived. The indexer contributes only the event timestamp and,
+    // when requested, its tokenURI snapshot as a display-only metadata hint.
     return listing;
   }
 
-  private async hydrateIndexedListings(rows: GraphListingRow[]): Promise<Listing[]> {
+  private async hydrateIndexedListings(rows: GraphListingRow[], includeMetadata = true): Promise<Listing[]> {
     const [items, topId] = await Promise.all([
-      Promise.all(rows.map((row) => this.hydrateIndexedListing(row))),
+      Promise.all(rows.map((row) => this.hydrateIndexedListing(row, includeMetadata))),
       this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "topListingId" }),
     ]);
     const listings = items.filter((listing): listing is Listing => listing !== null);
@@ -418,12 +453,18 @@ export class ViemProtocolClient implements ProtocolClient {
     return request;
   }
 
-  private async resolveListingNFT(collection: Address, tokenId: bigint): Promise<Listing["nft"]> {
+  private async resolveListingNFT(
+    collection: Address,
+    tokenId: bigint,
+    indexedTokenURI?: string | null,
+  ): Promise<Listing["nft"]> {
     const [collectionMetadata, metadata] = await Promise.all([
       this.resolveCollectionMetadata(collection),
-      this.pub
-        .readContract({ address: collection, abi: erc721Abi, functionName: "tokenURI", args: [tokenId] })
-        .then((tokenURI) => this.resolveNFTMetadata(tokenURI))
+      (indexedTokenURI
+        ? this.resolveNFTMetadata(indexedTokenURI)
+        : this.pub
+            .readContract({ address: collection, abi: erc721Abi, functionName: "tokenURI", args: [tokenId] })
+            .then((tokenURI) => this.resolveNFTMetadata(tokenURI)))
         .catch((): { name?: string; imageUrl?: string } => ({})),
     ]);
     return {
@@ -688,14 +729,14 @@ export class ViemProtocolClient implements ProtocolClient {
     };
   }
 
-  async getListing(id: bigint): Promise<Listing | null> {
+  async getListing(id: bigint, indexedTokenURI?: string | null): Promise<Listing | null> {
     const raw = await this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "listings", args: [id] });
     const status = LISTING_STATUS_BY_CODE[raw[10] as keyof typeof LISTING_STATUS_BY_CODE];
     if (!status) return null;
     const [pendingFees, stuckRecipient, nft] = await Promise.all([
       this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "pendingFees", args: [id] }),
       this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "stuckNFTRecipient", args: [id] }),
-      this.resolveListingNFT(raw[0], raw[3]),
+      this.resolveListingNFT(raw[0], raw[3], indexedTokenURI),
     ]);
     let settlement: Listing["settlement"];
     if (status === "settled") {
@@ -844,7 +885,9 @@ export class ViemProtocolClient implements ProtocolClient {
       direction: query.direction,
     });
     const totalWeight = await this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "totalWeight" });
-    const hydrated = await this.hydrateIndexedListings(rows);
+    // Large telemetry windows power odds/distribution only. Hydrating every tokenURI here made the homepage wait
+    // for the entire pool before it could show the visible 24-card page.
+    const hydrated = await this.hydrateIndexedListings(rows, query.includeMetadata !== false);
     const search = query.search?.trim().toLowerCase();
     const filtered = hydrated.filter((listing): listing is Listing => {
       if (query.rarities?.length && !query.rarities.includes(rarityFromOdds(listing.weight, totalWeight))) return false;
@@ -1671,6 +1714,68 @@ export class ViemProtocolClient implements ProtocolClient {
     };
   }
 
+  private async getPoolSwapSamples(pool: Address): Promise<PoolSwapSample[] | undefined> {
+    const logPub = this.logPub;
+    const deploymentBlock = this.manifest.deployedAtBlock;
+    if (!logPub || this.logRpcMaxBlockRange < MIN_DEDICATED_LOG_RANGE_BLOCKS || deploymentBlock === undefined) {
+      return undefined;
+    }
+
+    const head = await logPub.getBlockNumber();
+    const deployedBlock = BigInt(deploymentBlock);
+    if (deployedBlock > head) return undefined;
+    const historyFloor = head > MARKET_HISTORY_BLOCK_WINDOW ? head - MARKET_HISTORY_BLOCK_WINDOW : 0n;
+    const firstBlock = deployedBlock > historyFloor ? deployedBlock : historyFloor;
+
+    const samePool = sameAddress(this.poolSwapCache?.pool, pool);
+    const previous = samePool ? this.poolSwapCache : undefined;
+    const nextUncachedBlock = previous ? previous.throughBlock + 1n : firstBlock;
+    let fromBlock = nextUncachedBlock > firstBlock ? nextUncachedBlock : firstBlock;
+    const pending: Array<{
+      blockNumber: bigint;
+      sqrtPriceX96: bigint;
+      amount0: bigint;
+      amount1: bigint;
+    }> = [];
+
+    while (fromBlock <= head) {
+      const { toBlock } = nextLogDiscoveryWindow(fromBlock, head, this.logRpcMaxBlockRange);
+      const logs = await logPub.getLogs({ address: pool, event: POOL_SWAP_EVENT, fromBlock, toBlock });
+      for (const log of logs) {
+        if (
+          log.blockNumber !== null &&
+          log.args.sqrtPriceX96 !== undefined &&
+          log.args.amount0 !== undefined &&
+          log.args.amount1 !== undefined
+        ) {
+          pending.push({
+            blockNumber: log.blockNumber,
+            sqrtPriceX96: log.args.sqrtPriceX96,
+            amount0: log.args.amount0,
+            amount1: log.args.amount1,
+          });
+        }
+      }
+      fromBlock = toBlock + 1n;
+    }
+
+    const blockNumbers = [...new Set(pending.map((sample) => sample.blockNumber.toString()))].map(BigInt);
+    const blocks = await Promise.all(blockNumbers.map((blockNumber) => this.pub.getBlock({ blockNumber })));
+    const timestamps = new Map(blocks.map((block) => [block.number.toString(), Number(block.timestamp)]));
+    const fresh = pending.flatMap((sample) => {
+      const timestamp = timestamps.get(sample.blockNumber.toString());
+      return timestamp === undefined
+        ? []
+        : [{ timestamp, sqrtPriceX96: sample.sqrtPriceX96, amount0: sample.amount0, amount1: sample.amount1 }];
+    });
+    const oldestUsefulTimestamp = Math.floor(Date.now() / 1_000) - 25 * 60 * 60;
+    const samples = [...(previous?.samples ?? []), ...fresh].filter(
+      (sample) => sample.timestamp >= oldestUsefulTimestamp,
+    );
+    this.poolSwapCache = { pool, throughBlock: head, samples };
+    return samples;
+  }
+
   async getTokenMarket(account?: Address): Promise<TokenMarket> {
     const token = this.manifest.contracts.token;
     const pool = this.manifest.contracts.projectXPool;
@@ -1694,6 +1799,16 @@ export class ViemProtocolClient implements ProtocolClient {
       throw new ProtocolError("CONTRACT_MISCONFIGURED", "The configured Project X pool does not contain the HWA token.");
     }
     const price = hypePerHwaFromSqrtPrice(slot0[0], hwaIsToken0);
+    const history =
+      price === undefined
+        ? undefined
+        : await this.getPoolSwapSamples(pool)
+            .then((samples) =>
+              samples === undefined
+                ? undefined
+                : buildPoolMarketHistory(samples, hwaIsToken0, price, Math.floor(Date.now() / 1_000)),
+            )
+            .catch(() => undefined);
     if (account) {
       const [hypeBalance, tokenBalance] = await Promise.all([
         this.pub.getBalance({ address: account }),
@@ -1710,6 +1825,11 @@ export class ViemProtocolClient implements ProtocolClient {
       feeTierBps: 100,
       price,
       marketCapHype: price === undefined ? undefined : (price * totalSupply) / 10n ** 18n,
+      candles: history?.candles,
+      change24hBps: history?.change24hBps,
+      volume24hHype: history?.volume24hHype,
+      volume24hToken: history?.volume24hToken,
+      poolSwaps: history?.poolSwaps,
       externalBuysEnabled,
       externalTradeUrl: this.manifest.links?.projectXTradeUrl,
       user,
