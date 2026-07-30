@@ -123,36 +123,19 @@ export function PoolScreen() {
 
       {/* ------------------------------------------------------ info strip */}
       <section id="mechanics" className="mx-auto flex w-full max-w-5xl scroll-mt-24 flex-col gap-8 px-6 py-14">
-        <div className="max-w-2xl">
-          <div className="mlabel mb-2 text-secondary-readable">THE PLAYBOOK</div>
-          <h2 className="text-2xl font-semibold text-ink sm:text-[2rem] sm:leading-tight">
-            Back the pool. Draw the book. Choose your exit.
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-mute">
-            One shared NFT market with the transparency of a trading venue: visible depth, explicit odds and on-chain
-            settlement on HyperEVM.
-          </p>
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-3">
+        {/* The loop, one line: a newcomer must get it without reading a page. */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-2">
           {[
-            ["01", "Supply / LP", "Back an allowlisted NFT with HYPE. Your capital becomes a standing bid and defines its draw weight."],
-            ["02", "Draw / Market", "Enter at the displayed pool price. Randomness selects one active position in strict request order."],
-            ["03", "Resolve / Exit", "Keep the NFT, relist it with fresh backing, or accept the protocol bid under visible settlement rules."],
-          ].map(([index, title, detail]) => (
-            <div
-              key={index}
-              className="card group relative overflow-hidden p-5 transition-transform duration-300 hover:-translate-y-1"
-            >
-              <div aria-hidden className="absolute -right-8 -top-8 size-24 rounded-full bg-secondary/10 blur-2xl transition-colors group-hover:bg-secondary/18" />
-              <div className="flex items-center justify-between gap-3">
-                <div className="num font-mono text-2xs text-accent">{index} / 03</div>
-                <span className="mlabel rounded-full border border-line/80 bg-inset/70 px-2 py-1 text-faint">
-                  {index === "01" ? "LIQUIDITY" : index === "02" ? "RANDOMNESS" : "SETTLEMENT"}
-                </span>
-              </div>
-              <h3 className="mt-6 text-lg font-semibold text-ink">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-mute">{detail}</p>
+            ["Back", "Deposit an NFT with HYPE behind it."],
+            ["Draw", "Pay the pool price, get a random NFT."],
+            ["Exit", "Keep it, relist it, or take the bid."],
+          ].map(([title, detail], i) => (
+            <div key={title} className="flex flex-1 items-baseline gap-2">
+              <span className="num shrink-0 font-mono text-2xs text-accent">0{i + 1}</span>
+              <span className="min-w-0">
+                <span className="text-sm font-semibold text-ink">{title}</span>{" "}
+                <span className="text-sm text-mute">{detail}</span>
+              </span>
             </div>
           ))}
         </div>
@@ -160,41 +143,36 @@ export function PoolScreen() {
         <div className="rounded-xl border border-secondary/30 bg-secondary/8 p-4 sm:p-5">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <div className="mlabel text-secondary-readable">HWA REWARDS</div>
-              <h3 className="mt-1 text-xl font-semibold text-ink">300M over 15 days. Permanent buyback loop.</h3>
+              <h3 className="text-lg font-semibold text-ink">$HWA · 1B supply, no minting after launch</h3>
             </div>
-            <a href="/rewards" className="text-xs font-medium text-accent hover:underline">Inspect reward accounting â</a>
+            <a href="/rewards" className="text-xs font-medium text-accent hover:underline">Inspect reward accounting →</a>
           </div>
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            {[["DEP", "150M", "Depositors · 15 days"], ["BUY", "150M", "Purchasers · 15 epochs"], ["LP", "500M", "Locked full range"]].map(([season, cap, days]) => (
-              <div key={season} className="rounded-lg border border-line/70 bg-inset/60 px-3 py-2.5">
-                <div className="font-mono text-2xs text-purple">{season}</div>
-                <div className="mt-1 font-mono text-base font-semibold text-ink">{cap}</div>
-                <div className="text-2xs text-mute">{days}</div>
+            {[
+              ["500M", "Liquidity, locked forever"],
+              ["300M", "Earned by playing"],
+              ["100M", "Ecosystem"],
+            ].map(([cap, label]) => (
+              <div key={label} className="rounded-lg border border-line/70 bg-inset/60 px-3 py-2.5">
+                <div className="font-mono text-base font-semibold text-ink">{cap}</div>
+                <div className="text-2xs text-mute">{label}</div>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-2xs leading-relaxed text-mute">
-            The FWA-parity reserve is fixed at 300M HWA: 150M for active depositors and 150M across 15 daily purchaser epochs. Protocol-revenue buybacks continue afterward. No new HWA can be minted.
-          </p>
         </div>
-        <div className="flex flex-col gap-3 rounded-xl border border-amber/25 bg-amber/6 p-4 sm:flex-row sm:items-start sm:gap-5">
-          <span className="mlabel shrink-0 rounded-full border border-amber/25 px-2.5 py-1 text-amber">RISK ENGINE</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-amber/25 bg-amber/6 p-4 sm:flex-row sm:items-center sm:gap-5">
+          <span className="mlabel shrink-0 rounded-full border border-amber/25 px-2.5 py-1 text-amber">RISK</span>
           <p className="text-sm leading-relaxed text-dim">
-            Depositing provides liquidity and carries risk of loss: your NFT can be selected earlier than its
-            weight-implied average. Randomness decides the outcome;{" "}
-            <span className="font-medium text-ink">no result is known before settlement</span>. HWA rewards have no
+            Your NFT can be drawn at any time.{" "}
+            <span className="font-medium text-ink">No outcome is known before settlement</span>, and HWA rewards have no
             guaranteed value.
           </p>
         </div>
 
         <div className="flex items-end justify-between border-t border-line/60 pt-8">
-          <div>
-            <div className="mlabel text-secondary-readable">POOL TELEMETRY</div>
-            <h2 className="mt-1 text-xl font-semibold text-ink">Live protocol state</h2>
-          </div>
+          <h2 className="text-xl font-semibold text-ink">Live protocol state</h2>
           <span className="hidden text-2xs text-faint sm:block">
-            {env.dataMode === "mock" ? "Deterministic demo telemetry" : "Browser sampled Â· never estimated"}
+            {env.dataMode === "mock" ? "Deterministic demo telemetry" : "Read from the contracts"}
           </span>
         </div>
 
@@ -276,7 +254,7 @@ export function PoolScreen() {
             <div className="card border-red/30">
               <EmptyState
                 title="Couldn't load listings"
-                detail="The data source did not respond. The pool may be fine â this is a connection problem, not an empty pool."
+                detail="The data source did not respond. This is a connection problem, not an empty pool."
                 action={
                   <Button variant="outline" onClick={() => void refetch()}>
                     Retry
@@ -413,7 +391,7 @@ function HeroStatsBar({
         href="#pool"
         className="mlabel hidden h-14 shrink-0 items-center justify-center border-l border-line px-6 text-mute transition-colors hover:text-accent lg:flex"
       >
-        View Pool â
+        View Pool ↓
       </a>
     </div>
   );

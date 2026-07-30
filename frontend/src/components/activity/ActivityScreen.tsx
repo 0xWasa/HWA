@@ -70,9 +70,16 @@ export function ActivityScreen() {
   const [collection, setCollection] = useState<string | null>(null);
   const [limit, setLimit] = useState(PAGE);
 
+  // Deployment bootstrap emits dozens of parameter writes that drown the real
+  // user tape. They stay fully visible under the Protocol filter, they just do
+  // not lead the default view.
+  const ALL_EXCEPT_BOOTSTRAP = useMemo(
+    () => TYPE_GROUPS.flatMap((g) => g.types).filter((t) => t !== "config_set"),
+    [],
+  );
   const types = useMemo(
-    () => (groupId ? TYPE_GROUPS.find((g) => g.id === groupId)?.types : undefined),
-    [groupId],
+    () => (groupId ? TYPE_GROUPS.find((g) => g.id === groupId)?.types : ALL_EXCEPT_BOOTSTRAP),
+    [groupId, ALL_EXCEPT_BOOTSTRAP],
   );
 
   const { data: collections } = useCollections();

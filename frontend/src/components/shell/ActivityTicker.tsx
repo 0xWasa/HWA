@@ -84,7 +84,12 @@ export function ActivityTicker() {
     return map;
   }, [collections]);
 
-  const items = useMemo(() => page?.items ?? [], [page]);
+  // The ticker is the public heartbeat: deployment parameter writes are noise
+  // here (and render raw wei), so they stay on /activity under Protocol.
+  const items = useMemo(
+    () => (page?.items ?? []).filter((item) => item.type !== "config_set"),
+    [page],
+  );
 
   // The marquee translates by -50%, so the track must be two identical halves.
   // Short feeds repeat inside each half instead of leaving a gap mid-loop.
