@@ -114,7 +114,7 @@ export function RewardsScreen() {
             <BigAmount label="Purchaser side" value={emission?.purchaserEmitted ?? 0n} />
           </div>
           <p className="mt-2 text-2xs leading-relaxed text-mute">
-            Each settled draw can unlock at most 5% of its HYPE value in HWA, priced with the lower of the 30-minute TWAP and launch price. Depositors split 50% by âbacking; purchasers split 50% by actual HYPE spent. Protocol-seeded Genesis positions are excluded.
+            Each settled draw can unlock at most 5% of its HYPE value in HWA, priced with the lower of the 30-minute TWAP and launch price. Depositors split 50% by √backing; purchasers split 50% by actual HYPE spent. Protocol-seeded Genesis positions are excluded.
           </p>
         </Panel>
 
