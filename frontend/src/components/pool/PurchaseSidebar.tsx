@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { env } from "@/config/env";
 import { chainLabel } from "@/config/chains";
 import { conciseError } from "@/lib/errors";
@@ -8,9 +8,9 @@ import { formatHype } from "@/lib/units";
 import { FWA_PARAMS } from "@/protocol/params";
 import { ProtocolError } from "@/protocol/errors";
 import { useAccountState, useProtocol } from "@/protocol/provider";
-import type { AcquisitionTicket, ListingsQuery, PoolSnapshot } from "@/protocol/types";
+import type { AcquisitionTicket, ListingsQuery, PoolSnapshot, TrackedTransaction } from "@/protocol/types";
 import { useProtocolAction } from "@/state/actions";
-import { useAcquisitionQuote, useListings, useNativeBalance, usePositions } from "@/state/queries";
+import { useAcquisitionQuote, useListings, useNativeBalance, usePositions, useTrackedTxs } from "@/state/queries";
 import { Button } from "@/components/ui/Button";
 import { Hype } from "@/components/ui/Hype";
 import { InfoTip } from "@/components/ui/InfoTip";
@@ -165,7 +165,22 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
 
   const quote = useAcquisitionQuote(quantity, driftBps);
   const { data: balance } = useNativeBalance();
-  const { data: positions } = usePositions();
+  const { data: trackedTxs = [] } = useTrackedTxs();
+  const recentAcquireTxs = useMemo(() => {
+    const cutoff = Math.floor(Date.now() / 1000) - 15 * 60;
+    return trackedTxs.filter(
+      (tx) =>
+        tx.kind === "acquire" &&
+        tx.phase === "completed" &&
+        tx.createdAt >= cutoff &&
+        (tx.meta.purchaser
+          ? tx.meta.purchaser.toLowerCase() === account.address?.toLowerCase()
+          : !!tx.meta.requestIds),
+    );
+  }, [trackedTxs, account.address]);
+  const { data: positions } = usePositions({
+    refetchInterval: recentAcquireTxs.length > 0 ? 4_000 : false,
+  });
   const action = useProtocolAction();
 
   const maxBatch = snapshot?.maxBatch ?? FWA_PARAMS.maxBatch;
@@ -181,6 +196,19 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
       return inFlight || nowS - t.requestedAt < 300;
     });
   }, [positions]);
+  const ticketRequestIds = useMemo(
+    () => new Set((positions?.pendingAcquisitions ?? []).map((ticket) => ticket.requestId.toString())),
+    [positions],
+  );
+  const discoveringTxs = useMemo(
+    () =>
+      recentAcquireTxs.filter((tx) => {
+        if (tx.meta.ticketDiscoveredAt) return false;
+        const requestIds = tx.meta.requestIds?.split(",").filter(Boolean) ?? [];
+        return requestIds.length === 0 || requestIds.some((requestId) => !ticketRequestIds.has(requestId));
+      }),
+    [recentAcquireTxs, ticketRequestIds],
+  );
 
   const blocker = ((): { label: string; sub?: string } | null => {
     if (prelaunch) return { label: "Launch pending", sub: "Mainnet contracts are not deployed." };
@@ -342,6 +370,8 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
           >
             Switch to {chainLabel(env.chainId)}
           </Button>
+        ) : discoveringTxs.length > 0 ? (
+          <AcquisitionDiscovery tx={discoveringTxs[0]!} />
         ) : !reviewing ? (
           <Button
             variant="primary"
@@ -408,6 +438,62 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
   );
 }
 
+function AcquisitionDiscovery({ tx }: { tx: TrackedTransaction }) {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => tick((value) => value + 1), 1_000);
+    return () => clearInterval(timer);
+  }, []);
+  const elapsed = Math.max(0, Math.floor(Date.now() / 1000) - tx.updatedAt);
+  const requestIds = tx.meta.requestIds?.split(",").filter(Boolean) ?? [];
+  const delayed = elapsed >= 90;
+
+  return (
+    <div
+      className="anim-fade-up rounded-lg border border-chain/35 bg-chain/8 p-3"
+      data-testid="acquire-discovery"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="mlabel text-chain">DRAW CONFIRMED</div>
+          <div className="mt-1 text-sm font-semibold text-ink">Your ticket is waiting for the random draw.</div>
+        </div>
+        <span className="num shrink-0 font-mono text-2xs text-chain">{elapsed}s</span>
+      </div>
+      <div className="mt-2 grid grid-cols-3 gap-1 text-3xs">
+        <DiscoveryStep label="Payment" state="done" />
+        <DiscoveryStep label="Ticket" state={requestIds.length > 0 ? "done" : "active"} />
+        <DiscoveryStep label="Random draw" state="active" />
+      </div>
+      <p className={`mt-2 text-2xs leading-relaxed ${delayed ? "text-amber" : "text-dim"}`}>
+        {delayed
+          ? "RPC/indexer sync is slower than usual. Your confirmed ticket remains on-chain; this screen retries automatically and the result will appear without another payment."
+          : "The protocol waits for a future authenticated randomness round before selecting the NFT. This normally takes about 30–90 seconds; no action is required."}
+      </p>
+      {tx.hash && (
+        <a
+          className="mt-2 inline-flex text-3xs font-medium text-chain hover:underline"
+          href={`${env.explorerUrl}/tx/${tx.hash}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          View confirmed transaction ↗
+        </a>
+      )}
+    </div>
+  );
+}
+
+function DiscoveryStep({ label, state }: { label: string; state: "done" | "active" }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <div className={`h-[3px] rounded-full ${state === "done" ? "bg-green" : "anim-pulse bg-chain"}`} />
+      <span className={state === "done" ? "text-green" : "text-chain"}>{label}</span>
+    </div>
+  );
+}
 function TicketMetric({
   label,
   value,

@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 const MAX_BODY_BYTES = 64 * 1024;
 const MAX_BATCH_SIZE = 50;
 const MAX_RESPONSE_BYTES = 4 * 1024 * 1024;
-const UPSTREAM_TIMEOUT_MS = 12_000;
+const UPSTREAM_TIMEOUT_MS = 6_000;
 const MAX_RATE_BUCKETS = 4_096;
 const RATE_WINDOW_MS = 60_000;
 const DEFAULT_RATE_LIMIT = 240;
@@ -151,28 +151,40 @@ function isValidCall(value: unknown): value is JsonRpcRequest {
   return false;
 }
 
-function upstreamConfig(): { url: URL; headers: Record<string, string> } | null {
+function parseUpstream(raw: string, headers: Record<string, string>): { url: URL; headers: Record<string, string> } | null {
   try {
-    const url = new URL(process.env.HYPEREVM_LOG_RPC_UPSTREAM_URL ?? "");
+    const url = new URL(raw);
     if (url.protocol !== "https:" || url.username || url.password) return null;
-    const apiKey = process.env.HYPEREVM_LOG_RPC_API_KEY?.trim();
-    const headerName = (process.env.HYPEREVM_LOG_RPC_API_KEY_HEADER ?? "x-api-key").trim().toLowerCase();
-    if (!/^[a-z0-9-]{1,64}$/.test(headerName)) return null;
-    const headers: Record<string, string> = { "content-type": "application/json", accept: "application/json" };
-    if (apiKey) headers[headerName] = apiKey;
     return { url, headers };
   } catch {
     return null;
   }
 }
 
+function upstreamConfigs(): { url: URL; headers: Record<string, string> }[] {
+  const apiKey = process.env.HYPEREVM_LOG_RPC_API_KEY?.trim();
+  const headerName = (process.env.HYPEREVM_LOG_RPC_API_KEY_HEADER ?? "x-api-key").trim().toLowerCase();
+  if (!/^[a-z0-9-]{1,64}$/.test(headerName)) return [];
+
+  const primaryHeaders: Record<string, string> = { "content-type": "application/json", accept: "application/json" };
+  if (apiKey) primaryHeaders[headerName] = apiKey;
+  const primary = parseUpstream(process.env.HYPEREVM_LOG_RPC_UPSTREAM_URL ?? "", primaryHeaders);
+  const fallback = parseUpstream(process.env.HYPEREVM_READ_RPC_FALLBACK_URL ?? "", {
+    "content-type": "application/json",
+    accept: "application/json",
+  });
+  const upstreams = [primary, fallback].filter(
+    (item): item is { url: URL; headers: Record<string, string> } => item !== null,
+  );
+  return upstreams.filter((item, index) => upstreams.findIndex((candidate) => candidate.url.href === item.url.href) === index);
+}
 export async function POST(request: NextRequest) {
   const contentLength = Number.parseInt(request.headers.get("content-length") ?? "0", 10);
   if (contentLength > MAX_BODY_BYTES) return noStore({ error: "request too large" }, 413);
   if (isRateLimited(request)) return noStore({ error: "rate limited" }, 429);
 
-  const upstream = upstreamConfig();
-  if (!upstream) return noStore({ error: "read RPC unavailable" }, 503);
+  const upstreams = upstreamConfigs();
+  if (upstreams.length === 0) return noStore({ error: "read RPC unavailable" }, 503);
 
   let body: unknown;
   try {
@@ -188,27 +200,31 @@ export async function POST(request: NextRequest) {
     return noStore({ error: "unsupported JSON-RPC request" }, 400);
   }
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
-  try {
-    const response = await fetch(upstream.url, {
-      method: "POST",
-      headers: upstream.headers,
-      body: JSON.stringify(body),
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    const raw = await response.text();
-    if (Buffer.byteLength(raw, "utf8") > MAX_RESPONSE_BYTES) return noStore({ error: "upstream response too large" }, 502);
-    if (!response.ok) return noStore({ error: "upstream unavailable", status: response.status }, 502);
+  for (const upstream of upstreams) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
     try {
-      return noStore(JSON.parse(raw));
+      const response = await fetch(upstream.url, {
+        method: "POST",
+        headers: upstream.headers,
+        body: JSON.stringify(body),
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      const raw = await response.text();
+      if (Buffer.byteLength(raw, "utf8") > MAX_RESPONSE_BYTES) continue;
+      if (!response.ok) continue;
+      try {
+        return noStore(JSON.parse(raw));
+      } catch {
+        // Try the next reviewed read endpoint on malformed upstream output.
+      }
     } catch {
-      return noStore({ error: "invalid upstream response" }, 502);
+      // Timeout/network failure: immediately fail over instead of making the
+      // browser wait through viem's full retry cycle on one provider.
+    } finally {
+      clearTimeout(timer);
     }
-  } catch {
-    return noStore({ error: "upstream unavailable" }, 502);
-  } finally {
-    clearTimeout(timer);
   }
+  return noStore({ error: "all read RPC upstreams unavailable" }, 502);
 }

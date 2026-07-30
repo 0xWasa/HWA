@@ -20,6 +20,7 @@ describe("read RPC proxy", () => {
     vi.unstubAllGlobals();
     delete process.env.HYPEREVM_LOG_RPC_UPSTREAM_URL;
     delete process.env.HYPEREVM_LOG_RPC_API_KEY;
+    delete process.env.HYPEREVM_READ_RPC_FALLBACK_URL;
   });
 
   it("fails closed without a server upstream", async () => {
@@ -56,7 +57,23 @@ describe("read RPC proxy", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 
-  it("accepts the contract reads used by viem", async () => {
+
+  it("fails over transient read errors without forwarding the primary credential", async () => {
+    process.env.HYPEREVM_LOG_RPC_UPSTREAM_URL = "https://primary.example.test";
+    process.env.HYPEREVM_LOG_RPC_API_KEY = "secret-test-key";
+    process.env.HYPEREVM_READ_RPC_FALLBACK_URL = "https://fallback.example.test";
+    const fetchMock = vi.fn(async (url: URL, init: RequestInit) => {
+      if (url.hostname === "primary.example.test") return new Response("unavailable", { status: 503 });
+      expect(url.hostname).toBe("fallback.example.test");
+      expect(new Headers(init.headers).has("x-api-key")).toBe(false);
+      return new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result: "0x3e7" }), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(request(call("eth_chainId")));
+    expect(response.status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });  it("accepts the contract reads used by viem", async () => {
     process.env.HYPEREVM_LOG_RPC_UPSTREAM_URL = "https://rpc.example.test";
     const fetchMock = vi.fn(async () => new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result: "0x" }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);

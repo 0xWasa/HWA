@@ -3,6 +3,7 @@ import {
   createPublicClient,
   createWalletClient,
   custom,
+  decodeEventLog,
   decodeFunctionResult,
   encodeFunctionData,
   http,
@@ -485,7 +486,7 @@ export class ViemProtocolClient implements ProtocolClient {
 
   private updateTransaction(
     id: string,
-    patch: Partial<Pick<TrackedTransaction, "phase" | "hash" | "error">>,
+    patch: Partial<Pick<TrackedTransaction, "phase" | "hash" | "error" | "meta">>,
   ): TrackedTransaction {
     const index = this.txs.findIndex((tx) => tx.id === id);
     if (index < 0) throw new Error(`Unknown transaction ${id}`);
@@ -564,7 +565,28 @@ export class ViemProtocolClient implements ProtocolClient {
       if (receipt.status !== "success") {
         throw new ProtocolError("REVERTED", "Transaction reverted on-chain.", tx.hash);
       }
-      const completed = this.updateTransaction(tx.id, { phase: "completed" });
+      let meta = tx.meta;
+      if (tx.kind === "acquire") {
+        const requestIds: string[] = [];
+        for (const log of receipt.logs) {
+          if (!sameAddress(log.address as Address, this.core)) continue;
+          try {
+            const decoded = decodeEventLog({
+              abi: [ACQUISITION_REQUESTED_EVENT],
+              data: log.data,
+              topics: log.topics,
+              strict: true,
+            });
+            if (decoded.eventName === "AcquisitionRequested") {
+              requestIds.push(decoded.args.requestId.toString());
+            }
+          } catch {
+            // Other core events in the same receipt are expected and ignored.
+          }
+        }
+        if (requestIds.length > 0) meta = { ...meta, requestIds: requestIds.join(",") };
+      }
+      const completed = this.updateTransaction(tx.id, { phase: "completed", meta });
       this.emit({ scope: "pool" });
       this.emit({ scope: "listings" });
       this.emit({ scope: "positions" });
@@ -1087,6 +1109,96 @@ export class ViemProtocolClient implements ProtocolClient {
     });
   }
 
+  /**
+   * Bridge the short indexer-lag window with request ids decoded from this
+   * browser's confirmed acquisition receipts. This is bounded to recent
+   * local writes and hydrates every economic field from the core contract.
+   */
+  private async mergeTrackedAcquisitionTickets(
+    account: Address,
+    tickets: AcquisitionTicket[],
+  ): Promise<AcquisitionTicket[]> {
+    const byId = new Map(tickets.map((ticket) => [ticket.requestId, ticket]));
+    const cutoff = nowSec() - 15 * 60;
+    const tracked = this.txs.filter(
+      (tx) =>
+        tx.kind === "acquire" &&
+        tx.phase === "completed" &&
+        tx.createdAt >= cutoff &&
+        !!tx.hash &&
+        !!tx.meta.requestIds &&
+        (!tx.meta.purchaser || sameAddress(tx.meta.purchaser as Address, account)),
+    );
+
+    for (const tx of tracked) {
+      const encodedRequestIds = tx.meta.requestIds;
+      if (!encodedRequestIds) continue;
+      const requestIds = encodedRequestIds
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean)
+        .map(BigInt);
+      let discovered = requestIds.length > 0;
+      for (const requestId of requestIds) {
+        if (byId.has(requestId)) continue;
+        try {
+          const [acquisition, meta] = await Promise.all([
+            this.pub.readContract({
+              address: this.core,
+              abi: fwaCoreAbi,
+              functionName: "acquisitions",
+              args: [requestId],
+            }),
+            this.pub.readContract({
+              address: this.core,
+              abi: fwaCoreAbi,
+              functionName: "acquisitionMeta",
+              args: [requestId],
+            }),
+          ]);
+          if (!sameAddress(acquisition[0], account)) {
+            discovered = false;
+            continue;
+          }
+          const statusCode = acquisition[4];
+          const phase: AcquisitionTicket["phase"] =
+            statusCode === 1
+              ? "randomness_pending"
+              : statusCode === 5
+                ? "randomness_cached"
+                : statusCode === 6
+                  ? "timed_out"
+                  : statusCode === 2
+                    ? "allocated"
+                    : statusCode === 3
+                      ? "expired"
+                      : "refunded";
+          byId.set(requestId, {
+            requestId,
+            sequence: meta[0],
+            purchaser: acquisition[0],
+            feePaid: acquisition[2],
+            serviceFeePaid: 0n,
+            requestedAt: tx.createdAt,
+            requestBlock: acquisition[1],
+            txHash: tx.hash,
+            wordDeadlineBlock: meta[1],
+            phase,
+            listingId: acquisition[3] > 0n ? acquisition[3] : undefined,
+            refund: statusCode === 3 || statusCode === 4 ? acquisition[2] : undefined,
+          });
+        } catch {
+          discovered = false;
+        }
+      }
+      if (discovered && !tx.meta.ticketDiscoveredAt) {
+        this.updateTransaction(tx.id, {
+          meta: { ...tx.meta, ticketDiscoveredAt: String(nowSec()) },
+        });
+      }
+    }
+    return [...byId.values()].sort((a, b) => b.requestedAt - a.requestedAt);
+  }
   private async getAccountStateDirectFromLogs(account: Address): Promise<{
     listings: Listing[];
     tickets: AcquisitionTicket[];
@@ -1225,6 +1337,7 @@ export class ViemProtocolClient implements ProtocolClient {
       if (!(error instanceof ProtocolError) || error.code !== "INDEXER_DOWN") throw error;
       ({ listings, tickets } = await this.getAccountStateDirectFromLogs(account));
     }
+    tickets = await this.mergeTrackedAcquisitionTickets(account, tickets);
     const [earnings, acquisitionRefund, topId, topPot] = await Promise.all([
       this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "feeCredit", args: [account] }),
       this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "acquisitionRefundCredit", args: [account] }),
@@ -1871,7 +1984,12 @@ export class ViemProtocolClient implements ProtocolClient {
             value,
             gasPrice: priced.gasPrice,
           });
-    return this.executeWrite("acquire", `Acquire ${input.quote.quantity} chance${input.quote.quantity > 1 ? "s" : ""}`, { quantity: String(input.quote.quantity) }, submit);
+    return this.executeWrite(
+      "acquire",
+      `Acquire ${input.quote.quantity} chance${input.quote.quantity > 1 ? "s" : ""}`,
+      { quantity: String(input.quote.quantity), purchaser: account },
+      submit,
+    );
   }
 
   async settle(input: { listingId: bigint; choice: SettlementChoice }): Promise<TrackedTransaction> {

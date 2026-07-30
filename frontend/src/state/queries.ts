@@ -71,12 +71,13 @@ export function useActivity(query: ActivityQuery) {
   });
 }
 
-export function usePositions() {
+export function usePositions(options?: { refetchInterval?: number | false }) {
   const { client, account } = useProtocol();
   return useQuery({
     queryKey: ["positions", account.address ?? ""],
     queryFn: () => client!.getUserPositions(account.address!),
     enabled: !!client && account.status === "connected" && !!account.address,
+    refetchInterval: options?.refetchInterval ?? false,
   });
 }
 
