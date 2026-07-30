@@ -1843,7 +1843,7 @@ export class ViemProtocolClient implements ProtocolClient {
         outcome:
           ticket.phase === "allocated"
             ? (listing?.settlement ?? "allocated")
-            : ticket.phase === "expired" || ticket.phase === "refunded" || ticket.phase === "timed_out"
+            : ticket.phase === "expired" || ticket.phase === "refunded"
               ? "refunded"
               : "pending",
         nft: listing?.nft,

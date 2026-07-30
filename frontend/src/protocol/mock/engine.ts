@@ -1210,7 +1210,7 @@ export class MockEngine {
         outcome:
           t.phase === "allocated"
             ? (listing?.settlement ?? "allocated")
-            : ["expired", "refunded", "timed_out"].includes(t.phase)
+            : ["expired", "refunded"].includes(t.phase)
               ? "refunded"
               : "pending",
         nft: listing?.nft,

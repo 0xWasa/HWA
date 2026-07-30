@@ -87,6 +87,8 @@ if (!/^[a-z0-9-]{1,64}$/u.test(logRpcApiKeyHeader)) throw new Error("Invalid HYP
 const fairnessAlertBlocks = positiveBigInt("FWA_DRAND_FAIRNESS_ALERT_BLOCKS", "120");
 const heartbeatIntervalMs = Number(positiveBigInt("FWA_DRAND_HEARTBEAT_INTERVAL_MS", "180000"));
 if (!Number.isSafeInteger(heartbeatIntervalMs) || heartbeatIntervalMs < 30_000) throw new Error("Invalid heartbeat interval");
+const fulfillmentBatch = positiveBigInt("FWA_DRAND_FULFILL_BATCH", "3");
+if (fulfillmentBatch === 0n) throw new Error("FWA_DRAND_FULFILL_BATCH must be positive");
 const acquisitionProcessBatch = positiveBigInt("FWA_ACQUISITION_PROCESS_BATCH", "3");
 if (acquisitionProcessBatch === 0n) throw new Error("FWA_ACQUISITION_PROCESS_BATCH must be positive");
 const submitterKey = required("FWA_DRAND_SUBMITTER_PRIVATE_KEY");
@@ -119,6 +121,7 @@ if (validateConfig) {
     submitter: derived.stdout.trim(),
     statePath,
     heartbeatIntervalMs,
+    fulfillmentBatch: fulfillmentBatch.toString(),
     acquisitionProcessBatch: acquisitionProcessBatch.toString(),
     forge,
     cast,
@@ -287,6 +290,7 @@ async function maintainHeartbeat() {
 async function fulfillReady(state) {
   const now = BigInt(Math.floor(Date.now() / 1000));
   const head = BigInt(await rpc("eth_blockNumber", []));
+  let fulfilledThisPass = 0n;
   for (const [requestId, persisted] of Object.entries(state.pending)) {
     const current = await requestStatus(requestId);
     if (current.status === 0 || current.status === 2 || current.status === 3) {
@@ -307,6 +311,8 @@ async function fulfillReady(state) {
     delete state.pending[requestId];
     persistState(state);
     console.log(`fulfilled request=${requestId} round=${targetRound} randomness=${beacon.randomness}`);
+    fulfilledThisPass += 1n;
+    if (fulfilledThisPass >= fulfillmentBatch) break;
   }
 }
 
@@ -325,6 +331,7 @@ console.log(`permissionless drand BN254 relayer chain=${CHAIN_ID} submitter=${de
 do {
   try {
     await scanRequests(state);
+    await processReadyAcquisitions();
     await fulfillReady(state);
     await processReadyAcquisitions();
     await maintainHeartbeat();

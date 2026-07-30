@@ -11,14 +11,14 @@ import { randomnessSecurityBufferSec } from "@/protocol/params";
 const TICKET_STEPS: { key: AcquisitionTicket["phase"][]; label: string }[] = [
   { key: ["requested"], label: "Requested" },
   { key: ["randomness_pending"], label: "Randomness" },
-  { key: ["randomness_cached", "processing"], label: "Processing" },
+  { key: ["randomness_cached", "processing", "timed_out"], label: "Processing" },
   { key: ["allocated"], label: "Revealed" },
 ];
 
 /** Acquisition request tracker: request → randomness → ordered processing → reveal. */
 export function TicketProgress({ ticket }: { ticket: AcquisitionTicket }) {
   const { data: listing } = useListing(ticket.phase === "allocated" ? (ticket.listingId ?? null) : null);
-  const failed = ["expired", "refunded", "timed_out"].includes(ticket.phase);
+  const failed = ["expired", "refunded"].includes(ticket.phase);
   const stepIdx = failed ? -1 : TICKET_STEPS.findIndex((s) => s.key.includes(ticket.phase));
   const longWait =
     ticket.phase === "randomness_pending" &&
@@ -58,12 +58,18 @@ export function TicketProgress({ ticket }: { ticket: AcquisitionTicket }) {
               and your fee is credited as a refund.
             </p>
           )}
+          {ticket.phase === "timed_out" && (
+            <p className="mt-1.5 text-2xs leading-snug text-amber">
+              Randomness missed its deadline. The ordered processor is finalizing your refund. It will appear in
+              Manage → Refunds &amp; Earnings once credited on-chain.
+            </p>
+          )}
           {ticket.phase === "allocated" && listing && <RevealCard listing={listing} requestId={ticket.requestId} />}
         </>
       ) : (
         <div className="rounded-xs border border-amber/30 bg-amber/8 p-1.5 text-2xs">
           <span className="font-semibold text-amber">
-            {ticket.phase === "expired" ? "Expired — word missed its deadline." : "Refunded."}
+            {ticket.phase === "expired" ? "Expired — refund ready." : "Refund ready."}
           </span>{" "}
           <span className="text-dim">
             {ticket.refund !== undefined && (
