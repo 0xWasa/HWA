@@ -1842,7 +1842,10 @@ export class ViemProtocolClient implements ProtocolClient {
     if (weightedBackingTotal < input.quote.minWeightedValue) {
       throw new ProtocolError("PRICE_DRIFTED", "Pool weighted value fell below the quoted guard.");
     }
-    const value = (poolFeePerItem + serviceFeePerItem) * BigInt(input.quote.quantity);
+    // `_acquire` may activate staged listings before repricing the pool. Fund the
+    // signed ceiling, not the pre-activation spot quote; the core refunds every
+    // wei above the final pool fee + randomness service fee.
+    const value = (input.quote.maxAcquisitionFeePerItem + serviceFeePerItem) * BigInt(input.quote.quantity);
     const submit = () =>
       input.quote.quantity === 1
         ? wallet.writeContract({
