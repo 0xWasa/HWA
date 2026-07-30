@@ -216,6 +216,9 @@ export interface RewardsSnapshot {
     currentEpoch: number;
     claimsEnabled: boolean;
     configured: boolean;
+    /** Wei of HWA emitted per second across all active deposits. Set once at
+     *  configuration and immutable afterwards, but read rather than assumed. */
+    depositorRatePerSec: bigint;
     reserveRemaining: bigint;
     emitted: bigint;
     burned: bigint;

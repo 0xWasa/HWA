@@ -1611,6 +1611,7 @@ export class ViemProtocolClient implements ProtocolClient {
         currentEpoch: Number(currentEpoch),
         claimsEnabled: startNumber !== 0,
         configured,
+        depositorRatePerSec,
         reserveRemaining: tokenLiability,
         emitted: fixedBudget > tokenLiability ? fixedBudget - tokenLiability : 0n,
         burned: 0n,

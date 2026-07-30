@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { shortAddress, timeAgo } from "@/lib/format";
+import { shortAddress, shortId, timeAgo } from "@/lib/format";
 import { formatHwa } from "@/lib/units";
 import { useAccountState, useProtocol } from "@/protocol/provider";
 import type { ActivityItem, ActivityType } from "@/protocol/types";
@@ -234,8 +234,12 @@ function ActivityRow({ item }: { item: ActivityItem }) {
       </div>
       <div className="min-w-0 truncate text-2xs text-dim">
         {item.listingId !== undefined && (
-          <a href={`/?listing=${item.listingId.toString()}`} className="num font-mono text-blue hover:underline">
-            #{item.listingId.toString()}
+          <a
+            href={`/?listing=${item.listingId.toString()}`}
+            title={item.listingId.toString()}
+            className="num font-mono text-blue hover:underline"
+          >
+            #{shortId(item.listingId)}
           </a>
         )}
         {item.tokenId !== undefined && <span className="num ml-1 font-mono text-mute">token {item.tokenId.toString()}</span>}

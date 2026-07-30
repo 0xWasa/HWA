@@ -1,8 +1,26 @@
 "use client";
 
+import Link from "next/link";
 import { sanitizeLabel } from "@/lib/format";
 import { collectionFloorConfig } from "@/lib/collectionFloors";
+import { HWA_NFT_DEPOSITS_PAUSED } from "@/config/featureFlags";
+import { Button } from "@/components/ui/Button";
 import type { CollectionInfo } from "@/protocol/types";
+
+const SECONDS_PER_DAY = 86_400n;
+
+/** Rounded to the nearest readable unit: the emission budget is a headline
+ *  figure, not an accounting number, and the exact wei is on /rewards. */
+function compactTokens(wei: bigint): string {
+  const whole = Number(wei / 10n ** 18n);
+  if (whole >= 1_000_000) return `${trim(whole / 1_000_000)}M`;
+  if (whole >= 1_000) return `${trim(whole / 1_000)}K`;
+  return trim(whole);
+}
+
+function trim(n: number): string {
+  return n.toFixed(1).replace(/\.0$/, "");
+}
 
 /**
  * The allowlist, shown as a shelf. A newcomer needs to know what they can
@@ -10,9 +28,22 @@ import type { CollectionInfo } from "@/protocol/types";
  * this renders whatever the manifest whitelists, never a hardcoded list.
  * Thumbnails are self-hosted so the page never depends on a marketplace CDN.
  */
-export function SupportedCollections({ collections }: { collections: CollectionInfo[] }) {
+export function SupportedCollections({
+  collections,
+  depositorRatePerSec,
+}: {
+  collections: CollectionInfo[];
+  /** Live emission rate. The daily figure is omitted rather than guessed when
+   *  the rewards module has not reported one. */
+  depositorRatePerSec?: bigint;
+}) {
   const allowed = collections.filter((c) => c.whitelisted);
   if (allowed.length === 0) return null;
+
+  const daily =
+    depositorRatePerSec !== undefined && depositorRatePerSec > 0n
+      ? compactTokens(depositorRatePerSec * SECONDS_PER_DAY)
+      : null;
 
   return (
     <section className="flex flex-col gap-3" data-testid="supported-collections">
@@ -69,6 +100,33 @@ export function SupportedCollections({ collections }: { collections: CollectionI
             </div>
           );
         })}
+      </div>
+
+      {/* The shelf answers "what can I deposit"; this answers "why would I".
+          The link is unconditional in the open case because /deposit owns the
+          fail-closed gate, but the label must not promise a flow that is shut. */}
+      <div
+        className="flex flex-col gap-3 rounded-xl border border-accent/30 bg-accent/8 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5"
+        data-testid="deposit-cta"
+      >
+        <div className="min-w-0">
+          <h3 className="text-base font-semibold text-ink">Deposit an NFT, earn $HWA</h3>
+          <p className="mt-1 text-sm text-mute">
+            {daily ? `${daily} $HWA a day is` : "$HWA is"} split across every active deposit, weighted by the
+            square root of its HYPE backing. Smaller deposits earn more per HYPE.
+          </p>
+        </div>
+        {HWA_NFT_DEPOSITS_PAUSED ? (
+          <Button variant="primary" size="lg" className="shrink-0" disabled>
+            Deposits paused
+          </Button>
+        ) : (
+          <Link href="/deposit" className="shrink-0 no-underline">
+            <Button variant="primary" size="lg" className="w-full sm:w-auto">
+              Deposit an NFT
+            </Button>
+          </Link>
+        )}
       </div>
     </section>
   );

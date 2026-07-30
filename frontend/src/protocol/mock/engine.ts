@@ -330,6 +330,8 @@ export class MockEngine {
         currentEpoch: 3,
         claimsEnabled: false,
         configured: true,
+        // 10M HWA a day, the same shape the mainnet module was configured with.
+        depositorRatePerSec: (10_000_000n * WEI) / 86_400n,
         reserveRemaining: 96_000_000n * WEI,
         emitted: 4_000_000n * WEI,
         burned: 1_000_000n * WEI,

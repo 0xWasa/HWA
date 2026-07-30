@@ -56,7 +56,10 @@ export function DepositFlow() {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [backing, setBacking] = useState<bigint | null>(null);
   const [submittedDeposit, setSubmittedDeposit] = useState<DepositIntent | null>(null);
-  const [dismissedTxId, setDismissedTxId] = useState<string | null>(null);
+  /** Every deposit the user has already walked away from. This has to be a set:
+   *  with one slot, dismissing the newest deposit only uncovered the previous
+   *  one, which pinned the page to an NFT that was already in escrow. */
+  const [dismissedTxIds, setDismissedTxIds] = useState<string[]>([]);
 
   const selected: OwnedNFT | undefined = useMemo(
     () => owned?.find((n) => `${n.collection}:${n.tokenId}` === selectedKey),
@@ -78,29 +81,39 @@ export function DepositFlow() {
   const floorWei = floorQuery.data?.floorHype ? parseHype(floorQuery.data.floorHype) : null;
   const marketRisk = marketValueAtRisk(backing, floorWei);
 
+  // Also keyed on the selection: picking a second NFT from the same collection
+  // leaves floorWei unchanged, so without it the suggested backing never
+  // refilled and the form sat empty.
   useEffect(() => {
     if (floorWei !== null) setBacking((current) => current ?? floorWei);
-  }, [floorWei]);
+  }, [floorWei, selectedKey]);
 
   const recentListTx = useMemo(
     () =>
-      txs?.find(
-        (tx) =>
-          tx.kind === "list_nft" &&
-          tx.id !== dismissedTxId &&
-          Date.now() / 1000 - tx.updatedAt < 10 * 60 &&
-          !["rejected", "reverted", "replaced", "timeout"].includes(tx.phase),
-      ),
-    [dismissedTxId, txs],
+      txs
+        ?.filter(
+          (tx) =>
+            tx.kind === "list_nft" &&
+            !dismissedTxIds.includes(tx.id) &&
+            Date.now() / 1000 - tx.updatedAt < 10 * 60 &&
+            !["rejected", "reverted", "replaced", "timeout"].includes(tx.phase),
+        )
+        // Newest wins: resuming should land on the deposit the user was last on,
+        // never on whichever happened to be first in the tracked list.
+        .sort((a, b) => b.updatedAt - a.updatedAt)[0],
+    [dismissedTxIds, txs],
   );
   const recoveredDeposit = useMemo<DepositIntent | null>(() => {
+    // Recovery is for resuming an interrupted deposit, so it must never
+    // outrank a deposit the user is actively setting up.
+    if (selectedKey !== null) return null;
     if (!recentListTx?.meta.collection || !recentListTx.meta.tokenId || !recentListTx.meta.backing) return null;
     return {
       collection: recentListTx.meta.collection as Address,
       tokenId: BigInt(recentListTx.meta.tokenId),
       backing: BigInt(recentListTx.meta.backing),
     };
-  }, [recentListTx]);
+  }, [recentListTx, selectedKey]);
   const depositIntent = submittedDeposit ?? recoveredDeposit;
 
   const approveTx = findLatest(txs, "approve_nft", selected && { collection: selected.collection, tokenId: selected.tokenId.toString() });
@@ -221,7 +234,15 @@ export function DepositFlow() {
           listing={listedListing}
           error={action.error ?? undefined}
           onReset={() => {
-            if (listTx) setDismissedTxId(listTx.id);
+            // Dismiss every candidate the recovery could still latch onto, not
+            // just the one on screen, otherwise "Deposit another" walks
+            // backwards through the session instead of opening a fresh form.
+            setDismissedTxIds((prev) => {
+              const next = new Set(prev);
+              if (listTx) next.add(listTx.id);
+              if (recentListTx) next.add(recentListTx.id);
+              return [...next];
+            });
             setSubmittedDeposit(null);
             setSelectedKey(null);
             setBacking(null);
@@ -471,7 +492,10 @@ export function DepositFlow() {
                           nft: selected.nft,
                         };
                         setSubmittedDeposit(intent);
-                        setDismissedTxId(null);
+                        // Deliberately does not clear dismissedTxIds: this
+                        // submission gets its own id, and un-dismissing the old
+                        // ones is what made a failed retry fall back onto an
+                        // already-escrowed NFT.
                         const tx = await action.run((c) =>
                           c.listNFT({ collection: selected.collection, tokenId: selected.tokenId, backing }),
                         );

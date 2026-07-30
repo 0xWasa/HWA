@@ -150,4 +150,21 @@ test.describe("Pool exploration", () => {
     await expect(page.getByText("The pool is empty", { exact: true })).toBeVisible();
     await expect(page.getByTestId("acquire-panel")).toContainText("Acquisitions closed");
   });
+
+  test("the allowlist shelf routes to the deposit flow and quotes the live emission", async ({ page }) => {
+    // Rewards inactive: the shelf still sells the deposit, but must not invent a rate.
+    await page.goto("/?scenario=default");
+    const shelf = page.getByTestId("supported-collections");
+    await expect(shelf).toBeVisible();
+    const cta = page.getByTestId("deposit-cta");
+    await expect(cta).toContainText("square root");
+    await expect(cta).not.toContainText("a day is split");
+
+    // Rewards active: the daily figure comes from the emission rate, not a constant.
+    await page.goto("/?scenario=rewardsActive");
+    await expect(page.getByTestId("deposit-cta")).toContainText("10M $HWA a day");
+
+    await page.getByTestId("deposit-cta").getByRole("button", { name: "Deposit an NFT" }).click();
+    await expect(page).toHaveURL(/\/deposit$/);
+  });
 });

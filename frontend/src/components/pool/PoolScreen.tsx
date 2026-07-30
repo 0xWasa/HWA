@@ -8,7 +8,7 @@ import { RARITY_COLOR, RARITY_LABEL, rarityFromOdds } from "@/protocol/rarity";
 import { FWA_PARAMS } from "@/protocol/params";
 import { useProtocol } from "@/protocol/provider";
 import type { Listing, ListingsQuery, PoolSnapshot, RarityTier } from "@/protocol/types";
-import { useCollections, useListings, usePoolSnapshot, usePositions } from "@/state/queries";
+import { useCollections, useListings, usePoolSnapshot, usePositions, useRewards } from "@/state/queries";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { SkeletonCard, SkeletonRow } from "@/components/ui/Skeleton";
@@ -48,6 +48,7 @@ export function PoolScreen() {
   const { data: snapshot } = usePoolSnapshot();
   const { data: page, isLoading, isError, refetch } = useListings(query);
   const { data: collections } = useCollections();
+  const { data: rewards } = useRewards();
   const { data: positions } = usePositions();
 
   const inFlightTickets = useMemo(
@@ -141,7 +142,10 @@ export function PoolScreen() {
           ))}
         </div>
 
-        <SupportedCollections collections={collections ?? []} />
+        <SupportedCollections
+          collections={collections ?? []}
+          depositorRatePerSec={rewards?.emission?.depositorRatePerSec}
+        />
 
         <div className="rounded-xl border border-secondary/30 bg-secondary/8 p-4 sm:p-5">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

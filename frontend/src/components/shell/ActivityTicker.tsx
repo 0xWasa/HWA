@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { sanitizeLabel, timeAgo } from "@/lib/format";
+import { sanitizeLabel, shortId, timeAgo } from "@/lib/format";
 import { formatHwa, formatHype } from "@/lib/units";
 import type { ActivityItem, ActivityType } from "@/protocol/types";
 import { useActivity, useCollections } from "@/state/queries";
@@ -233,7 +233,8 @@ function subjectOf(item: ActivityItem, names: Map<string, string>): string {
   const name = item.collection ? names.get(item.collection.toLowerCase()) : undefined;
   const token = item.tokenId !== undefined ? `#${item.tokenId.toString()}` : "";
   if (name) return `${sanitizeLabel(name, "Collection")}${token ? ` ${token}` : ""}`;
-  if (item.listingId !== undefined) return `Listing #${item.listingId.toString()}`;
+  // Randomness rows carry a uint256 request id here, not a small listing id.
+  if (item.listingId !== undefined) return `Listing #${shortId(item.listingId)}`;
   return token;
 }
 
