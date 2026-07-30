@@ -37,6 +37,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {l.label}
               </Link>
             ))}
+            <a
+              href="https://x.com/hwadotfun"
+              target="_blank"
+              rel="me noopener noreferrer"
+              aria-label="HWA on X (@hwadotfun)"
+              className="normal-case transition-colors hover:text-ink"
+            >
+              X · @hwadotfun
+            </a>
             <span className="num normal-case text-faint">HyperEVM ≠ HyperCore · amounts in HYPE</span>
           </nav>
         </div>
