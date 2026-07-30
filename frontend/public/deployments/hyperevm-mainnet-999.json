@@ -20,7 +20,7 @@
     "features":  {
                      "writesEnabled":  true,
                      "depositsEnabled":  true,
-                     "acquisitionsEnabled":  false,
+                     "acquisitionsEnabled":  true,
                      "rewardClaimsEnabled":  false,
                      "externalBuysEnabled":  false,
                      "randomnessMode":  "drand-bn254",
