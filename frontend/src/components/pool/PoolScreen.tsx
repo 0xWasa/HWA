@@ -42,7 +42,13 @@ export function PoolScreen() {
   const { data: page, isLoading, isError, refetch } = useListings(query);
   // Whole active pool, up to the client's explicit 1,000-row hydration bound.
   // The strip hides rather than renormalising a partial window to a false 100%.
-  const { data: poolAll } = useListings({ view: "pool", sort: "value", direction: "desc", limit: 1_000 });
+  const { data: poolAll } = useListings({
+    view: "pool",
+    sort: "value",
+    direction: "desc",
+    limit: 1_000,
+    includeMetadata: false,
+  });
   const { data: collections } = useCollections();
   const { data: positions } = usePositions();
 
@@ -103,7 +109,7 @@ export function PoolScreen() {
               ) : inFlightTickets.length > 0 ? (
                 <RandomnessFlightDeck tickets={inFlightTickets} snapshot={snapshot} />
               ) : (
-                <HeroPrizeStack listings={poolAll?.items ?? []} snapshot={snapshot} onOpen={openListing} />
+                <HeroPrizeStack listings={page?.items ?? poolAll?.items ?? []} snapshot={snapshot} onOpen={openListing} />
               )}
             </div>
           </div>

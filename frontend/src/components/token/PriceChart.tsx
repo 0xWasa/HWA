@@ -71,7 +71,7 @@ export function PriceChart({ candles }: { candles?: Candle[] }) {
   const series = useMemo(() => aggregate(candles ?? [], tf.keep, tf.group), [candles, tf.keep, tf.group]);
 
   const geometry = useMemo(() => {
-    if (series.length < 2) return null;
+    if (series.length < 1) return null;
     let lo = series[0]!.l;
     let hi = series[0]!.h;
     for (const c of series) {
@@ -87,13 +87,15 @@ export function PriceChart({ candles }: { candles?: Candle[] }) {
     const y = (v: bigint) => PAD_T + (1 - Number(v - min) / span) * PLOT_H;
     const slot = VB_W / series.length;
     const x = (i: number) => slot * (i + 0.5);
-    return { min, max, y, x, slot, bodyW: slot * 0.58 };
+    return { min, max, y, x, slot, bodyW: Math.min(slot * 0.58, 24) };
   }, [series]);
 
-  if (series.length < 2 || !geometry) {
+  if (series.length < 1 || !geometry) {
     return (
       <div className="flex h-56 items-center justify-center rounded-sm border border-line-subtle bg-inset text-xs text-mute sm:h-72">
-        No price history for this pool yet.
+        {candles === undefined
+          ? "Live pool history is temporarily unavailable."
+          : "No Project X swaps in the last 24 hours. Reserved HWA reward transfers do not move the pool price."}
       </div>
     );
   }
@@ -117,7 +119,9 @@ export function PriceChart({ candles }: { candles?: Candle[] }) {
     pct: ((PAD_T + (PLOT_H * i) / TICKS) / VB_H) * 100,
   }));
 
-  const xLabelIdx = [0, Math.floor(series.length / 3), Math.floor((series.length * 2) / 3), series.length - 1];
+  const xLabelIdx = [
+    ...new Set([0, Math.floor(series.length / 3), Math.floor((series.length * 2) / 3), series.length - 1]),
+  ];
 
   return (
     <div className="space-y-2">
