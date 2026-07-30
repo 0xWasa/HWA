@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { describeError } from "@/protocol/errors";
 import { useProtocol } from "@/protocol/provider";
 import type { ProtocolClient } from "@/protocol/client";
@@ -22,6 +22,7 @@ export function useProtocolAction() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<ActionError | null>(null);
   const [lastTxId, setLastTxId] = useState<string | null>(null);
+  const runInFlightRef = useRef(false);
 
   const run = useCallback(
     async (fn: (client: ProtocolClient) => Promise<TrackedTransaction>): Promise<TrackedTransaction | null> => {
@@ -29,6 +30,8 @@ export function useProtocolAction() {
         setError({ title: "Protocol client not ready" });
         return null;
       }
+      if (runInFlightRef.current) return null;
+      runInFlightRef.current = true;
       setSubmitting(true);
       setError(null);
       try {
@@ -39,6 +42,7 @@ export function useProtocolAction() {
         setError(describeError(err));
         return null;
       } finally {
+        runInFlightRef.current = false;
         setSubmitting(false);
       }
     },

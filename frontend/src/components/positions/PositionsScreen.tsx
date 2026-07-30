@@ -2,11 +2,13 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import { sanitizeLabel, timeAgo } from "@/lib/format";
 import { formatOddsPercent } from "@/lib/units";
 import { FWA_PARAMS } from "@/protocol/params";
 import { useAccountState, useProtocol } from "@/protocol/provider";
-import type { Listing } from "@/protocol/types";
+import type { ProtocolClient } from "@/protocol/client";
+import type { Listing, TrackedTransaction, UserPositions } from "@/protocol/types";
 import { useProtocolAction } from "@/state/actions";
 import { usePoolSnapshot, usePositions } from "@/state/queries";
 import { Button } from "@/components/ui/Button";
@@ -39,8 +41,41 @@ export function PositionsScreen() {
   const { data: snapshot } = usePoolSnapshot();
   const { data: positions, isLoading } = usePositions();
   const action = useProtocolAction();
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<TabId>("deposited");
   const [settling, setSettling] = useState<Listing | null>(null);
+  const runClaim = async (
+    claim: "earnings" | "acquisitionRefund" | "listingFees",
+    submit: (client: ProtocolClient) => Promise<TrackedTransaction>,
+  ) => {
+    const tx = await action.run(submit);
+    if (tx?.phase !== "completed" || !account.address) return;
+
+    const positionsKey = ["positions", account.address] as const;
+    // The read-RPC coalesces identical calls for one second. A receipt can
+    // therefore confirm while an immediate invalidation still returns the
+    // pre-claim value. Cancel that refetch, zero the confirmed claim
+    // optimistically, then revalidate once the coalescing window has elapsed.
+    await queryClient.cancelQueries({ queryKey: positionsKey });
+    queryClient.setQueryData<UserPositions>(positionsKey, (current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        claimable: {
+          ...current.claimable,
+          ...(claim === "earnings" ? { earnings: 0n } : {}),
+          ...(claim === "acquisitionRefund" ? { acquisitionRefund: 0n } : {}),
+          ...(claim === "listingFees" ? { listingFees: [] } : {}),
+        },
+      };
+    });
+    action.clearError();
+    window.setTimeout(() => {
+      void queryClient.invalidateQueries({ queryKey: positionsKey });
+      void queryClient.invalidateQueries({ queryKey: ["balance", account.address] });
+    }, 1_500);
+  };
+
 
   const nowSec = Math.floor(Date.now() / 1000);
   const totalWeight = snapshot?.totalWeight ?? 0n;
@@ -374,14 +409,20 @@ export function PositionsScreen() {
                     amount={positions.claimable.earnings}
                     cta="Withdraw"
                     testid="claim-earnings"
-                    onClick={() => void action.run((c) => c.withdrawEarnings())}
+                    busy={action.submitting}
+                    onClick={() =>
+                      void runClaim("earnings", (client) => client.withdrawEarnings())
+                    }
                   />
                   <ClaimRow
                     label="Acquisition refunds"
                     amount={positions.claimable.acquisitionRefund}
                     cta="Withdraw"
                     testid="claim-refund"
-                    onClick={() => void action.run((c) => c.withdrawAcquisitionRefund())}
+                    busy={action.submitting}
+                    onClick={() =>
+                      void runClaim("acquisitionRefund", (client) => client.withdrawAcquisitionRefund())
+                    }
                   />
                   {positions.claimable.listingFees.length > 0 && (
                     <ClaimRow
@@ -391,9 +432,10 @@ export function PositionsScreen() {
                       amount={positions.claimable.listingFees.reduce((a, f) => a + f.amount, 0n)}
                       cta="Claim all"
                       testid="claim-listing-fees"
+                      busy={action.submitting}
                       onClick={() =>
-                        void action.run((c) =>
-                          c.claimListingFees({ listingIds: positions.claimable.listingFees.map((f) => f.listingId) }),
+                        void runClaim("listingFees", (client) =>
+                          client.claimListingFees({ listingIds: positions.claimable.listingFees.map((f) => f.listingId) }),
                         )
                       }
                     />
@@ -509,12 +551,14 @@ function ClaimRow({
   cta,
   onClick,
   testid,
+  busy = false,
 }: {
   label: string;
   amount: bigint;
   cta?: string;
   onClick?: () => void;
   testid?: string;
+  busy?: boolean;
 }) {
   const empty = amount <= 0n;
   return (
@@ -524,7 +568,7 @@ function ClaimRow({
         <Hype wei={amount} className="text-sm text-ink" />
       </div>
       {cta && (
-        <Button size="xs" variant={empty ? "secondary" : "primary"} disabled={empty} onClick={onClick} data-testid={testid}>
+        <Button size="xs" variant={empty ? "secondary" : "primary"} disabled={empty || busy} onClick={onClick} data-testid={testid}>
           {cta}
         </Button>
       )}
