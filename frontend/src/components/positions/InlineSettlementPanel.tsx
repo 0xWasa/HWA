@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { minHwaOutFromSpotPrice } from "@/lib/units";
 import { FWA_PARAMS } from "@/protocol/params";
 import { useAccountState, useProtocol } from "@/protocol/provider";
 import type { Listing, SettlementChoice } from "@/protocol/types";
 import { useProtocolAction } from "@/state/actions";
-import { useNativeBalance, usePoolSnapshot, useRewards, useSettlementInfo } from "@/state/queries";
+import { useNativeBalance, usePoolSnapshot, useRewards, useSettlementInfo, useTokenMarket } from "@/state/queries";
 import { AmountInput } from "@/components/ui/AmountInput";
 import { Button } from "@/components/ui/Button";
 import { Countdown } from "@/components/ui/Countdown";
@@ -23,12 +24,19 @@ export function InlineSettlementPanel({
   const { data: snapshot } = usePoolSnapshot();
   const { data: rewards } = useRewards();
   const { data: balance } = useNativeBalance();
+  const { data: market } = useTokenMarket();
   const action = useProtocolAction();
   const account = useAccountState();
   const { writesEnabled, exitWritesEnabled } = useProtocol();
   const [relistBacking, setRelistBacking] = useState<bigint | null>(listing.backing);
-  const [minTokensOut, setMinTokensOut] = useState<bigint>(0n);
+  const [minTokensOverride, setMinTokensOverride] = useState<{ listingId: bigint; value: bigint | null } | null>(null);
   const [submitted, setSubmitted] = useState<SettlementChoice["kind"] | null>(null);
+  const suggestedMinTokensOut = info && market?.price
+    ? minHwaOutFromSpotPrice(info.bidPayout, market.price, FWA_PARAMS.defaultDriftBps)
+    : null;
+  const minTokensOut = minTokensOverride?.listingId === listing.id
+    ? (minTokensOverride.value ?? suggestedMinTokensOut)
+    : suggestedMinTokensOut;
 
   if (listing.status !== "allocated") {
     return (
@@ -150,14 +158,19 @@ export function InlineSettlementPanel({
             id={`result-min-fwa-${listing.id.toString()}`}
             label="Minimum HWA received"
             value={minTokensOut}
-            onChange={(value) => setMinTokensOut(value ?? 0n)}
+            onChange={(value) => setMinTokensOverride({ listingId: listing.id, value })}
+            unit="HWA"
           />
         ) : undefined}
         action={
           <Button
             variant="secondary"
-            disabled={!exitWritesEnabled || !tokensAvailable}
-            onClick={() => void submit({ kind: "acceptBidTokens", minTokensOut })}
+            disabled={!exitWritesEnabled || !tokensAvailable || minTokensOut === null || minTokensOut <= 0n}
+            onClick={() => {
+              if (minTokensOut !== null && minTokensOut > 0n) {
+                void submit({ kind: "acceptBidTokens", minTokensOut });
+              }
+            }}
             loading={action.submitting}
             data-testid="settle-acceptBidTokens"
           >

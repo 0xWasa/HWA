@@ -11,6 +11,7 @@ export function AmountInput({
   value,
   onChange,
   max,
+  unit = "HYPE",
   placeholder = "0.00",
   label,
   id,
@@ -20,6 +21,8 @@ export function AmountInput({
   onChange: (wei: bigint | null) => void;
   /** Optional balance cap — renders a MAX button. */
   max?: bigint;
+  /** Display unit; values always keep 18-decimal fixed-point semantics. */
+  unit?: string;
   placeholder?: string;
   label: string;
   id: string;
@@ -52,7 +55,7 @@ export function AmountInput({
         }}
         className="num min-w-0 flex-1 bg-transparent font-mono text-base text-ink outline-none placeholder:text-faint"
       />
-      <span className="text-xs font-medium text-mute">HYPE</span>
+      <span className="text-xs font-medium text-mute">{unit}</span>
       {max !== undefined && (
         <button
           type="button"

@@ -2,11 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { sanitizeLabel } from "@/lib/format";
+import { minHwaOutFromSpotPrice } from "@/lib/units";
 import { FWA_PARAMS } from "@/protocol/params";
 import { useAccountState, useProtocol } from "@/protocol/provider";
 import type { Listing, SettlementChoice } from "@/protocol/types";
 import { useProtocolAction } from "@/state/actions";
-import { useNativeBalance, usePoolSnapshot, useRewards, useSettlementInfo } from "@/state/queries";
+import { useNativeBalance, usePoolSnapshot, useRewards, useSettlementInfo, useTokenMarket } from "@/state/queries";
 import { AmountInput } from "@/components/ui/AmountInput";
 import { Button } from "@/components/ui/Button";
 import { Countdown } from "@/components/ui/Countdown";
@@ -33,15 +34,22 @@ export function SettlementDrawer({
   const { data: snapshot } = usePoolSnapshot();
   const { data: rewards } = useRewards();
   const { data: balance } = useNativeBalance();
+  const { data: market } = useTokenMarket();
   const action = useProtocolAction();
   const account = useAccountState();
   const { writesEnabled, exitWritesEnabled } = useProtocol();
   const [choice, setChoice] = useState<ChoiceKind | null>(null);
   const [relistBacking, setRelistBacking] = useState<bigint | null>(null);
-  const [minTokensOut, setMinTokensOut] = useState<bigint>(0n);
+  const [minTokensOverride, setMinTokensOverride] = useState<{ listingId: bigint; value: bigint | null } | null>(null);
 
   const tokensAvailable = rewards?.moduleActive ?? false;
   const windowOpen = info !== null && info !== undefined && Date.now() / 1000 < info.purchaserWindowEndsAt;
+  const suggestedMinTokensOut = info && market?.price
+    ? minHwaOutFromSpotPrice(info.bidPayout, market.price, FWA_PARAMS.defaultDriftBps)
+    : null;
+  const minTokensOut = listing && minTokensOverride?.listingId === listing.id
+    ? (minTokensOverride.value ?? suggestedMinTokensOut)
+    : suggestedMinTokensOut;
 
   const options = useMemo(() => {
     if (!listing || !info) return [];
@@ -118,6 +126,7 @@ export function SettlementDrawer({
       if (relistBacking === null) return;
       payload = { kind: "relist", newBacking: relistBacking };
     } else if (choice === "acceptBidTokens") {
+      if (minTokensOut === null || minTokensOut <= 0n) return;
       payload = { kind: "acceptBidTokens", minTokensOut };
     } else {
       payload = { kind: choice };
@@ -240,9 +249,10 @@ export function SettlementDrawer({
               id="min-tokens-out"
               label="Minimum HWA received"
               value={minTokensOut}
-              onChange={(v) => setMinTokensOut(v ?? 0n)}
+              onChange={(value) => setMinTokensOverride({ listingId: listing.id, value })}
+              unit="HWA"
             />
-            <p className="text-2xs text-faint">Route: Project X, 1% tier. The swap reverts below your minimum.</p>
+            <p className="text-2xs text-faint">Route: Project X, 1% tier. Default guard: spot quote minus {FWA_PARAMS.defaultDriftBps / 100}%.</p>
           </div>
         )}
 
@@ -263,7 +273,8 @@ export function SettlementDrawer({
               !choice ||
               !exitWritesEnabled ||
               (choice === "relist" &&
-                (!writesEnabled || relistBacking === null || relistBacking < (snapshot?.minBacking ?? FWA_PARAMS.minBacking)))
+                (!writesEnabled || relistBacking === null || relistBacking < (snapshot?.minBacking ?? FWA_PARAMS.minBacking))) ||
+              (choice === "acceptBidTokens" && (minTokensOut === null || minTokensOut <= 0n))
             }
             loading={action.submitting}
             data-testid="settle-confirm"

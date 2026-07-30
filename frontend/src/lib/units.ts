@@ -54,6 +54,18 @@ export function applyBps(value: bigint, bps: bigint): bigint {
   return (value * bps) / BPS;
 }
 
+/** Conservative HWA minimum from the Project X spot price. */
+export function minHwaOutFromSpotPrice(hypeIn: bigint, hypePerHwa: bigint, slippageBps: number): bigint {
+  if (
+    hypeIn <= 0n ||
+    hypePerHwa <= 0n ||
+    !Number.isInteger(slippageBps) ||
+    slippageBps < 0 ||
+    slippageBps >= Number(BPS)
+  ) return 0n;
+  return applyBps((hypeIn * WEI) / hypePerHwa, BPS - BigInt(slippageBps));
+}
+
 /** Selection odds of one listing: weight / totalWeight, in parts-per-million. */
 export function oddsPpm(weight: bigint, totalWeight: bigint): number {
   if (totalWeight <= 0n) return 0;

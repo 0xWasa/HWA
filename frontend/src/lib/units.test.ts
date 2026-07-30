@@ -3,6 +3,7 @@ import {
   applyBps,
   formatHype,
   formatOddsPercent,
+  minHwaOutFromSpotPrice,
   oddsOneIn,
   oddsPpm,
   parseHype,
@@ -72,5 +73,15 @@ describe("applyBps", () => {
     expect(applyBps(10_000n, 8_500n)).toBe(8_500n);
     expect(applyBps(3n, 8_500n)).toBe(2n); // 2.55 → 2
     expect(applyBps(WEI, 11_000n)).toBe((WEI * 11n) / 10n);
+  });
+});
+
+describe("minHwaOutFromSpotPrice", () => {
+  it("pre-fills a 10% protected HWA minimum from HYPE spot value", () => {
+    expect(minHwaOutFromSpotPrice(WEI, WEI / 1_000n, 1_000)).toBe(900n * WEI);
+  });
+
+  it("fails closed without a usable price", () => {
+    expect(minHwaOutFromSpotPrice(WEI, 0n, 1_000)).toBe(0n);
   });
 });
