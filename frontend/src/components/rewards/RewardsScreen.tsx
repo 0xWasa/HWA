@@ -57,6 +57,12 @@ export function RewardsScreen() {
 
   const emission = rewards.emission;
   const user = rewards.user;
+  // The buttons used to be labelled "Claims locked" unconditionally, so an
+  // open programme still told holders their rewards were stuck while the
+  // button underneath worked. Label and gate now read the same state.
+  const claimsLocked = HWA_REWARD_CLAIMS_PAUSED || !emission?.claimsEnabled;
+  const claimLabel = (amount: bigint | undefined, ready: string) =>
+    claimsLocked ? "Claims locked" : (amount ?? 0n) > 0n ? ready : "Nothing to claim";
   const started = Boolean(emission?.startedAt);
   const ended = Boolean(emission?.endsAt && Math.floor(Date.now() / 1000) >= emission.endsAt);
 
@@ -137,15 +143,15 @@ export function RewardsScreen() {
             <div className="space-y-2">
               <BigAmount label="Active-position balance" value={user?.depositorPending ?? 0n} highlight />
               <BigAmount label="Credited from closed positions" value={user?.depositorCredit ?? 0n} />
-              <Button className="w-full" variant="primary" disabled={HWA_REWARD_CLAIMS_PAUSED || !emission?.claimsEnabled || (user?.depositorPending ?? 0n) <= 0n} loading={action.submitting} onClick={() => void action.run((client) => client.claimRewards({ listingIds: positions?.deposited.map((listing) => listing.id) ?? [] }))}>Claims locked</Button>
-              <Button className="w-full" variant="secondary" disabled={HWA_REWARD_CLAIMS_PAUSED || !emission?.claimsEnabled || (user?.depositorCredit ?? 0n) <= 0n} loading={action.submitting} onClick={() => void action.run((client) => client.claimRewards({ withdrawCredit: true }))}>Withdrawals locked</Button>
+              <Button data-testid="claim-depositor" className="w-full" variant="primary" disabled={claimsLocked || (user?.depositorPending ?? 0n) <= 0n} loading={action.submitting} onClick={() => void action.run((client) => client.claimRewards({ listingIds: positions?.deposited.map((listing) => listing.id) ?? [] }))}>{claimLabel(user?.depositorPending, "Claim HWA")}</Button>
+              <Button data-testid="withdraw-depositor-credit" className="w-full" variant="secondary" disabled={claimsLocked || (user?.depositorCredit ?? 0n) <= 0n} loading={action.submitting} onClick={() => void action.run((client) => client.claimRewards({ withdrawCredit: true }))}>{claimsLocked ? "Withdrawals locked" : (user?.depositorCredit ?? 0n) > 0n ? "Withdraw credited HWA" : "Nothing credited"}</Button>
             </div>
           </Panel>
           <Panel title="Your purchaser allocation" actions={<Tag tone="neutral">successful daily acquisitions</Tag>}>
             <div className="space-y-2">
               <BigAmount label="Closed epochs" value={user?.purchaserClaimable ?? 0n} highlight />
               <div className="rounded-sm border border-line-subtle bg-inset p-2.5"><div className="text-2xs text-mute">HYPE allowance for an HWA buy</div><Hype wei={user?.purchaserBuyAllowanceHype ?? 0n} className="text-lg text-ink" /></div>
-              <Button className="w-full" variant="primary" disabled={HWA_REWARD_CLAIMS_PAUSED || !emission?.claimsEnabled || (user?.purchaserClaimable ?? 0n) <= 0n} loading={action.submitting} onClick={() => void action.run((client) => client.claimRewards({ epochs: user?.claimableEpochs ?? [] }))}>Claims locked</Button>
+              <Button data-testid="claim-purchaser" className="w-full" variant="primary" disabled={claimsLocked || (user?.purchaserClaimable ?? 0n) <= 0n} loading={action.submitting} onClick={() => void action.run((client) => client.claimRewards({ epochs: user?.claimableEpochs ?? [] }))}>{claimLabel(user?.purchaserClaimable, "Claim HWA")}</Button>
               <div className="text-2xs text-mute">The 60s→60m hot/cold gap only changes the HYPE allowance routed to the purchaser. It does not inflate the 15-day reserve.</div>
             </div>
           </Panel>
