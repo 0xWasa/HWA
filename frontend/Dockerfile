@@ -32,9 +32,11 @@ RUN npm run build:standalone
 
 FROM node:24-alpine AS runner
 WORKDIR /app
+ARG NEXT_PUBLIC_INDEXER_URL
 ENV NODE_ENV=production \
     PORT=3900 \
-    HOSTNAME=0.0.0.0
+    HOSTNAME=0.0.0.0 \
+    HWA_INDEXER_UPSTREAM_URL=$NEXT_PUBLIC_INDEXER_URL
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next-standalone/standalone ./

@@ -197,7 +197,9 @@ function ViemProtocolRoot({ children }: { children: ReactNode }) {
           state.manifest,
           env.rpcUrl,
           env.chainId,
-          env.indexerUrl,
+          // Browsers never hit Goldsky directly. The same-origin route coalesces
+          // identical queries and serves a short stale cache through quota resets.
+          env.indexerUrl ? "/api/indexer" : "",
           env.logRpcUrl,
           env.logRpcMaxBlockRange,
         );

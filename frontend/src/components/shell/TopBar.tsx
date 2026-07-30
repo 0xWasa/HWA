@@ -34,7 +34,8 @@ export function TopBar() {
     if (prelaunch) return { dot: "bg-amber", label: "Pre-launch", tone: "text-amber" };
     if (!health) return { dot: "bg-mute", label: "Syncing…", tone: "text-mute" };
     if (health.rpc === "down") return { dot: "bg-red", label: "RPC down", tone: "text-red" };
-    if (health.indexer.status === "down") return { dot: "bg-red", label: "Indexer down", tone: "text-red" };
+    if (health.indexer.status === "down")
+      return { dot: "bg-amber", label: "History delayed", tone: "text-amber" };
     if (health.indexer.status === "lagging")
       return { dot: "bg-amber", label: `−${health.indexer.lagBlocks} blocks`, tone: "text-amber" };
     return { dot: "bg-green", label: "Synced", tone: "text-mute" };
