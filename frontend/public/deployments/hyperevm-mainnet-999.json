@@ -16,7 +16,8 @@
     "projectXLiquidityLocker": "0x5E5A121c80D059d3d97d15b5492Ce575EF22Ba8e",
     "ecosystemVesting": "0xcdB40ef7956bCfF3804acd404e78e9F76F25de0C",
     "snapshotNft": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
-    "migrationDistributor": "0xc63a810c0aF7e94227E70364F45803328ab9cf79"
+    "migrationDistributor": "0xc63a810c0aF7e94227E70364F45803328ab9cf79",
+    "legacyFwa": "0x13aB222c1079084064F75713e72defCE20751f4A"
   },
   "features": {
     "writesEnabled": true,

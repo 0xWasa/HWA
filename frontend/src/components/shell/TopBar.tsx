@@ -16,6 +16,7 @@ const NAV = [
   { href: "/token", label: "$HWA" },
   { href: "/acquisitions", label: "Acquisitions" },
   { href: "/positions", label: "Manage" },
+  { href: "/legacy", label: "Legacy" },
   { href: "/activity", label: "Activity" },
   { href: "/rewards", label: "Rewards" },
 ] as const;

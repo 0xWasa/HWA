@@ -1,0 +1,448 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-30T15:17:26.234Z",
+  "core": "0x13aB222c1079084064F75713e72defCE20751f4A",
+  "state": {
+    "activeListingCount": "28",
+    "nextListingId": "234",
+    "stagedCount": "0",
+    "pendingAcquisitionCount": "0",
+    "activeBackingTotal": "54789000000000000000",
+    "withdrawOnly": "true",
+    "acquisitionsEnabled": "false"
+  },
+  "positions": [
+    {
+      "listingId": 7,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x6C39d7E6D7689b7a0d81aFF7Cc8a346FE054ff13",
+      "tokenId": "48",
+      "backingWei": "250000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 36,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "77",
+      "backingWei": "270000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 41,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x6C39d7E6D7689b7a0d81aFF7Cc8a346FE054ff13",
+      "tokenId": "82",
+      "backingWei": "240000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 47,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "88",
+      "backingWei": "150000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 54,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0xd8ba9E5886B7000BACe2C9dbdd0BE98Ac77D4A28",
+      "tokenId": "95",
+      "backingWei": "180000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 58,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x650D80dfA3d0636abF7a35E4619Db5421d8A871B",
+      "tokenId": "99",
+      "backingWei": "280000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 81,
+      "collection": "0x43A9652E2B3cE8970e8d33d8C34252a59a6596Aa",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "1964",
+      "backingWei": "2860000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 82,
+      "collection": "0x43A9652E2B3cE8970e8d33d8C34252a59a6596Aa",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "966",
+      "backingWei": "2860000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 83,
+      "collection": "0xbc4a26ba78ce05E8bCbF069Bbb87FB3E1dAC8DF8",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x650D80dfA3d0636abF7a35E4619Db5421d8A871B",
+      "tokenId": "6972",
+      "backingWei": "1157000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 86,
+      "collection": "0xbc4a26ba78ce05E8bCbF069Bbb87FB3E1dAC8DF8",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "1317",
+      "backingWei": "1157000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 87,
+      "collection": "0xbc4a26ba78ce05E8bCbF069Bbb87FB3E1dAC8DF8",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "2652",
+      "backingWei": "1157000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 88,
+      "collection": "0x63eb9d77D083cA10C304E28d5191321977fd0Bfb",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "2816",
+      "backingWei": "2795000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 89,
+      "collection": "0x63eb9d77D083cA10C304E28d5191321977fd0Bfb",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "5088",
+      "backingWei": "2795000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 90,
+      "collection": "0x63eb9d77D083cA10C304E28d5191321977fd0Bfb",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "2629",
+      "backingWei": "2795000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 91,
+      "collection": "0xCC3D60fF11a268606C6a57bD6Db74b4208f1D30c",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "780",
+      "backingWei": "3100000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 92,
+      "collection": "0xCC3D60fF11a268606C6a57bD6Db74b4208f1D30c",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "117",
+      "backingWei": "3250000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 93,
+      "collection": "0xCC3D60fF11a268606C6a57bD6Db74b4208f1D30c",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "948",
+      "backingWei": "3400000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 101,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0xb2B73e992b2d7d3612B140d5920a2a19bF2D0d10",
+      "tokenId": "9",
+      "backingWei": "114000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 104,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x6C39d7E6D7689b7a0d81aFF7Cc8a346FE054ff13",
+      "tokenId": "12",
+      "backingWei": "152000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 142,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0xb2B73e992b2d7d3612B140d5920a2a19bF2D0d10",
+      "tokenId": "130",
+      "backingWei": "195000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 144,
+      "collection": "0x43A9652E2B3cE8970e8d33d8C34252a59a6596Aa",
+      "depositor": "0x452aC9bAe9EA547D5073cdefFA5107F87F35699B",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "839",
+      "backingWei": "2000000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 145,
+      "collection": "0x43A9652E2B3cE8970e8d33d8C34252a59a6596Aa",
+      "depositor": "0x452aC9bAe9EA547D5073cdefFA5107F87F35699B",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "352",
+      "backingWei": "3000000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 146,
+      "collection": "0x43A9652E2B3cE8970e8d33d8C34252a59a6596Aa",
+      "depositor": "0x452aC9bAe9EA547D5073cdefFA5107F87F35699B",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "2451",
+      "backingWei": "3000000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 150,
+      "collection": "0xbc4a26ba78ce05E8bCbF069Bbb87FB3E1dAC8DF8",
+      "depositor": "0x00683Dc4CA9c5020725Ac261b5609F6a2Db7e47b",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "1574",
+      "backingWei": "1150000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 153,
+      "collection": "0x63eb9d77D083cA10C304E28d5191321977fd0Bfb",
+      "depositor": "0x26b3378A36020eE745f611CF71d870BF22b677AD",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "4500",
+      "backingWei": "3000000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 154,
+      "collection": "0xbc4a26ba78ce05E8bCbF069Bbb87FB3E1dAC8DF8",
+      "depositor": "0xE751D56c31DC1B16595a2CdfC94388687E26a674",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "6912",
+      "backingWei": "1200000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 155,
+      "collection": "0xbc4a26ba78ce05E8bCbF069Bbb87FB3E1dAC8DF8",
+      "depositor": "0xE751D56c31DC1B16595a2CdfC94388687E26a674",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "2283",
+      "backingWei": "1200000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 156,
+      "collection": "0xbc4a26ba78ce05E8bCbF069Bbb87FB3E1dAC8DF8",
+      "depositor": "0x00683Dc4CA9c5020725Ac261b5609F6a2Db7e47b",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "4043",
+      "backingWei": "1000000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 157,
+      "collection": "0xbc4a26ba78ce05E8bCbF069Bbb87FB3E1dAC8DF8",
+      "depositor": "0x72D971041Ce8fEDB5EDD8E0e05f5D20bf647Afa3",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "7026",
+      "backingWei": "6000000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 158,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x891A94a56369569d8d79143E9d89195094671160",
+      "tokenId": "123",
+      "backingWei": "110000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 161,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "133",
+      "backingWei": "110000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 166,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x6C39d7E6D7689b7a0d81aFF7Cc8a346FE054ff13",
+      "tokenId": "138",
+      "backingWei": "150000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 167,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0xb2B73e992b2d7d3612B140d5920a2a19bF2D0d10",
+      "tokenId": "139",
+      "backingWei": "180000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 170,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0xb2B73e992b2d7d3612B140d5920a2a19bF2D0d10",
+      "tokenId": "142",
+      "backingWei": "170000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 177,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x6C39d7E6D7689b7a0d81aFF7Cc8a346FE054ff13",
+      "tokenId": "148",
+      "backingWei": "170000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 183,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0xb2B73e992b2d7d3612B140d5920a2a19bF2D0d10",
+      "tokenId": "154",
+      "backingWei": "140000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 192,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0xE751D56c31DC1B16595a2CdfC94388687E26a674",
+      "tokenId": "163",
+      "backingWei": "160000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 194,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0xb2B73e992b2d7d3612B140d5920a2a19bF2D0d10",
+      "tokenId": "165",
+      "backingWei": "180000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 195,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0xb2B73e992b2d7d3612B140d5920a2a19bF2D0d10",
+      "tokenId": "166",
+      "backingWei": "140000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 198,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "169",
+      "backingWei": "170000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 211,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "182",
+      "backingWei": "170000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 215,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x6C39d7E6D7689b7a0d81aFF7Cc8a346FE054ff13",
+      "tokenId": "186",
+      "backingWei": "120000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 216,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0xdec81C6249104e409EA10C5383d710270b679A0E",
+      "tokenId": "187",
+      "backingWei": "150000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 219,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x24398fc31899E2384E4E070fcdBF8Bb6D916FcD9",
+      "purchaser": "0x650D80dfA3d0636abF7a35E4619Db5421d8A871B",
+      "tokenId": "190",
+      "backingWei": "150000000000000000",
+      "status": 2
+    },
+    {
+      "listingId": 229,
+      "collection": "0x63eb9d77D083cA10C304E28d5191321977fd0Bfb",
+      "depositor": "0xdec81C6249104e409EA10C5383d710270b679A0E",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "2772",
+      "backingWei": "2100000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 231,
+      "collection": "0x63eb9d77D083cA10C304E28d5191321977fd0Bfb",
+      "depositor": "0x8BA986D4c7fB42C9D8A95d641b83BF1AC57E7d9c",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "412",
+      "backingWei": "2200000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 232,
+      "collection": "0xbc4a26ba78ce05E8bCbF069Bbb87FB3E1dAC8DF8",
+      "depositor": "0xE751D56c31DC1B16595a2CdfC94388687E26a674",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "4421",
+      "backingWei": "1400000000000000000",
+      "status": 1
+    },
+    {
+      "listingId": 233,
+      "collection": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
+      "depositor": "0x00683Dc4CA9c5020725Ac261b5609F6a2Db7e47b",
+      "purchaser": "0x0000000000000000000000000000000000000000",
+      "tokenId": "64",
+      "backingWei": "500000000000000000",
+      "status": 1
+    }
+  ]
+}

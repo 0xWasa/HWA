@@ -33,6 +33,7 @@ export const DeploymentManifestSchema = z.object({
     ecosystemVesting: AddressSchema.optional(),
     migrationDistributor: AddressSchema.optional(),
     snapshotNft: AddressSchema.optional(),
+    legacyFwa: AddressSchema.optional(),
   }),
   features: z
     .object({
