@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type PointerEvent, type ReactNode } from "react";
-import Link from "next/link";
+
 import { sanitizeLabel, shortAddress, timeAgo } from "@/lib/format";
 import { formatOddsPercent, oddsOneIn } from "@/lib/units";
 import { RARITY_COLOR, rarityFromOdds } from "@/protocol/rarity";
@@ -122,7 +122,11 @@ export function HeroPrizeStack({
   }, [deck.length, paused]);
 
   if (deck.length === 0) {
-    if (!snapshot) {
+    // Pool state is much cheaper than hydrating every ERC-721 tokenURI, so it
+    // normally arrives first. If the chain says positions exist, keep an
+    // honest loading shell instead of flashing the genesis/empty state for a
+    // few seconds while NFT metadata resolves.
+    if (!snapshot || snapshot.activeListingCount > 0) {
       return (
         <div className="flex flex-col items-center gap-3" data-testid="prize-stack">
           <Skeleton className="aspect-square w-56 rounded-lg" />
@@ -146,21 +150,18 @@ export function HeroPrizeStack({
             </div>
           </div>
           <span className="absolute right-0 top-4 rounded-full border border-accent/25 bg-bg/90 px-2.5 py-1 text-2xs font-semibold text-accent shadow-lg">
-            Deposits open
+            Pool empty
           </span>
         </div>
-        <div className="mlabel mb-2 text-chain">HyperEVM testnet · genesis state</div>
+        <div className="mlabel mb-2 text-chain">HyperEVM · verified empty state</div>
         <h2 className="max-w-xl text-2xl font-semibold tracking-tight text-ink sm:text-[2rem] sm:leading-tight">
-          The pool starts with one NFT.
+          No active NFT positions.
         </h2>
         <p className="mt-2 max-w-lg text-sm leading-relaxed text-mute">
-          No active position exists yet. Seed the testnet pool with an allowlisted NFT and HYPE backing; the first real
-          card will replace this slot on-chain.
+          The on-chain pool currently reports zero active positions. Verified cards will appear here as soon as a
+          position is active and hydrated.
         </p>
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-          <Link href="/deposit" className="btn3d btn3d--primary inline-flex h-10 items-center px-4 text-xs font-semibold">
-            Seed the pool
-          </Link>
+        <div className="mt-5 flex flex-wrap items-center justify-center">
           <a href="#mechanics" className="inline-flex h-10 items-center rounded-md border border-line px-4 text-xs font-semibold text-dim transition-colors hover:border-line-strong hover:text-ink">
             See how it works ↓
           </a>
@@ -172,6 +173,12 @@ export function HeroPrizeStack({
   const activeFront = Math.min(front, deck.length - 1);
   const frontListing = deck[activeFront]!;
   const totalWeight = snapshot?.totalWeight ?? 0n;
+  const crownListing = snapshot?.crown
+    ? deck.find((listing) => listing.id === snapshot.crown!.listingId)
+    : undefined;
+  const nextCrownBacking = crownListing && snapshot?.crown
+    ? (crownListing.backing * BigInt(10_000 + snapshot.crown.thresholdBps) + 9_999n) / 10_000n
+    : undefined;
   const visible = deck
     .map((listing, index) => ({ listing, index, relativeSlot: wrappedRel(index, activeFront, deck.length) }))
     .filter(({ index, relativeSlot }) => index === activeFront || Math.abs(relativeSlot) <= VISIBLE_SIDE_SLOTS);
@@ -445,7 +452,7 @@ export function HeroPrizeStack({
                 <span aria-hidden className="hero-card-glare pointer-events-none absolute inset-0 z-20" />
                 {listing.isCrown && (
                   <span className="absolute bottom-2 left-2 z-30 rounded-xs border border-gold/35 bg-bg/90 px-1.5 py-0.5 text-3xs font-bold text-gold backdrop-blur">
-                    ♛ TOP DEPOSIT
+                    ♛ CROWN
                   </span>
                 )}
                 {isFront && (
@@ -570,11 +577,20 @@ export function HeroPrizeStack({
           >
             <span aria-hidden className="text-sm leading-none text-gold">♛</span>
             <span className="text-dim">
-              Top deposit earns <span className="font-semibold text-gold">{(snapshot.crown.shareBps / 100).toFixed(0)}%</span>{" "}
+              Crown earns <span className="font-semibold text-gold">{(snapshot.crown.shareBps / 100).toFixed(0)}%</span>{" "}
               of every fee · pot{" "}
               <span className="num font-mono font-semibold text-gold">
                 <Hype wei={snapshot.crown.pot} maxDecimals={2} unit={false} /> HYPE
               </span>
+              {nextCrownBacking !== undefined && (
+                <>
+                  {" "}· next crown ≥{" "}
+                  <span className="num font-mono font-semibold text-gold">
+                    <Hype wei={nextCrownBacking} maxDecimals={3} unit={false} /> HYPE
+                  </span>{" "}
+                  (+{(snapshot.crown.thresholdBps / 100).toFixed(0)}%)
+                </>
+              )}
             </span>
           </button>
         )}

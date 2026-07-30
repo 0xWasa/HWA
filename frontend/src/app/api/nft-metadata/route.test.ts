@@ -79,6 +79,27 @@ describe("NFT metadata on-chain SVG support", () => {
     await expect(response.json()).resolves.toEqual({ name: "Tiny Hyper Cat #780", imageUrl });
   });
 
+  it("accepts TinyHyperCats-style trailing commas without weakening SVG checks", async () => {
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="#83cff1"/></svg>';
+    const imageUrl = "data:image/svg+xml;base64," + Buffer.from(svg).toString("base64");
+    const malformed =
+      '{"name":"Tiny Hyper Cat #780","attributes":[{"trait_type":"Special","value":"None"},],"image":"' +
+      imageUrl +
+      '"}';
+    const tokenURI = "data:application/json;base64," + Buffer.from(malformed).toString("base64");
+
+    const response = await POST(
+      new NextRequest("https://hwa.fun/api/nft-metadata", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ uri: tokenURI }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ name: "Tiny Hyper Cat #780", imageUrl });
+  });
+
   it("rejects active content in an inline SVG image", async () => {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>`;
     const image = `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;

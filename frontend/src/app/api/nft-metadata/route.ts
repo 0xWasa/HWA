@@ -79,6 +79,55 @@ function decodeDataJSON(uri: string): string | null {
   }
 }
 
+/**
+ * A few established on-chain collections emit JSON with a trailing comma in
+ * an attributes array. Browsers and JSON.parse reject it even though the
+ * tokenURI is otherwise unambiguous. Repair only commas immediately followed
+ * by a closing array/object token, and only while outside JSON strings; all
+ * other malformed metadata still fails closed.
+ */
+function withoutTrailingJSONCommas(raw: string): string {
+  let repaired = "";
+  let inString = false;
+  let escaped = false;
+
+  for (let index = 0; index < raw.length; index += 1) {
+    const character = raw[index]!;
+    if (inString) {
+      repaired += character;
+      if (escaped) escaped = false;
+      else if (character === "\\") escaped = true;
+      else if (character === '"') inString = false;
+      continue;
+    }
+
+    if (character === '"') {
+      inString = true;
+      repaired += character;
+      continue;
+    }
+
+    if (character === ",") {
+      let next = index + 1;
+      while (next < raw.length && /\s/.test(raw[next]!)) next += 1;
+      if (raw[next] === "]" || raw[next] === "}") continue;
+    }
+    repaired += character;
+  }
+
+  return repaired;
+}
+
+function parseMetadataJSON(raw: string): { name?: unknown; image?: unknown; image_url?: unknown } {
+  try {
+    return JSON.parse(raw) as { name?: unknown; image?: unknown; image_url?: unknown };
+  } catch (originalError) {
+    const repaired = withoutTrailingJSONCommas(raw);
+    if (repaired === raw) throw originalError;
+    return JSON.parse(repaired) as { name?: unknown; image?: unknown; image_url?: unknown };
+  }
+}
+
 function safeName(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
   const sanitized = value.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 120);
@@ -312,7 +361,7 @@ async function metadataResponse(request: NextRequest, uri: string) {
       raw = response.body;
     }
 
-    const parsed = JSON.parse(raw) as { name?: unknown; image?: unknown; image_url?: unknown };
+    const parsed = parseMetadataJSON(raw);
     return NextResponse.json(
       { name: safeName(parsed.name), imageUrl: safeImageURL(parsed.image ?? parsed.image_url, hosts, request.nextUrl.origin) },
       {

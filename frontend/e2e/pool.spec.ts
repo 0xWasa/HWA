@@ -6,6 +6,8 @@ test.describe("Pool exploration", () => {
     await expect(page.getByTestId("banner-mock")).toBeVisible();
     await expect(page.getByTestId("pool-stats")).toBeVisible();
     await expect(page.getByTestId("crown-card")).toBeVisible();
+    await expect(page.getByTestId("crown-card")).toContainText("next crown ≥");
+    await expect(page.getByTestId("crown-card")).toContainText("(+10%)");
     await expect(page.getByTestId("listing-grid")).toBeVisible();
     const cards = page.locator('[data-testid^="listing-card-"]');
     expect(await cards.count()).toBeGreaterThan(8);
@@ -128,7 +130,7 @@ test.describe("Pool exploration", () => {
 
   test("empty pool shows the honest empty state", async ({ page }) => {
     await page.goto("/?scenario=emptyPool");
-    await expect(page.getByText("The pool starts with one NFT.", { exact: true })).toBeVisible();
+    await expect(page.getByText("No active NFT positions.", { exact: true })).toBeVisible();
     await expect(page.getByTestId("prize-stack").locator(".skeleton")).toHaveCount(0);
     await expect(page.getByText("The pool is empty", { exact: true })).toBeVisible();
     await expect(page.getByTestId("acquire-panel")).toContainText("Acquisitions closed");
