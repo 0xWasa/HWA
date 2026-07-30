@@ -63,8 +63,8 @@ export function EnvBanner() {
     });
   } else if (health?.indexer.status === "down") {
     items.push({
-      tone: "red",
-      text: "Indexer unavailable — history and position discovery are paused; contract balances remain authoritative",
+      tone: "amber",
+      text: "History delayed — live pool prices and balances still come directly from HyperEVM",
       testid: "banner-indexer-down",
     });
   } else if (health && health.indexer.status === "lagging") {

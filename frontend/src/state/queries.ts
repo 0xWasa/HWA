@@ -65,7 +65,8 @@ export function useActivity(query: ActivityQuery) {
     ],
     queryFn: () => client!.getActivity(query),
     enabled: !!client,
-    refetchInterval: 8_000,
+    refetchInterval: 30_000,
+    staleTime: 15_000,
     placeholderData: (prev) => prev,
   });
 }
@@ -163,7 +164,9 @@ export function useConnectionHealth() {
     queryKey: ["health"],
     queryFn: () => client!.getConnectionHealth(),
     enabled: !!client,
-    refetchInterval: 10_000,
+    refetchInterval: 30_000,
+    staleTime: 15_000,
+    retry: 1,
   });
 }
 

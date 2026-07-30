@@ -785,7 +785,15 @@ export class ViemProtocolClient implements ProtocolClient {
   }
 
   async getListings(query: ListingsQuery): Promise<Page<Listing>> {
-    if (this.indexerUrl) return this.getIndexedListings(query);
+    if (this.indexerUrl) {
+      try {
+        return await this.getIndexedListings(query);
+      } catch (error) {
+        // Public pool state is reconstructible from the core while the listing
+        // count remains inside the reviewed direct-enumeration bound.
+        if (!(error instanceof ProtocolError) || error.code !== "INDEXER_DOWN") throw error;
+      }
+    }
     const snapshot = await this.getAllListingsDirect();
     const totalWeight = snapshot
       .filter((listing) => listing.status === "active")
