@@ -47,6 +47,10 @@ const COLLECTION_FLOORS: Record<string, CollectionFloorConfig> = {
     seedReferenceHype: "0.25",
     image: "/collections/genesis.webp",
   },
+  "0xcc3d60ff11a268606c6a57bd6db74b4208f1d30c": {
+    slug: "tiny-hyper-cats-hyperevm",
+    marketplaceUrl: "https://opensea.io/collection/tiny-hyper-cats-hyperevm",
+  },
 };
 
 export function collectionFloorConfig(collection: string): CollectionFloorConfig | undefined {
