@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Untrusted NFT image rendering:
@@ -26,18 +26,50 @@ export function NFTImage({
   // get eager loading and no network timeout (a lazy-deferred image in a
   // hidden/uncomposited tab would otherwise be misread as broken).
   const isDataUri = src?.startsWith("data:") ?? false;
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
 
   useEffect(() => {
     setState(src ? "loading" : "failed");
-    if (!src || src.startsWith("data:")) return;
+    setInView(false);
+  }, [src]);
+
+  // A lazy image below the fold is never fetched, so it never fires onLoad.
+  // Arming the timeout regardless marked every off-screen NFT as offline media
+  // after 8s, permanently: the fallback unmounts the img, so scrolling to it
+  // could not recover. The clock starts only once the image is near the
+  // viewport and the browser has a reason to load it.
+  useEffect(() => {
+    if (!src || isDataUri) return;
+    const box = boxRef.current;
+    if (!box || typeof IntersectionObserver === "undefined") {
+      setInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setInView(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    io.observe(box);
+    return () => io.disconnect();
+  }, [src, isDataUri]);
+
+  useEffect(() => {
+    if (!src || isDataUri || !inView) return;
     const t = setTimeout(() => {
       setState((s) => (s === "loading" ? "failed" : s));
     }, timeoutMs);
     return () => clearTimeout(t);
-  }, [src, timeoutMs]);
+  }, [src, isDataUri, inView, timeoutMs]);
 
   return (
     <div
+      ref={boxRef}
       className={`relative aspect-square w-full select-none overflow-hidden bg-inset ${
         rounded ? "rounded-sm" : ""
       } ${className}`}
