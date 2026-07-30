@@ -70,8 +70,10 @@ describe("ViemProtocolClient indexer boundary", () => {
     );
     const getLogs = vi.fn(async (_request: { fromBlock: bigint; toBlock: bigint }) => []);
     Object.assign(client, {
-      logPub: {
+      pub: {
         getBlockNumber: vi.fn(async () => 20_500n),
+      },
+      logPub: {
         getLogs,
       },
     });

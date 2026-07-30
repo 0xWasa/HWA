@@ -1257,7 +1257,7 @@ export class ViemProtocolClient implements ProtocolClient {
         "Emergency discovery requires the reviewed archival/log RPC configured for production; the public HyperEVM RPC is intentionally not used for historical scans.",
       );
     }
-    const head = await logPub.getBlockNumber();
+    const head = await this.pub.getBlockNumber();
     const deploymentBlock = BigInt(this.manifest.deployedAtBlock);
     if (head - deploymentBlock > MAX_LOG_DISCOVERY_BLOCK_SPAN) {
       throw new ProtocolError("INDEXER_DOWN", "Emergency discovery exceeded its 50-million-block checkpoint horizon.");
@@ -1835,7 +1835,7 @@ export class ViemProtocolClient implements ProtocolClient {
       return undefined;
     }
 
-    const head = await logPub.getBlockNumber();
+    const head = await this.pub.getBlockNumber();
     const deployedBlock = BigInt(deploymentBlock);
     if (deployedBlock > head) return undefined;
     const historyFloor = head > MARKET_HISTORY_BLOCK_WINDOW ? head - MARKET_HISTORY_BLOCK_WINDOW : 0n;
