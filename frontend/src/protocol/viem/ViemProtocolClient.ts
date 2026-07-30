@@ -230,6 +230,7 @@ export class ViemProtocolClient implements ProtocolClient {
   private txs: TrackedTransaction[] = [];
   private receiptWatchers = new Set<string>();
   private metadataCache = new Map<string, Promise<{ name?: string; imageUrl?: string }>>();
+  private collectionMetadataCache = new Map<string, Promise<{ name?: string; symbol?: string }>>();
 
   constructor(
     private manifest: DeploymentManifest,
@@ -347,21 +348,8 @@ export class ViemProtocolClient implements ProtocolClient {
     if (!listing) return null;
     listing.listedAt = Number(row.listedAt);
     // Economic outcome, settlement and crown state stay on-chain-derived. Indexer values are
-    // discovery hints only and never overwrite a core/ownerOf read.
-    try {
-      const tokenURI = await this.pub.readContract({
-        address: listing.collection,
-        abi: erc721Abi,
-        functionName: "tokenURI",
-        args: [listing.tokenId],
-      });
-      const metadata = await this.resolveNFTMetadata(tokenURI);
-      listing.nft.name = metadata.name ?? listing.nft.name;
-      listing.nft.imageUrl = metadata.imageUrl;
-    } catch {
-      // Metadata is display-only. The listing's identity and all transaction
-      // guards remain sourced from the core and ERC-721 ownership reads.
-    }
+    // discovery hints only and never overwrite a core/ownerOf read. getListing already hydrates
+    // display-only ERC-721 metadata so deep links and indexed lists share the exact same path.
     return listing;
   }
 
@@ -379,7 +367,13 @@ export class ViemProtocolClient implements ProtocolClient {
     const existing = this.metadataCache.get(tokenURI);
     if (existing) return existing;
     const request = scheduleMetadataRequest(() =>
-      fetch(`/api/nft-metadata?uri=${encodeURIComponent(tokenURI)}`, { cache: "force-cache" }),
+      tokenURI.startsWith("data:application/json")
+        ? fetch("/api/nft-metadata", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ uri: tokenURI }),
+          })
+        : fetch(`/api/nft-metadata?uri=${encodeURIComponent(tokenURI)}`, { cache: "force-cache" }),
     )
       .then(async (response) => {
         if (!response.ok) return {};
@@ -396,6 +390,47 @@ export class ViemProtocolClient implements ProtocolClient {
 
   private get core(): Address {
     return this.manifest.contracts.fwa;
+  }
+
+  private resolveCollectionMetadata(address: Address): Promise<{ name?: string; symbol?: string }> {
+    const known = this.collectionInfo(address);
+    if (known) return Promise.resolve({ name: known.name, symbol: known.symbol });
+
+    const key = address.toLowerCase();
+    const existing = this.collectionMetadataCache.get(key);
+    if (existing) return existing;
+
+    const readLabel = async (functionName: "name" | "symbol", maxLength: number): Promise<string | undefined> => {
+      try {
+        const value = await this.pub.readContract({ address, abi: erc721Abi, functionName });
+        const label = typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/g, " ").trim() : "";
+        return label ? label.slice(0, maxLength) : undefined;
+      } catch {
+        return undefined;
+      }
+    };
+    const request = Promise.all([readLabel("name", 120), readLabel("symbol", 24)]).then(([name, symbol]) => ({
+      name,
+      symbol,
+    }));
+    this.collectionMetadataCache.set(key, request);
+    return request;
+  }
+
+  private async resolveListingNFT(collection: Address, tokenId: bigint): Promise<Listing["nft"]> {
+    const [collectionMetadata, metadata] = await Promise.all([
+      this.resolveCollectionMetadata(collection),
+      this.pub
+        .readContract({ address: collection, abi: erc721Abi, functionName: "tokenURI", args: [tokenId] })
+        .then((tokenURI) => this.resolveNFTMetadata(tokenURI))
+        .catch((): { name?: string; imageUrl?: string } => ({})),
+    ]);
+    return {
+      name: metadata.name ?? `${collectionMetadata.symbol ?? "NFT"} #${tokenId.toString()}`,
+      collectionName: collectionMetadata.name,
+      collectionSymbol: collectionMetadata.symbol,
+      imageUrl: metadata.imageUrl,
+    };
   }
 
   private emit(event: ProtocolEvent): void {
@@ -656,11 +691,11 @@ export class ViemProtocolClient implements ProtocolClient {
     const raw = await this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "listings", args: [id] });
     const status = LISTING_STATUS_BY_CODE[raw[10] as keyof typeof LISTING_STATUS_BY_CODE];
     if (!status) return null;
-    const [pendingFees, stuckRecipient] = await Promise.all([
+    const [pendingFees, stuckRecipient, nft] = await Promise.all([
       this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "pendingFees", args: [id] }),
       this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "stuckNFTRecipient", args: [id] }),
+      this.resolveListingNFT(raw[0], raw[3]),
     ]);
-    const collection = this.collectionInfo(raw[0]);
     let settlement: Listing["settlement"];
     if (status === "settled") {
       try {
@@ -693,11 +728,7 @@ export class ViemProtocolClient implements ProtocolClient {
       pendingFees,
       settlement,
       stuckRecipient: stuckRecipient !== ZERO_ADDRESS ? stuckRecipient : undefined,
-      nft: {
-        name: `${collection?.symbol ?? "NFT"} #${raw[3].toString()}`,
-        collectionName: collection?.name,
-        collectionSymbol: collection?.symbol,
-      },
+      nft,
     };
   }
 

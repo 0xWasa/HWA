@@ -92,8 +92,25 @@ function safeImageURL(value: unknown, hosts: Set<string>, forbiddenOrigin?: stri
   const remote = allowedHTTPSURL(value, hosts, forbiddenOrigin);
   if (remote) return remote.toString();
   const match = /^data:image\/(png|jpeg|gif|webp);base64,([A-Za-z0-9+/=]+)$/i.exec(value);
-  if (!match) return undefined;
-  return Buffer.byteLength(match[2] ?? "", "base64") <= MAX_DATA_IMAGE_BYTES ? value : undefined;
+  if (match) return Buffer.byteLength(match[2] ?? "", "base64") <= MAX_DATA_IMAGE_BYTES ? value : undefined;
+
+  // Fully on-chain collections commonly embed SVG artwork in tokenURI JSON. SVG stays in an
+  // isolated <img> context, but reject active content and outbound references before returning it.
+  const svgMatch = /^data:image\/svg\+xml;base64,([A-Za-z0-9+/=]+)$/i.exec(value);
+  if (!svgMatch || Buffer.byteLength(svgMatch[1] ?? "", "base64") > MAX_DATA_IMAGE_BYTES) return undefined;
+  try {
+    const svg = Buffer.from(svgMatch[1] ?? "", "base64").toString("utf8");
+    if (!/^\s*<svg(?:\s|>)/i.test(svg)) return undefined;
+    if (
+      /<\s*(?:script|foreignObject|iframe|object|embed|audio|video|style)\b/i.test(svg) ||
+      /\bon[a-z]+\s*=/i.test(svg) ||
+      /\b(?:href|xlink:href)\s*=/i.test(svg) ||
+      /(?:url\s*\(|@import|<!doctype|<\?xml-stylesheet)/i.test(svg)
+    ) return undefined;
+    return value;
+  } catch {
+    return undefined;
+  }
 }
 
 function isPrivateIPv4(address: string): boolean {
@@ -269,12 +286,9 @@ function rateLimited(request: NextRequest): boolean {
   return bucket.count > metadataRateLimit();
 }
 
-export async function GET(request: NextRequest) {
-  if (rateLimited(request)) {
-    return NextResponse.json({ error: "rate limit exceeded" }, { status: 429, headers: { "cache-control": "no-store", "retry-after": "60" } });
-  }
-  const uri = request.nextUrl.searchParams.get("uri") ?? "";
-  if (!uri || uri.length > MAX_URI_LENGTH) {
+async function metadataResponse(request: NextRequest, uri: string) {
+  const maxURILength = uri.startsWith("data:application/json") ? MAX_METADATA_BYTES * 2 : MAX_URI_LENGTH;
+  if (!uri || uri.length > maxURILength) {
     return NextResponse.json({ error: "invalid token URI" }, { status: 400, headers: { "cache-control": "no-store" } });
   }
 
@@ -313,5 +327,31 @@ export async function GET(request: NextRequest) {
       { error: "metadata unavailable" },
       { status: 422, headers: { "cache-control": "no-store", "x-content-type-options": "nosniff" } },
     );
+  }
+}
+
+function rateLimitResponse(request: NextRequest): NextResponse | null {
+  return rateLimited(request)
+    ? NextResponse.json(
+        { error: "rate limit exceeded" },
+        { status: 429, headers: { "cache-control": "no-store", "retry-after": "60" } },
+      )
+    : null;
+}
+
+export async function GET(request: NextRequest) {
+  const limited = rateLimitResponse(request);
+  if (limited) return limited;
+  return metadataResponse(request, request.nextUrl.searchParams.get("uri") ?? "");
+}
+
+export async function POST(request: NextRequest) {
+  const limited = rateLimitResponse(request);
+  if (limited) return limited;
+  try {
+    const body = (await request.json()) as { uri?: unknown };
+    return metadataResponse(request, typeof body.uri === "string" ? body.uri : "");
+  } catch {
+    return NextResponse.json({ error: "invalid token URI" }, { status: 400, headers: { "cache-control": "no-store" } });
   }
 }
