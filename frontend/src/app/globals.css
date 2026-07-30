@@ -675,6 +675,18 @@ h2 {
   }
 }
 
+/* Hero deck cards: one springy glide for steps/settles; raw 1:1 pointer
+   follow while a drag is live (transitions off so nothing lags the finger). */
+.hero-deck-card {
+  transition:
+    transform 0.42s var(--ease-spring),
+    opacity 0.42s var(--ease-swift),
+    filter 0.42s var(--ease-swift);
+}
+[data-dragging="true"] .hero-deck-card {
+  transition: none;
+}
+
 /* NFT foil interaction — FWA's tactile depth, translated to Volt Loot.
    The spectrum follows the pointer without tinting the source artwork. */
 .hero-prize-card {

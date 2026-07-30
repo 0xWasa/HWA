@@ -11,12 +11,25 @@ import { NFTImage } from "@/components/nft/NFTImage";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 const CYCLE_MS = 4_500;
-const VISIBLE_SIDE_SLOTS = 3;
+/** Cards kept in the DOM on each side; the outermost slot fades to invisible
+ *  so entering/leaving cards never pop. */
+const VISIBLE_SIDE_SLOTS = 4;
+/** Flick: release velocity (px/ms) that advances one card even on a short drag. */
+const FLICK_VELOCITY = 0.35;
 
-/** Place rank #1 in the center, then alternate #2/#3 left and right. */
-function rankSlot(index: number): number {
-  if (index === 0) return 0;
-  return index % 2 === 1 ? -Math.ceil(index / 2) : Math.ceil(index / 2);
+/** Shortest wrapped distance from the front card, so stepping past either end
+ *  of the deck slides one slot instead of leapfrogging across the fan. */
+function wrappedRel(index: number, front: number, total: number): number {
+  let rel = (index - front) % total;
+  if (rel > total / 2) rel -= total;
+  if (rel < -total / 2) rel += total;
+  return rel;
+}
+
+/** JS mirror of the CSS slot spacing `clamp(4.4rem, 10.5vw, 8.8rem)` so a drag
+ *  follows the pointer 1:1. */
+function slotSpacingPx(): number {
+  return Math.min(140.8, Math.max(70.4, window.innerWidth * 0.105));
 }
 
 function resetCardFx(element: HTMLDivElement | null) {
@@ -32,7 +45,6 @@ function resetCardFx(element: HTMLDivElement | null) {
 }
 
 function moveCardFx(event: PointerEvent<HTMLDivElement>) {
-  event.stopPropagation();
   if (event.pointerType !== "mouse" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const bounds = event.currentTarget.getBoundingClientRect();
   const x = Math.min(1, Math.max(0, (event.clientX - bounds.left) / bounds.width));
@@ -70,11 +82,26 @@ export function HeroPrizeStack({
   }, [listings]);
 
   const [front, setFront] = useState(0);
+  /** Fractional slot offset: follows the pointer 1:1 during a drag, then
+   *  glides back to 0 through the card transition on release. */
+  const [shift, setShift] = useState(0);
+  const [dragging, setDragging] = useState(false);
   const [paused, setPaused] = useState(false);
   const [cursorPct, setCursorPct] = useState(50);
   const [flippedId, setFlippedId] = useState<string | null>(null);
   const activeCardRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<{ pointerId: number; startX: number; startFront: number; moved: number } | null>(null);
+  const dragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startFront: number;
+    lastX: number;
+    lastT: number;
+    velocity: number;
+    moved: number;
+    captured: boolean;
+  } | null>(null);
+  const dragFrame = useRef<number | null>(null);
+  const pendingX = useRef(0);
   /** True for the click that ends a real drag, so browsing never opens a card. */
   const dragSuppressClick = useRef(false);
 
@@ -145,9 +172,8 @@ export function HeroPrizeStack({
   const activeFront = Math.min(front, deck.length - 1);
   const frontListing = deck[activeFront]!;
   const totalWeight = snapshot?.totalWeight ?? 0n;
-  const frontSlot = rankSlot(activeFront);
   const visible = deck
-    .map((listing, index) => ({ listing, index, relativeSlot: rankSlot(index) - frontSlot }))
+    .map((listing, index) => ({ listing, index, relativeSlot: wrappedRel(index, activeFront, deck.length) }))
     .filter(({ index, relativeSlot }) => index === activeFront || Math.abs(relativeSlot) <= VISIBLE_SIDE_SLOTS);
 
   function step(direction: -1 | 1) {
@@ -160,20 +186,59 @@ export function HeroPrizeStack({
    *  makes the whole hero feel broken. */
   function onDragStart(event: PointerEvent<HTMLDivElement>) {
     if (event.pointerType === "mouse" && event.button !== 0) return;
-    dragRef.current = { pointerId: event.pointerId, startX: event.clientX, startFront: front, moved: 0 };
+    // No pointer capture yet: capturing on press would retarget the eventual
+    // click to the stage and break the front card's tap-to-flip.
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startFront: front,
+      lastX: event.clientX,
+      lastT: performance.now(),
+      velocity: 0,
+      moved: 0,
+      captured: false,
+    };
+    setDragging(true);
     setPaused(true);
   }
 
+  /** The deck follows the pointer 1:1 (rAF-throttled). Whole slots crossed
+   *  mid-gesture are committed immediately so the visible window stays
+   *  centered however far the drag travels; `shift` keeps the fraction. */
   function onDragMove(event: PointerEvent<HTMLDivElement>) {
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
-    const dx = event.clientX - drag.startX;
-    drag.moved = Math.max(drag.moved, Math.abs(dx));
-    // One card per ~96px of travel, dragging left advances forward.
-    const steps = Math.trunc(-dx / 96);
-    const next = (((drag.startFront + steps) % deck.length) + deck.length) % deck.length;
-    setFront(next);
-    setCursorPct(50 + Math.max(-40, Math.min(40, dx / 8)));
+    // Once this is a real drag (not a wobbly tap), capture so the gesture
+    // keeps tracking outside the stage; the drag-suppressed click no longer
+    // matters at that point.
+    if (!drag.captured && Math.abs(event.clientX - drag.startX) > 6) {
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+      drag.captured = true;
+    }
+    const now = performance.now();
+    const dt = now - drag.lastT;
+    if (dt > 0) {
+      const instant = (event.clientX - drag.lastX) / dt;
+      // Light smoothing so one jittery sample can't fake a flick.
+      drag.velocity = drag.velocity * 0.7 + instant * 0.3;
+    }
+    drag.lastX = event.clientX;
+    drag.lastT = now;
+    pendingX.current = event.clientX;
+    if (dragFrame.current !== null) return;
+    dragFrame.current = requestAnimationFrame(() => {
+      dragFrame.current = null;
+      const live = dragRef.current;
+      if (!live) return;
+      const dx = pendingX.current - live.startX;
+      live.moved = Math.max(live.moved, Math.abs(dx));
+      const totalSlots = dx / slotSpacingPx();
+      const crossed = Math.trunc(totalSlots);
+      const next = (((live.startFront - crossed) % deck.length) + deck.length) % deck.length;
+      setFront(next);
+      setShift(totalSlots - crossed);
+      setCursorPct(50 + Math.max(-40, Math.min(40, dx / 8)));
+    });
   }
 
   function onDragEnd(event: PointerEvent<HTMLDivElement>) {
@@ -181,6 +246,28 @@ export function HeroPrizeStack({
     if (drag && drag.pointerId === event.pointerId) {
       dragSuppressClick.current = drag.moved > 6;
       dragRef.current = null;
+      if (dragFrame.current !== null) {
+        cancelAnimationFrame(dragFrame.current);
+        dragFrame.current = null;
+      }
+      const dx = event.clientX - drag.startX;
+      const totalSlots = dx / slotSpacingPx();
+      const crossed = Math.trunc(totalSlots);
+      const residual = totalSlots - crossed;
+      // Snap to the nearest slot; a fast release flicks one card further.
+      let snap = Math.round(residual);
+      if (snap === 0 && Math.abs(drag.velocity) > FLICK_VELOCITY) {
+        snap = drag.velocity < 0 ? -1 : 1;
+      }
+      const landed = (((drag.startFront - crossed - snap) % deck.length) + deck.length) % deck.length;
+      setFront(landed);
+      // Keep the visual position continuous, then glide the remainder to rest
+      // through the re-enabled card transitions.
+      setShift(residual - snap);
+      setDragging(false);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setShift(0));
+      });
       // The click event fires right after pointerup; clear on the next tick.
       window.setTimeout(() => {
         dragSuppressClick.current = false;
@@ -213,6 +300,7 @@ export function HeroPrizeStack({
         data-testid="hero-stage"
         data-front-index={activeFront}
         data-total={deck.length}
+        data-dragging={dragging ? "true" : "false"}
         role="group"
         tabIndex={0}
         aria-roledescription="carousel"
@@ -241,11 +329,21 @@ export function HeroPrizeStack({
         />
 
         {visible.map(({ listing, index, relativeSlot }) => {
-          const distance = Math.abs(relativeSlot);
+          // Every visual is a CONTINUOUS function of the effective (fractional)
+          // slot, so a mid-drag frame and a settled frame are the same math —
+          // no visual seam when the committed front changes.
+          const eff = relativeSlot + shift;
+          const distance = Math.abs(eff);
           const isFront = index === activeFront;
-          const scale = isFront ? 1 : Math.max(0.68, 0.86 - distance * 0.07);
-          const y = isFront ? 0 : Math.min(56, distance * distance * 4 + distance * 6);
-          const rotation = isFront ? 0 : relativeSlot * 4.2;
+          const scale = Math.max(0.68, 1 - distance * 0.14);
+          const y = Math.min(56, distance * distance * 4 + distance * 6);
+          const rotation = eff * 4.2;
+          const edgeFade = Math.max(0, Math.min(1, (4.2 - distance) / 0.8));
+          const opacity =
+            (distance <= 1
+              ? Math.min(1, 1.05 - distance * 0.35)
+              : Math.max(0.32, 0.83 - distance * 0.13)) * edgeFade;
+          const blur = distance * 0.8;
           const tier = rarityFromOdds(listing.weight, totalWeight);
           const label = sanitizeLabel(listing.nft.name, `#${listing.tokenId}`);
 
@@ -273,22 +371,30 @@ export function HeroPrizeStack({
                     : `Show on-card details for ${label}`
                   : `Focus ${label}`
               }
-              className="absolute left-1/2 top-1/2 w-[clamp(10rem,28vw,18.5rem)] text-left transition-[transform,opacity,filter] duration-500 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform"
+              className="hero-deck-card absolute left-1/2 top-1/2 w-[clamp(10rem,28vw,18.5rem)] text-left will-change-transform"
               style={{
-                zIndex: 100 - distance,
-                transform: `translate(-50%, -50%) translateX(calc(${relativeSlot} * clamp(4.4rem, 10.5vw, 8.8rem))) translateY(${y}px) rotate(${rotation}deg) scale(${scale})`,
-                opacity: isFront ? 1 : Math.max(0.32, 0.7 - distance * 0.13),
+                zIndex: 100 - Math.round(distance * 8),
+                transform: `translate(-50%, -50%) translateX(calc(${eff.toFixed(4)} * clamp(4.4rem, 10.5vw, 8.8rem))) translateY(${y.toFixed(2)}px) rotate(${rotation.toFixed(2)}deg) scale(${scale.toFixed(4)})`,
+                opacity: Number(opacity.toFixed(3)),
                 // Side cards are depth, not content: blurring them stops their
                 // labels competing with the front card for the eye.
-                filter: isFront
-                  ? "none"
-                  : `blur(${(distance * 0.8).toFixed(1)}px) saturate(${Math.max(0.5, 0.9 - distance * 0.1)}) brightness(${Math.max(0.55, 0.88 - distance * 0.08)})`,
+                filter:
+                  distance < 0.03
+                    ? "none"
+                    : `blur(${blur.toFixed(1)}px) saturate(${Math.max(0.5, 1 - distance * 0.11).toFixed(2)}) brightness(${Math.max(0.55, 1 - distance * 0.1).toFixed(2)})`,
               }}
             >
               <div
                 ref={isFront ? activeCardRef : undefined}
                 data-fx-active="false"
-                onPointerMove={isFront ? moveCardFx : undefined}
+                onPointerMove={
+                  isFront
+                    ? (event) => {
+                        // The foil must not fight a live drag for the pointer.
+                        if (!dragRef.current) moveCardFx(event);
+                      }
+                    : undefined
+                }
                 onPointerLeave={isFront ? (event) => resetCardFx(event.currentTarget) : undefined}
                 className={`hero-prize-card relative overflow-hidden rounded-xl border bg-panel ${
                   isFront ? "hero-prize-card--active" : ""
@@ -302,7 +408,7 @@ export function HeroPrizeStack({
                 }}
               >
                 {isFront && (
-                <div className="hero-card-header relative z-10 border-b border-line bg-inset/95 px-2.5 py-2">
+                <div className="hero-card-header anim-fade-up relative z-10 border-b border-line bg-inset/95 px-2.5 py-2">
                   <div className="flex items-center justify-between gap-2 text-3xs font-bold uppercase tracking-[0.12em] text-faint">
                     <span>
                       <span className="text-accent">#{index + 1}</span> · <span className="text-chain">HWA VERIFIED</span>
