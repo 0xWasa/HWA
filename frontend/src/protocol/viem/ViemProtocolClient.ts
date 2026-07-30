@@ -171,6 +171,20 @@ interface GraphListingRow {
   isCrown: boolean;
 }
 
+type ListingTelemetryRaw = readonly [
+  Address,
+  Address,
+  Address,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  number,
+];
+
 interface GraphActivityRow {
   id: string;
   type: ActivityItem["type"];
@@ -356,8 +370,7 @@ export class ViemProtocolClient implements ProtocolClient {
     return data.listings;
   }
 
-  private async getListingTelemetry(id: bigint): Promise<Listing | null> {
-    const raw = await this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "listings", args: [id] });
+  private listingFromTelemetry(id: bigint, raw: ListingTelemetryRaw): Listing | null {
     const status = LISTING_STATUS_BY_CODE[raw[10] as keyof typeof LISTING_STATUS_BY_CODE];
     if (!status) return null;
     const collection = this.collectionInfo(raw[0]);
@@ -373,7 +386,7 @@ export class ViemProtocolClient implements ProtocolClient {
       listedAt: 0,
       allocatedAt: raw[9] > 0n ? Number(raw[9]) : undefined,
       isCrown: false,
-      // This path is used only for aggregate odds/hero placeholders. Detail views re-read fees and recovery state.
+      // List surfaces do not need detail-only fee, recovery or ownerOf reads.
       pendingFees: 0n,
       nft: {
         name: `${collection?.symbol ?? "NFT"} #${raw[3].toString()}`,
@@ -383,26 +396,41 @@ export class ViemProtocolClient implements ProtocolClient {
     };
   }
 
-  private async hydrateIndexedListing(row: GraphListingRow, includeMetadata = true): Promise<Listing | null> {
-    // List surfaces need the live economic tuple but not the detail-only fee,
-    // recovery and ownerOf reads. This keeps discovery truthful with one
-    // on-chain call per row instead of four or five.
-    const listing = await this.getListingTelemetry(BigInt(row.listingId));
-    if (!listing) return null;
-    if (includeMetadata) {
-      listing.nft = await this.resolveListingNFT(listing.collection, listing.tokenId, row.tokenURI);
-    }
-    listing.listedAt = Number(row.listedAt);
-    // Economic fields stay on-chain-derived. The indexer contributes only the event timestamp and,
-    // when requested, its tokenURI snapshot as a display-only metadata hint.
-    return listing;
+  private async getListingTelemetry(id: bigint): Promise<Listing | null> {
+    const raw = await this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "listings", args: [id] });
+    return this.listingFromTelemetry(id, raw);
   }
 
   private async hydrateIndexedListings(rows: GraphListingRow[], includeMetadata = true): Promise<Listing[]> {
-    const [items, topId] = await Promise.all([
-      Promise.all(rows.map((row) => this.hydrateIndexedListing(row, includeMetadata))),
-      this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "topListingId" }),
-    ]);
+    if (rows.length === 0) return [];
+    const contracts = [
+      ...rows.map((row) => ({
+        address: this.core,
+        abi: fwaCoreAbi,
+        functionName: "listings",
+        args: [BigInt(row.listingId)],
+      })),
+      { address: this.core, abi: fwaCoreAbi, functionName: "topListingId" },
+    ] as never;
+    const state = await this.pub.multicall({
+      contracts,
+      allowFailure: false,
+      multicallAddress: MULTICALL3_ADDRESS,
+    }) as readonly unknown[];
+    const topId = state[state.length - 1] as bigint;
+    const items = await Promise.all(
+      rows.map(async (row, index) => {
+        const listing = this.listingFromTelemetry(BigInt(row.listingId), state[index] as ListingTelemetryRaw);
+        if (!listing) return null;
+        if (includeMetadata) {
+          listing.nft = await this.resolveListingNFT(listing.collection, listing.tokenId, row.tokenURI);
+        }
+        listing.listedAt = Number(row.listedAt);
+        // Economic fields stay on-chain-derived. The indexer contributes only
+        // event time and its tokenURI snapshot as a display-only metadata hint.
+        return listing;
+      }),
+    );
     const listings = items.filter((listing): listing is Listing => listing !== null);
     for (const listing of listings) listing.isCrown = listing.id === topId;
     return listings;

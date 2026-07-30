@@ -186,23 +186,23 @@ describe("ViemProtocolClient indexer boundary", () => {
       ),
     );
     const client = new ViemProtocolClient(manifest, "http://localhost:8545", 999, "https://indexer.example/graphql");
+    const listing = [
+      "0x0000000000000000000000000000000000000010",
+      "0x0000000000000000000000000000000000000020",
+      "0x0000000000000000000000000000000000000000",
+      42n, 100n, 1_001n, 0n, 0n, 1n, 0n, 1,
+    ] as const;
     const readContract = vi.fn(async ({ functionName }: { functionName: string }) => {
-      if (functionName === "listings") {
-        return [
-          "0x0000000000000000000000000000000000000010",
-          "0x0000000000000000000000000000000000000020",
-          "0x0000000000000000000000000000000000000000",
-          42n, 100n, 1_001n, 0n, 0n, 1n, 0n, 1,
-        ] as const;
-      }
       if (functionName === "totalWeight") return 100n;
-      if (functionName === "topListingId") return 7n;
       throw new Error(`Unexpected read: ${functionName}`);
     });
-    Object.assign(client, { pub: { readContract } });
+    const multicall = vi.fn(async (_args: { contracts: unknown[] }) => [listing, 7n] as const);
+    Object.assign(client, { pub: { readContract, multicall } });
 
     const page = await client.getListings({ view: "pool", sort: "value", direction: "desc", limit: 24, includeMetadata: false });
 
+    expect(multicall).toHaveBeenCalledOnce();
+    expect(multicall.mock.calls[0]![0].contracts).toHaveLength(2);
     expect(page.items[0]?.backing).toBe(1_001n);
     expect(page.items[0]?.listedAt).toBe(1_700_000_000);
     expect(page.items[0]?.isCrown).toBe(true);
