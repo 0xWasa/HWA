@@ -424,8 +424,11 @@ export class ViemProtocolClient implements ProtocolClient {
    * The read proxy caps request bodies at 64 KB. Past roughly 190 positions a
    * single aggregate exceeded it, the proxy answered 413, and every view that
    * hydrates listings came back empty rather than degraded. Chunks stay well
-   * inside the limit and are issued together, so the round-trip count grows but
-   * the wall clock does not. A pool small enough to fit still costs one call.
+   * inside the limit. A pool small enough to fit still costs one call.
+   *
+   * Sequential on purpose. The transport coalesces concurrent requests into one
+   * HTTP body by COUNT, not bytes, so firing the chunks together simply
+   * reassembled the oversized body that this split exists to avoid.
    */
   private async multicallChunked(contracts: readonly unknown[], size = 80): Promise<readonly unknown[]> {
     const run = (batch: readonly unknown[]) =>
@@ -435,10 +438,11 @@ export class ViemProtocolClient implements ProtocolClient {
         multicallAddress: MULTICALL3_ADDRESS,
       }) as Promise<readonly unknown[]>;
     if (contracts.length <= size) return run(contracts);
-    const batches: (readonly unknown[])[] = [];
-    for (let i = 0; i < contracts.length; i += size) batches.push(contracts.slice(i, i + size));
-    const results = await Promise.all(batches.map(run));
-    return results.flat();
+    const out: unknown[] = [];
+    for (let i = 0; i < contracts.length; i += size) {
+      out.push(...(await run(contracts.slice(i, i + size))));
+    }
+    return out;
   }
 
   private async hydrateIndexedListings(rows: GraphListingRow[], includeMetadata = true): Promise<Listing[]> {
