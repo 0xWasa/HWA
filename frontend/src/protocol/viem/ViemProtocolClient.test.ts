@@ -295,6 +295,27 @@ describe("ViemProtocolClient indexer boundary", () => {
     expect(page.items).toHaveLength(7);
   });
 
+  it("orders the acquisition feed by when a position was drawn, not when it was deposited", async () => {
+    let indexerQuery = "";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+        indexerQuery = (JSON.parse(String(init?.body)) as { query: string }).query;
+        return response({ listings: [] });
+      }),
+    );
+    const client = new ViemProtocolClient(manifest, "http://localhost:8545", 999, "https://indexer.example/graphql");
+    Object.assign(client, { pub: { readContract: vi.fn(async () => 0n) } });
+
+    // A fresh draw on a listing deposited hours earlier must lead the feed.
+    await client.getListings({ view: "recent", sort: "date", direction: "desc", limit: 24 });
+    expect(indexerQuery).toContain("orderBy: allocatedAt");
+
+    // Every other view still means deposit time by "date".
+    await client.getListings({ view: "pool", sort: "date", direction: "desc", limit: 24 });
+    expect(indexerQuery).toContain("orderBy: listedAt");
+  });
+
   it("carries the indexed settlement outcome that on-chain state cannot express", async () => {
     vi.stubGlobal(
       "fetch",

@@ -418,7 +418,7 @@ export class ViemProtocolClient implements ProtocolClient {
     where?: string[];
     first?: number;
     skip?: number;
-    orderBy?: "backing" | "weight" | "listedAt" | "listingId";
+    orderBy?: "backing" | "weight" | "listedAt" | "allocatedAt" | "listingId";
     direction?: "asc" | "desc";
   }): Promise<GraphListingRow[]> {
     const first = Math.max(1, Math.min(input.first ?? INDEXER_PAGE_SIZE, 1_000));
@@ -1070,6 +1070,12 @@ export class ViemProtocolClient implements ProtocolClient {
       if (query.sort === "value") return (a.backing < b.backing ? -1 : a.backing > b.backing ? 1 : 0) * direction;
       if (query.sort === "odds") return (a.weight < b.weight ? -1 : a.weight > b.weight ? 1 : 0) * direction;
       if (query.sort === "name") return (a.nft.name ?? "").localeCompare(b.nft.name ?? "") * direction;
+      if (query.sort === "date") {
+        // Same rule as the indexed path: the feed is ordered by the moment a
+        // position was drawn, every other view by the moment it was deposited.
+        const at = (l: Listing) => (query.view === "recent" ? (l.allocatedAt ?? l.listedAt) : l.listedAt);
+        return (at(a) - at(b)) * direction;
+      }
       return (a.id < b.id ? -1 : a.id > b.id ? 1 : 0) * direction;
     });
     const offset = Number.parseInt(query.cursor ?? "0", 10) || 0;
@@ -1091,8 +1097,14 @@ export class ViemProtocolClient implements ProtocolClient {
         `collection_in: [${query.collections.map((address) => JSON.stringify(address.toLowerCase())).join(", ")}]`,
       );
     }
+    // The acquisition feed shows when a position was DRAWN and every other view
+    // shows when it was deposited, so "date" cannot mean one column for both.
+    // Ordering the feed by listedAt sorted fresh spins by the age of the
+    // deposit behind them: a draw from a minute ago on a listing deposited
+    // three hours earlier landed at the bottom and never surfaced.
+    const dateField = query.view === "recent" ? "allocatedAt" : "listedAt";
     const orderBy =
-      query.sort === "value" ? "backing" : query.sort === "odds" ? "weight" : query.sort === "date" ? "listedAt" : "listingId";
+      query.sort === "value" ? "backing" : query.sort === "odds" ? "weight" : query.sort === "date" ? dateField : "listingId";
     const offset = Number.parseInt(query.cursor ?? "0", 10) || 0;
     const scanSize = Math.min(1_000, Math.max(query.limit * 4, query.limit + 1));
     const rows = await this.indexedListingRows({
