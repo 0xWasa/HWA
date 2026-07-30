@@ -104,12 +104,16 @@ const RPC_TRANSPORT_OPTIONS = {
 
 // Wallet discovery can surface hundreds of NFTs at once. Pace metadata calls
 // so a legitimate collection view does not create hundreds of simultaneous
-// upstream fetches. The server budget is per MINUTE, not per second, so the
-// pacing only needs to stop a thundering herd, not to ration: a full pool used
-// to spend eleven seconds in this queue while the responses themselves took
-// under a tenth of a second each.
+// upstream fetches.
+//
+// The interval is a HARD ceiling, not a preference: the edge allows 30 req/s
+// per IP with a burst of 60 and sheds the excess as a 503 rather than queueing
+// it. 40ms caps starts at 25/s, which leaves headroom. Loosening this to 12ms
+// once put a full pool at ~83/s and cost 43 dropped requests, each one a card
+// rendering with no name and no art. Raise the edge limit before raising this.
+// Concurrency is the softer knob: extra slots only absorb slow upstreams.
 const NFT_METADATA_MAX_CONCURRENCY = 12;
-const NFT_METADATA_START_INTERVAL_MS = 12;
+const NFT_METADATA_START_INTERVAL_MS = 40;
 
 /**
  * Resolved metadata, kept across reloads.
