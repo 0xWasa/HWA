@@ -373,6 +373,23 @@ export const erc721Abi = [
 ] as const;
 
 export const fwaRewardsAbi = [
+  { type: "function", name: "claimsEnabled", stateMutability: "view", inputs: [], outputs: [{ type: "bool" }] },
+  { type: "function", name: "emissionConfigured", stateMutability: "view", inputs: [], outputs: [{ type: "bool" }] },
+  { type: "function", name: "currentSeason", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
+  { type: "function", name: "seasonalReserveRemaining", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "seasonalEmitted", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "seasonalBurned", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "seasonalDepositorEmitted", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "seasonalPurchaserEmitted", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "buybackDepositorRouted", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "buybackPurchaserRouted", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "effectiveSeasonQuoteX96", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "VALUE_CAP_BPS", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "EMISSION_DURATION", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "seasonBudget", stateMutability: "pure", inputs: [{ name: "season", type: "uint256" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "settledHypeInEpoch", stateMutability: "view", inputs: [{ name: "epoch", type: "uint256" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "userSettledHypeInEpoch", stateMutability: "view", inputs: [{ name: "epoch", type: "uint256" }, { name: "purchaser", type: "address" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "epochFinalized", stateMutability: "view", inputs: [{ name: "epoch", type: "uint256" }], outputs: [{ type: "bool" }] },
   { type: "function", name: "emissionStart", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   {
     type: "function",

@@ -26,7 +26,7 @@ export const FWA_PARAMS = {
   crownShareBps: 100,
   /** New crown must beat current backing by this margin. */
   crownThresholdBps: 1_000,
-  minBacking: WEI / 100n, // 0.01 HYPE
+  minBacking: WEI / 10n, // 0.1 HYPE — current mainnet technical floor
   /** UI batch bound, mirrors the FWA frontend (1–5). */
   maxBatch: 5,
   /** Reward epoch gaps (hot/cold), seconds. */

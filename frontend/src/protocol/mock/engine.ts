@@ -325,10 +325,25 @@ export class MockEngine {
       tokenAddress: "0xf0a000000000000000000000000000000000f0a0",
       emission: {
         startedAt: started,
-        endsAt: started + 15 * 86_400,
-        depositorRatePerSec: 115_740_740_740_740_740_740n, // 115.74… HWA/s
-        purchaserDailyPot: 10_000_000n * WEI,
+        endsAt: started + 45 * 86_400,
+        currentSeason: 1,
+        currentEpoch: 3,
+        claimsEnabled: false,
+        configured: true,
+        reserveRemaining: 96_000_000n * WEI,
+        emitted: 4_000_000n * WEI,
+        burned: 1_000_000n * WEI,
+        depositorEmitted: 2_000_000n * WEI,
+        purchaserEmitted: 2_000_000n * WEI,
+        effectiveQuoteX96: 1n << 96n,
+        valueCapBps: 500,
+        seasons: [
+          { season: 1, startsAt: started, endsAt: started + 15 * 86_400, maxBudget: 50_000_000n * WEI },
+          { season: 2, startsAt: started + 15 * 86_400, endsAt: started + 30 * 86_400, maxBudget: 30_000_000n * WEI },
+          { season: 3, startsAt: started + 30 * 86_400, endsAt: started + 45 * 86_400, maxBudget: 20_000_000n * WEI },
+        ],
       },
+      buyback: { depositorRouted: 140_000n * WEI, purchaserRouted: 140_000n * WEI },
       epoch: {
         current: 3,
         mode: nowSec() - lastAcq < FWA_PARAMS.hotGapSec ? "hot" : "cold",
@@ -524,7 +539,7 @@ export class MockEngine {
       throw new ProtocolError("COLLECTION_NOT_WHITELISTED", "This collection is not on the allowlist.");
     }
     if (backing < FWA_PARAMS.minBacking) {
-      throw new ProtocolError("BELOW_MIN_BACKING", "Minimum backing is 0.01 HYPE.");
+      throw new ProtocolError("BELOW_MIN_BACKING", "Minimum backing is 0.1 HYPE.");
     }
     if (backing > this.world.wallet.balance) {
       throw new ProtocolError("INSUFFICIENT_BALANCE", "Backing exceeds your HYPE balance.");
@@ -823,7 +838,7 @@ export class MockEngine {
     }
     if (choice.kind === "relist") {
       if (choice.newBacking < FWA_PARAMS.minBacking) {
-        throw new ProtocolError("BELOW_MIN_BACKING", "Minimum backing is 0.01 HYPE.");
+        throw new ProtocolError("BELOW_MIN_BACKING", "Minimum backing is 0.1 HYPE.");
       }
       if (choice.newBacking > this.world.wallet.balance) {
         throw new ProtocolError("INSUFFICIENT_BALANCE", "New backing exceeds your HYPE balance.");

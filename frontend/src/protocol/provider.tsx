@@ -12,6 +12,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { env, isMockMode } from "@/config/env";
+import { HWA_PROTOCOL_OPERATIONS_PAUSED } from "@/config/featureFlags";
 import { loadManifest, type ManifestState } from "@/config/manifest";
 import type { Address } from "@/protocol/types";
 import type { ProtocolClient, ProtocolEvent } from "./client";
@@ -250,7 +251,10 @@ function ViemProtocolRoot({ children }: { children: ReactNode }) {
       scenario: null,
       manifestState,
       account,
-      writesEnabled: manifestState.status === "ready" && manifestState.manifest.features.writesEnabled,
+      writesEnabled:
+        !HWA_PROTOCOL_OPERATIONS_PAUSED &&
+        manifestState.status === "ready" &&
+        manifestState.manifest.features.writesEnabled,
       exitWritesEnabled: manifestState.status === "ready",
       prelaunch: env.dataMode === "mainnet" && manifestState.status === "absent",
     }),

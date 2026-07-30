@@ -30,18 +30,25 @@ export const DeploymentManifestSchema = z.object({
     projectXAdapter: AddressSchema.optional(),
     projectXPool: AddressSchema.optional(),
     projectXLiquidityLocker: AddressSchema.optional(),
+    ecosystemVesting: AddressSchema.optional(),
     snapshotNft: AddressSchema.optional(),
   }),
   features: z
     .object({
       writesEnabled: z.boolean().default(false),
+      depositsEnabled: z.boolean().default(false),
       acquisitionsEnabled: z.boolean().default(false),
+      rewardClaimsEnabled: z.boolean().default(false),
+      externalBuysEnabled: z.boolean().default(false),
       randomnessMode: z.enum(["drand-relay-testnet", "drand-bn254"]).default("drand-relay-testnet"),
       dexMode: z.enum(["projectx-v3-compat-testnet", "projectx"]).default("projectx-v3-compat-testnet"),
     })
     .default({
       writesEnabled: false,
+      depositsEnabled: false,
       acquisitionsEnabled: false,
+      rewardClaimsEnabled: false,
+      externalBuysEnabled: false,
       randomnessMode: "drand-relay-testnet",
       dexMode: "projectx-v3-compat-testnet",
     }),

@@ -40,7 +40,10 @@ export function EnvBanner() {
           : manifestState.status === "ready"
             ? "deployment manifest has features.writesEnabled=false"
             : "no deployment manifest";
-    items.push({ tone: "amber", text: `READ-ONLY — writes disabled (${reason})`, testid: "banner-readonly" });
+    const bannerText = manifestState.status === "ready" && env.chainId === 999
+      ? "PROTOCOL PAUSED / LAUNCH PENDING - all public operations disabled"
+      : `READ-ONLY - writes disabled (${reason})`;
+    items.push({ tone: "amber", text: bannerText, testid: "banner-readonly" });
   } else if (env.chainId === 998) {
     items.push({ tone: "amber", text: "HyperEVM TESTNET — assets have no value", testid: "banner-testnet" });
   }

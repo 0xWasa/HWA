@@ -2,10 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { env } from "@/config/env";
 import { chainLabel } from "@/config/chains";
 import { sanitizeLabel } from "@/lib/format";
-import { formatOddsPercent, weightFromBacking } from "@/lib/units";
+import { formatHype, formatOddsPercent, parseHype, weightFromBacking } from "@/lib/units";
+import {
+  collectionFloorApiPath,
+  marketValueAtRisk,
+  type CollectionFloorQuote,
+} from "@/lib/collectionFloors";
 import { FWA_PARAMS } from "@/protocol/params";
 import { useAccountState, useProtocol } from "@/protocol/provider";
 import type { Address, NFTMetadata, OwnedNFT, TrackedTransaction } from "@/protocol/types";
@@ -22,6 +28,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { NFTImage } from "@/components/nft/NFTImage";
 import { DepositLaunchSequence } from "@/components/deposit/DepositLaunchSequence";
 import { ProtocolPrelaunch } from "@/components/ui/ProtocolPrelaunch";
+import { HWA_NFT_DEPOSITS_PAUSED } from "@/config/featureFlags";
 
 type DepositIntent = {
   collection: Address;
@@ -55,6 +62,25 @@ export function DepositFlow() {
     () => owned?.find((n) => `${n.collection}:${n.tokenId}` === selectedKey),
     [owned, selectedKey],
   );
+
+  const floorQuery = useQuery({
+    queryKey: ["collection-floor", selected?.collection],
+    enabled: Boolean(selected),
+    staleTime: 60_000,
+    queryFn: async () => {
+      if (!selected) throw new Error("No NFT selected");
+      const result = await fetch(collectionFloorApiPath(selected.collection));
+      const payload = (await result.json()) as CollectionFloorQuote | { error?: string };
+      if ("source" in payload) return payload;
+      throw new Error(payload.error ?? "Collection floor unavailable");
+    },
+  });
+  const floorWei = floorQuery.data?.floorHype ? parseHype(floorQuery.data.floorHype) : null;
+  const marketRisk = marketValueAtRisk(backing, floorWei);
+
+  useEffect(() => {
+    if (floorWei !== null) setBacking((current) => current ?? floorWei);
+  }, [floorWei]);
 
   const recentListTx = useMemo(
     () =>
@@ -130,6 +156,16 @@ export function DepositFlow() {
           title="Deposits are locked until launch."
           detail="The allowlist, pool custody and settlement contracts are not deployed on HyperEVM mainnet yet. Deposit controls will unlock only after the public manifest passes the final canary."
           compact
+        />
+      </Shell>
+    );
+  }
+  if (HWA_NFT_DEPOSITS_PAUSED) {
+    return (
+      <Shell>
+        <EmptyState
+          title="NFT deposits are paused"
+          detail="No new NFT or backing can enter the pool while the launch inventory and backing parameters are being reviewed. Existing positions remain visible and withdrawable from Manage."
         />
       </Shell>
     );
@@ -233,6 +269,7 @@ export function DepositFlow() {
                     data-testid={n.whitelisted ? "nft-eligible" : "nft-ineligible"}
                     onClick={() => {
                       setSelectedKey(key);
+                      setBacking(null);
                       action.clearError();
                     }}
                     title={
@@ -296,17 +333,61 @@ export function DepositFlow() {
                       Backing
                     </label>
                     <span className="text-faint">
-                      min <Hype wei={snapshot?.minBacking ?? FWA_PARAMS.minBacking} maxDecimals={2} unit={false} /> · bal{" "}
+                      Protocol minimum{" "}
+                      <Hype wei={snapshot?.minBacking ?? FWA_PARAMS.minBacking} maxDecimals={2} unit={false} /> · bal{" "}
                       {balance !== undefined ? <Hype wei={balance} maxDecimals={2} unit={false} /> : "—"}
                     </span>
                   </div>
                   <AmountInput id="backing" label="HYPE backing" value={backing} onChange={setBacking} max={balance} />
+                  <p className="mt-1 text-2xs text-faint">The protocol minimum is not the NFT floor.</p>
                   {backingError && (
                     <p className="mt-1 text-2xs text-red" data-testid="backing-error">
                       {backingError}
                     </p>
                   )}
                 </div>
+
+                <div className="rounded-sm border border-line-subtle bg-inset p-2 text-2xs">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-mute">Indicative collection floor</span>
+                    <span className="font-mono text-ink">
+                      {floorQuery.isLoading
+                        ? "Loading…"
+                        : floorWei !== null
+                          ? `~${formatHype(floorWei, { maxDecimals: 3 })} HYPE`
+                          : "Unavailable"}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between gap-3 text-faint">
+                    <span>{floorQuery.data?.sourceLabel ?? "No verified live quote"}</span>
+                    {floorQuery.data?.marketplaceUrl && (
+                      <a
+                        className="text-link hover:underline"
+                        href={floorQuery.data.marketplaceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        View market ↗
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                {backing !== null && floorWei !== null && marketRisk !== null && (
+                  <div
+                    className={`rounded-sm border p-2 text-2xs leading-relaxed ${
+                      marketRisk > 0n
+                        ? "border-secondary/35 bg-secondary/10 text-secondary-readable"
+                        : "border-line-subtle bg-inset text-dim"
+                    }`}
+                  >
+                    Backing {formatHype(backing, { maxDecimals: 3 })} HYPE · Floor ~
+                    {formatHype(floorWei, { maxDecimals: 3 })} HYPE ·{" "}
+                    {marketRisk > 0n
+                      ? `You may lose ~${formatHype(marketRisk, { maxDecimals: 3 })} HYPE of market value.`
+                      : "Backing is at or above the indicative floor."}
+                  </div>
+                )}
 
                 {preview && !backingError && (
                   <dl className="space-y-1 rounded-sm border border-line-subtle bg-inset p-2 text-2xs text-dim">

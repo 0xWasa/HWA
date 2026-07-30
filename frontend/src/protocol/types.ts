@@ -205,15 +205,29 @@ export interface UserPositions {
 // ----------------------------------------------------------------- rewards
 
 export interface RewardsSnapshot {
-  /** False until the HWA token/rewards module is deployed and activated. */
+  /** False until the HWA token/rewards module is deployed. */
   moduleActive: boolean;
   tokenSymbol: "HWA";
   tokenAddress?: Address;
   emission?: {
     startedAt: number;
     endsAt: number;
-    depositorRatePerSec: bigint; // HWA wei per second
-    purchaserDailyPot: bigint; // HWA wei per epoch
+    currentSeason: number;
+    currentEpoch: number;
+    claimsEnabled: boolean;
+    configured: boolean;
+    reserveRemaining: bigint;
+    emitted: bigint;
+    burned: bigint;
+    depositorEmitted: bigint;
+    purchaserEmitted: bigint;
+    effectiveQuoteX96: bigint;
+    valueCapBps: number;
+    seasons: Array<{ season: number; startsAt: number; endsAt: number; maxBudget: bigint }>;
+  };
+  buyback?: {
+    depositorRouted: bigint;
+    purchaserRouted: bigint;
   };
   epoch?: {
     current: number;
@@ -235,8 +249,7 @@ export interface RewardsSnapshot {
     claimed?: bigint;
     claimableEpochs: number[];
   };
-  /** FWA-style native-revenue split reserved for holders of the immutable
-   * snapshot NFT. This module is independent from token emissions. */
+  /** FWA-style native-revenue split reserved for holders of the immutable snapshot NFT. */
   holderRevenue?: {
     splitterAddress: Address;
     snapshotNft: Address;
