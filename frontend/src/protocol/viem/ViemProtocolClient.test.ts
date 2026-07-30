@@ -207,6 +207,97 @@ describe("ViemProtocolClient indexer boundary", () => {
     expect(page.items[0]?.listedAt).toBe(1_700_000_000);
     expect(page.items[0]?.isCrown).toBe(true);
   });
+  it("carries the indexed settlement outcome that on-chain state cannot express", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        response({
+          listings: [
+            {
+              id: "2",
+              listingId: "2",
+              status: "settled",
+              collection: "0x0000000000000000000000000000000000000010",
+              tokenId: "42",
+              depositor: "0x0000000000000000000000000000000000000020",
+              purchaser: "0x0000000000000000000000000000000000000030",
+              backing: "1000",
+              weight: "0",
+              listedAt: "1700000000",
+              allocatedAt: "1700000100",
+              acquiredFor: "1200",
+              settlement: "bid_accepted_tokens",
+              isCrown: false,
+            },
+          ],
+        }),
+      ),
+    );
+    const client = new ViemProtocolClient(manifest, "http://localhost:8545", 999, "https://indexer.example/graphql");
+    // Status code 4 is "settled"; the NFT is back with the depositor, which is
+    // indistinguishable from a HYPE bid on-chain.
+    const listing = [
+      "0x0000000000000000000000000000000000000010",
+      "0x0000000000000000000000000000000000000020",
+      "0x0000000000000000000000000000000000000030",
+      42n, 0n, 1_000n, 0n, 0n, 1n, 0n, 4,
+    ] as const;
+    const readContract = vi.fn(async ({ functionName }: { functionName: string }) => {
+      if (functionName === "totalWeight") return 0n;
+      throw new Error(`Unexpected read: ${functionName}`);
+    });
+    const multicall = vi.fn(async (_args: { contracts: unknown[] }) => [listing, 9n] as const);
+    Object.assign(client, { pub: { readContract, multicall } });
+
+    const page = await client.getListings({ view: "recent", sort: "value", direction: "desc", limit: 24, includeMetadata: false });
+
+    expect(page.items[0]?.status).toBe("settled");
+    expect(page.items[0]?.settlement).toBe("bid_accepted_tokens");
+  });
+  it("ignores an unrecognised settlement string instead of trusting the indexer blindly", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        response({
+          listings: [
+            {
+              id: "3",
+              listingId: "3",
+              status: "settled",
+              collection: "0x0000000000000000000000000000000000000010",
+              tokenId: "43",
+              depositor: "0x0000000000000000000000000000000000000020",
+              purchaser: "0x0000000000000000000000000000000000000030",
+              backing: "1000",
+              weight: "0",
+              listedAt: "1700000000",
+              allocatedAt: "1700000100",
+              acquiredFor: "1200",
+              settlement: "rug_pulled",
+              isCrown: false,
+            },
+          ],
+        }),
+      ),
+    );
+    const client = new ViemProtocolClient(manifest, "http://localhost:8545", 999, "https://indexer.example/graphql");
+    const listing = [
+      "0x0000000000000000000000000000000000000010",
+      "0x0000000000000000000000000000000000000020",
+      "0x0000000000000000000000000000000000000030",
+      43n, 0n, 1_000n, 0n, 0n, 1n, 0n, 4,
+    ] as const;
+    const readContract = vi.fn(async ({ functionName }: { functionName: string }) => {
+      if (functionName === "totalWeight") return 0n;
+      throw new Error(`Unexpected read: ${functionName}`);
+    });
+    const multicall = vi.fn(async (_args: { contracts: unknown[] }) => [listing, 9n] as const);
+    Object.assign(client, { pub: { readContract, multicall } });
+
+    const page = await client.getListings({ view: "recent", sort: "value", direction: "desc", limit: 24, includeMetadata: false });
+
+    expect(page.items[0]?.settlement).toBeUndefined();
+  });
 });
 
 

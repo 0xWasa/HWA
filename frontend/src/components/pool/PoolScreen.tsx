@@ -19,6 +19,7 @@ import { ListingDetailDrawer } from "./ListingDetailDrawer";
 import { PoolStatCards } from "./PoolStatCards";
 import { PoolMissionHud } from "./PoolMissionHud";
 import { PurchaseSidebar } from "./PurchaseSidebar";
+import { SupportedCollections } from "./SupportedCollections";
 import { RandomnessFlightDeck } from "@/components/tx/RandomnessFlightDeck";
 import { ProtocolPrelaunch } from "@/components/ui/ProtocolPrelaunch";
 
@@ -139,6 +140,8 @@ export function PoolScreen() {
             </div>
           ))}
         </div>
+
+        <SupportedCollections collections={collections ?? []} />
 
         <div className="rounded-xl border border-secondary/30 bg-secondary/8 p-4 sm:p-5">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

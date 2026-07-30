@@ -37,6 +37,7 @@ import type {
   RewardsSnapshot,
   SettlementChoice,
   SettlementInfo,
+  SettlementOutcome,
   SwapQuote,
   SwapSide,
   TokenMarket,
@@ -169,6 +170,20 @@ interface GraphListingRow {
   acquiredFor?: string | null;
   settlement?: string | null;
   isCrown: boolean;
+}
+
+const SETTLEMENT_OUTCOMES = [
+  "kept",
+  "relisted",
+  "bid_accepted",
+  "bid_accepted_tokens",
+  "depositor_reclaim_nft",
+  "depositor_reclaim_backing",
+  "finalized",
+] as const;
+
+function isSettlementOutcome(value: unknown): value is SettlementOutcome {
+  return typeof value === "string" && (SETTLEMENT_OUTCOMES as readonly string[]).includes(value);
 }
 
 type ListingTelemetryRaw = readonly [
@@ -426,6 +441,13 @@ export class ViemProtocolClient implements ProtocolClient {
           listing.nft = await this.resolveListingNFT(listing.collection, listing.tokenId, row.tokenURI);
         }
         listing.listedAt = Number(row.listedAt);
+        // The settled outcome is an event fact, not an economic value: on-chain
+        // state cannot distinguish an HYPE sale from an HWA one (both return the
+        // NFT to the depositor), so without this every settled row rendered as
+        // "Pending claim". Validated against the union before it is trusted.
+        if (listing.status === "settled" && isSettlementOutcome(row.settlement)) {
+          listing.settlement = row.settlement;
+        }
         // Economic fields stay on-chain-derived. The indexer contributes only
         // event time and its tokenURI snapshot as a display-only metadata hint.
         return listing;

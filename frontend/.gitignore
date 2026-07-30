@@ -11,3 +11,4 @@ test-results/
 .next-live/
 .next-e2e/
 .next-standalone/
+.next-preview/
