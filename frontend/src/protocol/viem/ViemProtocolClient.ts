@@ -659,6 +659,12 @@ export class ViemProtocolClient implements ProtocolClient {
 
   private createTransaction(kind: TxKind, label: string, meta: Record<string, string>): TrackedTransaction {
     const timestamp = nowSec();
+    // The dock is stored per chain and contract, not per wallet, so switching
+    // accounts used to leave the previous wallet's transactions in place and
+    // the deposit flow resumed one of them: a screen about an NFT the new
+    // account does not own, with no way forward. Stamping the signer lets a
+    // reader tell whose transaction it is.
+    const signer = getAccount(wagmiConfig).address;
     const tx: TrackedTransaction = {
       id: txId(),
       kind,
@@ -666,7 +672,7 @@ export class ViemProtocolClient implements ProtocolClient {
       phase: "wallet",
       createdAt: timestamp,
       updatedAt: timestamp,
-      meta,
+      meta: signer ? { ...meta, account: signer.toLowerCase() } : meta,
     };
     this.txs.unshift(tx);
     this.persistTransactions();

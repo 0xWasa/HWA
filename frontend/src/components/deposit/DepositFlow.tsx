@@ -135,6 +135,10 @@ export function DepositFlow() {
         ?.filter(
           (tx) =>
             tx.kind === "list_nft" &&
+            // Transactions outlive a wallet switch, so a deposit signed by
+            // another account must not resume under this one. Older entries
+            // carry no signer and stay eligible rather than vanishing.
+            (!tx.meta.account || tx.meta.account === account.address?.toLowerCase()) &&
             !retiredTxIds.includes(tx.id) &&
             Date.now() / 1000 - tx.updatedAt < 10 * 60 &&
             !["rejected", "reverted", "replaced", "timeout"].includes(tx.phase),
@@ -142,7 +146,7 @@ export function DepositFlow() {
         // Newest wins: resuming should land on the deposit the user was last on,
         // never on whichever happened to be first in the tracked list.
         .sort((a, b) => b.updatedAt - a.updatedAt)[0],
-    [retiredTxIds, txs],
+    [account.address, retiredTxIds, txs],
   );
   const recoveredDeposit = useMemo<DepositIntent | null>(() => {
     // Recovery is for resuming an interrupted deposit, so it must never
