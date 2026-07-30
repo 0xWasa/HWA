@@ -1,11 +1,11 @@
 /**
  * Launch controls that intentionally require a reviewed code release to change.
  *
- * HWA rewards started accruing during the mainnet canary, but distribution must
- * stay closed until the public token launch. Keep the write-path guard in the
+ * HWA v2 rewards use the FWA-parity 300M / 15-day reserve. Claims are
+ * available after the explicit mainnet cutover. Keep the write-path guard in the
  * protocol client as well as the disabled controls in the UI.
  */
-export const HWA_REWARD_CLAIMS_PAUSED = true;
+export const HWA_REWARD_CLAIMS_PAUSED = false;
 
 /** Public NFT deposits are open; acquisition spins remain independently gated. */
 export const HWA_NFT_DEPOSITS_PAUSED = false;

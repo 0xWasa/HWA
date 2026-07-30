@@ -1497,21 +1497,11 @@ export class ViemProtocolClient implements ProtocolClient {
       start,
       emissionDuration,
       configured,
-      claimsEnabled,
-      currentSeason,
       currentEpoch,
       reserveRemaining,
-      seasonalEmitted,
-      seasonalBurned,
-      depositorEmitted,
-      purchaserEmitted,
-      buybackDepositorRouted,
-      buybackPurchaserRouted,
-      effectiveQuoteX96,
-      valueCapBps,
-      seasonOne,
-      seasonTwo,
-      seasonThree,
+      tokenLiability,
+      depositorRatePerSec,
+      purchaserDailyPot,
       hotGap,
       coldGap,
       lastAcquisitionAt,
@@ -1522,21 +1512,11 @@ export class ViemProtocolClient implements ProtocolClient {
       this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "emissionStart" }),
       this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "EMISSION_DURATION" }),
       this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "emissionConfigured" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "claimsEnabled" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "currentSeason" }),
       this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "currentEpoch" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "seasonalReserveRemaining" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "seasonalEmitted" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "seasonalBurned" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "seasonalDepositorEmitted" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "seasonalPurchaserEmitted" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "buybackDepositorRouted" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "buybackPurchaserRouted" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "effectiveSeasonQuoteX96" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "VALUE_CAP_BPS" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "seasonBudget", args: [0n] }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "seasonBudget", args: [1n] }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "seasonBudget", args: [2n] }),
+      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "depositorEmissionRemaining" }),
+      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "tokenLiability" }),
+      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "depositorRatePerSec" }),
+      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "purchaserDailyPot" }),
       this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "hotGap" }),
       this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "coldGap" }),
       this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "lastAcquisitionTs" }),
@@ -1575,17 +1555,15 @@ export class ViemProtocolClient implements ProtocolClient {
       const epochRows = await Promise.all(
         Array.from({ length: epochCount }, async (_, epoch) => {
           const epochId = BigInt(epoch);
-          const [mine, total, pendingCount, finalized, claimed, swept, pot] = await Promise.all([
-            this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "userSettledHypeInEpoch", args: [epochId, account] }),
-            this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "settledHypeInEpoch", args: [epochId] }),
+          const [mine, total, pendingCount, claimed, swept, pot] = await Promise.all([
+            this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "userAcquisitionsInEpoch", args: [epochId, account] }),
+            this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "acquisitionsInEpoch", args: [epochId] }),
             this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "pendingAcquisitionsInEpoch", args: [epochId] }),
-            this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "epochFinalized", args: [epochId] }),
             this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "purchaserClaimed", args: [epochId, account] }),
             this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "purchaserEpochSwept", args: [epochId] }),
             this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "purchaserEpochAmount", args: [epochId] }),
           ]);
-          const seasonalClosed = epoch >= 45 || finalized;
-          if (mine === 0n || total === 0n || pendingCount !== 0n || !seasonalClosed || claimed || swept) return null;
+          if (mine === 0n || total === 0n || pendingCount !== 0n || claimed || swept) return null;
           return { epoch, amount: (pot * mine) / total };
         }),
       );
@@ -1597,7 +1575,9 @@ export class ViemProtocolClient implements ProtocolClient {
     const startNumber = Number(start);
     const durationNumber = Number(emissionDuration);
     const chainNow = Number((await this.pub.getBlock()).timestamp);
-    const seasonBudgets = [seasonOne, seasonTwo, seasonThree];
+    const depositorBudget = depositorRatePerSec * emissionDuration;
+    const purchaserBudget = purchaserDailyPot * 15n;
+    const fixedBudget = depositorBudget + purchaserBudget;
     return {
       moduleActive: true,
       tokenSymbol: "HWA",
@@ -1605,25 +1585,25 @@ export class ViemProtocolClient implements ProtocolClient {
       emission: {
         startedAt: startNumber,
         endsAt: startNumber === 0 ? 0 : startNumber + durationNumber,
-        currentSeason: Number(currentSeason),
+        currentSeason: startNumber === 0 ? 0 : 1,
         currentEpoch: Number(currentEpoch),
-        claimsEnabled,
+        claimsEnabled: startNumber !== 0,
         configured,
-        reserveRemaining,
-        emitted: seasonalEmitted,
-        burned: seasonalBurned,
-        depositorEmitted,
-        purchaserEmitted,
-        effectiveQuoteX96,
-        valueCapBps: Number(valueCapBps),
-        seasons: seasonBudgets.map((maxBudget, index) => ({
-          season: index + 1,
-          startsAt: startNumber === 0 ? 0 : startNumber + index * 15 * 86_400,
-          endsAt: startNumber === 0 ? 0 : startNumber + (index + 1) * 15 * 86_400,
-          maxBudget,
-        })),
+        reserveRemaining: tokenLiability,
+        emitted: fixedBudget > tokenLiability ? fixedBudget - tokenLiability : 0n,
+        burned: 0n,
+        depositorEmitted: depositorBudget > reserveRemaining ? depositorBudget - reserveRemaining : 0n,
+        purchaserEmitted: 0n,
+        effectiveQuoteX96: 0n,
+        valueCapBps: 0,
+        seasons: [{
+          season: 1,
+          startsAt: startNumber,
+          endsAt: startNumber === 0 ? 0 : startNumber + durationNumber,
+          maxBudget: fixedBudget,
+        }],
       },
-      buyback: { depositorRouted: buybackDepositorRouted, purchaserRouted: buybackPurchaserRouted },
+      buyback: { depositorRouted: 0n, purchaserRouted: 0n },
       epoch: {
         current: Number(currentEpoch),
         mode: Number(lastAcquisitionAt) > 0 && chainNow - Number(lastAcquisitionAt) <= Number(hotGap) ? "hot" : "cold",
@@ -1636,7 +1616,6 @@ export class ViemProtocolClient implements ProtocolClient {
       holderRevenue,
     };
   }
-
   private async getHolderRevenue(account?: Address): Promise<NonNullable<RewardsSnapshot["holderRevenue"]>> {
     const splitter = this.manifest.contracts.splitter;
     const [snapshotNft, snapshotSupply, maxTokenId, sweepAvailableAt, claimsClosed, splitFrozen, nftShareBps, claimablePerToken] =
@@ -2196,7 +2175,7 @@ export class ViemProtocolClient implements ProtocolClient {
   async settle(input: { listingId: bigint; choice: SettlementChoice }): Promise<TrackedTransaction> {
     // `acceptBidAsTokens` spends the whole settlement payout buying HWA on a public pool. A zero
     // minimum is an unbounded-slippage order a sandwich bot can drain almost entirely, so it is
-    // refused as invalid input — before a wallet is even prompted — rather than signed.
+    // refused as invalid input â€” before a wallet is even prompted â€” rather than signed.
     if (input.choice.kind === "acceptBidTokens" && input.choice.minTokensOut <= 0n) {
       throw new ProtocolError(
         "PRICE_DRIFTED",

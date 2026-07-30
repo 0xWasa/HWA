@@ -1,7 +1,7 @@
 /**
- * Minimal ABI — only the entries this frontend actually consumes, transcribed
+ * Minimal ABI â€” only the entries this frontend actually consumes, transcribed
  * from the verified Ethereum reference (FWA_ETHEREUM_REFERENCE/FWA/abi.json).
- * The HyperEVM port keeps FWA.sol unchanged (FWA_PARITY_MANIFEST.md §15), so
+ * The HyperEVM port keeps FWA.sol unchanged (FWA_PARITY_MANIFEST.md Â§15), so
  * these fragments are expected to remain stable; the deployment manifest stays
  * the only source of addresses.
  */
@@ -391,6 +391,8 @@ export const fwaRewardsAbi = [
   { type: "function", name: "userSettledHypeInEpoch", stateMutability: "view", inputs: [{ name: "epoch", type: "uint256" }, { name: "purchaser", type: "address" }], outputs: [{ type: "uint256" }] },
   { type: "function", name: "epochFinalized", stateMutability: "view", inputs: [{ name: "epoch", type: "uint256" }], outputs: [{ type: "bool" }] },
   { type: "function", name: "emissionStart", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "depositorEmissionRemaining", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "tokenLiability", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   {
     type: "function",
     name: "depositorRatePerSec",
@@ -562,7 +564,7 @@ export const v3PoolAbi = [
   },
 ] as const;
 
-/** On-chain ListingStatus enum → domain status. */
+/** On-chain ListingStatus enum â†’ domain status. */
 export const LISTING_STATUS_BY_CODE = {
   0: undefined, // None
   1: "active",

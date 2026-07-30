@@ -1,0 +1,558 @@
+{
+  "schemaVersion": 1,
+  "chainId": 999,
+  "token": "0x0d3433Df3D9f5A5746384C79Ada7B1808E155971",
+  "core": "0x13aB222c1079084064F75713e72defCE20751f4A",
+  "rewards": "0xdac6E20EeAE89beE1D4810c7754f1Cc35F25960f",
+  "deploymentBlock": "41791962",
+  "snapshotBlock": "41850854",
+  "snapshotBlockHash": "0x67e79c14c996d92a7e035a180acd59240da0d54cb4c76b77ebbcdcc43640816d",
+  "totalSupplyWei": "1000000000000000000000000000",
+  "reconstructedSupplyWei": "1000000000000000000000000000",
+  "merkleRoot": "0x8c1040c8730a6f37cdf9447fdb749f0d7c72bb12aae5f27f8975166d51929f2c",
+  "migrationAllocationWei": "50004954408141496229619472",
+  "liquidAllocationWei": "48684785439378643073071783",
+  "legacyRewardCompensationWei": "1320168968762853156547689",
+  "legacyRewardsState": {
+    "tokenLiability": "100000000000000000000000000",
+    "seasonalReserveRemaining": "98679831031237146843452278",
+    "seasonalEmitted": "1320168968762853156547722",
+    "seasonalBurned": "0"
+  },
+  "currentRewardEpoch": "0",
+  "nextListingId": "234",
+  "excluded": [
+    {
+      "account": "0x0d3433Df3D9f5A5746384C79Ada7B1808E155971",
+      "reason": "legacy token contract / buyback inventory"
+    },
+    {
+      "account": "0x13aB222c1079084064F75713e72defCE20751f4A",
+      "reason": "legacy protocol core"
+    },
+    {
+      "account": "0xdac6E20EeAE89beE1D4810c7754f1Cc35F25960f",
+      "reason": "legacy rewards reserve; user liabilities are compensated separately"
+    },
+    {
+      "account": "0x92e5701F30767101A7A0032eaD053c3D4A406523",
+      "reason": "legacy ecosystem vesting; recreated once on v2"
+    },
+    {
+      "account": "0x2e98a09e6412AC1C55972832B4F1E841A0BD07e5",
+      "reason": "permanently locked legacy LP"
+    },
+    {
+      "account": "0x00F8dA9A528aFf254D77C8a8CF6106Ac8e87A70d",
+      "reason": "legacy LP locker"
+    },
+    {
+      "account": "0x5F946be27739446C546f9827c8E78465931E5C45",
+      "reason": "legacy Project X adapter"
+    },
+    {
+      "account": "0xE8196d684e354De6cadcDd838bf2fc57CB4e6903",
+      "reason": "legacy protocol splitter"
+    },
+    {
+      "account": "0x000000000000000000000000000000000000dEaD",
+      "reason": "irrecoverable balance"
+    },
+    {
+      "account": "0x0000000000000000000000000000000000000000",
+      "reason": "zero address"
+    }
+  ],
+  "excludedBalances": [
+    {
+      "account": "0x0d3433Df3D9f5A5746384C79Ada7B1808E155971",
+      "reason": "legacy token contract / buyback inventory",
+      "amountWei": "2370"
+    },
+    {
+      "account": "0x2e98a09e6412AC1C55972832B4F1E841A0BD07e5",
+      "reason": "permanently locked legacy LP",
+      "amountWei": "751315214560621356926925847"
+    },
+    {
+      "account": "0xdac6E20EeAE89beE1D4810c7754f1Cc35F25960f",
+      "reason": "legacy rewards reserve; user liabilities are compensated separately",
+      "amountWei": "100000000000000000000000000"
+    },
+    {
+      "account": "0x92e5701F30767101A7A0032eaD053c3D4A406523",
+      "reason": "legacy ecosystem vesting; recreated once on v2",
+      "amountWei": "100000000000000000000000000"
+    }
+  ],
+  "claims": [
+    {
+      "account": "0x00683Dc4CA9c5020725Ac261b5609F6a2Db7e47b",
+      "amountWei": "1100360979235206285620685",
+      "liquidAmountWei": "975359534064250205357870",
+      "legacyRewardAmountWei": "125001445170956080262815",
+      "proof": [
+        "0xfdd652bbbffbdf0cc969a5ce93148c60f2e4ea9c4e1dbb3aa4d6f485ca961ec5",
+        "0xade3c11871aa05861a9ec28c20714f6d9dc73a7bb8b4a3f153925a3b6e6946ac",
+        "0xaa286906eb9e1c6465242897ff6b0d0027b46c3766ad8888b4556544199ab666",
+        "0xc49df5e6393aa6ffca380a47f0f35808b447491afd5716cbf82f5b9b234e43e6",
+        "0x61f2a0ff1bb93bd61e758baeb0902e8e44dbd3cddf6849bad6c41ba753304071",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x0Dd29A896E1f200efDF2f6DF76D27E23df04413d",
+      "amountWei": "351834800096098336775223",
+      "liquidAmountWei": "347948865899413286239591",
+      "legacyRewardAmountWei": "3885934196685050535632",
+      "proof": [
+        "0xf9ade0627bcc5a52922a8d29dee471256952b42c6175bf072bf4e5427d47b95f",
+        "0xade3c11871aa05861a9ec28c20714f6d9dc73a7bb8b4a3f153925a3b6e6946ac",
+        "0xaa286906eb9e1c6465242897ff6b0d0027b46c3766ad8888b4556544199ab666",
+        "0xc49df5e6393aa6ffca380a47f0f35808b447491afd5716cbf82f5b9b234e43e6",
+        "0x61f2a0ff1bb93bd61e758baeb0902e8e44dbd3cddf6849bad6c41ba753304071",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x26b3378A36020eE745f611CF71d870BF22b677AD",
+      "amountWei": "748273241809844436187323",
+      "liquidAmountWei": "684433320031925037719824",
+      "legacyRewardAmountWei": "63839921777919398467499",
+      "proof": [
+        "0x52eb6bfcf507ba16e0c1802d761979a5e05b91407ae8209781b492116b274ed5",
+        "0xff7e1fbeec0d4f77354cc9a0693c0c18e4dd79f89704a77727f64d66660cadde",
+        "0xaa286906eb9e1c6465242897ff6b0d0027b46c3766ad8888b4556544199ab666",
+        "0xc49df5e6393aa6ffca380a47f0f35808b447491afd5716cbf82f5b9b234e43e6",
+        "0x61f2a0ff1bb93bd61e758baeb0902e8e44dbd3cddf6849bad6c41ba753304071",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x2a063224A654dC1f8Ccf367333C4c4ce3aa2162c",
+      "amountWei": "3621932068134347427243264",
+      "liquidAmountWei": "3574148542493284351616710",
+      "legacyRewardAmountWei": "47783525641063075626554",
+      "proof": [
+        "0x8c17bf8bbfad9808cebc523abe924b526940876054c8a153298f7dada3ed4ada",
+        "0xff7e1fbeec0d4f77354cc9a0693c0c18e4dd79f89704a77727f64d66660cadde",
+        "0xaa286906eb9e1c6465242897ff6b0d0027b46c3766ad8888b4556544199ab666",
+        "0xc49df5e6393aa6ffca380a47f0f35808b447491afd5716cbf82f5b9b234e43e6",
+        "0x61f2a0ff1bb93bd61e758baeb0902e8e44dbd3cddf6849bad6c41ba753304071",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x2a52aC190A84E935246202e529aed50B41c8731c",
+      "amountWei": "630170154955070325999199",
+      "liquidAmountWei": "619135126815499599130577",
+      "legacyRewardAmountWei": "11035028139570726868622",
+      "proof": [
+        "0x6e88878e91b4feaed49288dad6e2f9c13588043bf254128bb27e2f641adaf017",
+        "0xabefbd6fb83113ecb3116c84143622ea0ad7c5c6c7d521a00327abdef5ed17f0",
+        "0xb0d084fdc6e8711b70aca34c524d40aec12ce49aa4a3e34d4fd91eb3b33ad6ad",
+        "0xc49df5e6393aa6ffca380a47f0f35808b447491afd5716cbf82f5b9b234e43e6",
+        "0x61f2a0ff1bb93bd61e758baeb0902e8e44dbd3cddf6849bad6c41ba753304071",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x34Bc7B27c8EF30F27963f6a34775F085F3Dc8775",
+      "amountWei": "1351225638717068755068732",
+      "liquidAmountWei": "1327011152621283917611702",
+      "legacyRewardAmountWei": "24214486095784837457030",
+      "proof": [
+        "0x3fecd09527ba16bfcc047ce3dcfa70e4c656a4970d8bbdc8d7bb8525e6621273",
+        "0xabefbd6fb83113ecb3116c84143622ea0ad7c5c6c7d521a00327abdef5ed17f0",
+        "0xb0d084fdc6e8711b70aca34c524d40aec12ce49aa4a3e34d4fd91eb3b33ad6ad",
+        "0xc49df5e6393aa6ffca380a47f0f35808b447491afd5716cbf82f5b9b234e43e6",
+        "0x61f2a0ff1bb93bd61e758baeb0902e8e44dbd3cddf6849bad6c41ba753304071",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x38C9d6D0Bfc808157D8A106E9fC270985E29105D",
+      "amountWei": "7243748505323774819877552",
+      "liquidAmountWei": "7147927879664338548211022",
+      "legacyRewardAmountWei": "95820625659436271666530",
+      "proof": [
+        "0x7e5583e2105b243249302472e6310fd83b54c309ee2088f4f9211704df9bbab2",
+        "0x269ac7d4a696c0438e40a0af56b1b07837b2fa356c374707ac4c4f34cba1f646",
+        "0xb0d084fdc6e8711b70aca34c524d40aec12ce49aa4a3e34d4fd91eb3b33ad6ad",
+        "0xc49df5e6393aa6ffca380a47f0f35808b447491afd5716cbf82f5b9b234e43e6",
+        "0x61f2a0ff1bb93bd61e758baeb0902e8e44dbd3cddf6849bad6c41ba753304071",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x3c0498b51d69d325Da765d66A97160C9207A3d4f",
+      "amountWei": "7507093011678609546822",
+      "liquidAmountWei": "0",
+      "legacyRewardAmountWei": "7507093011678609546822",
+      "proof": [
+        "0x6d84346b08c7e1af87812974cc4b30c5639f280904aa5f17bd7052508b506126",
+        "0x269ac7d4a696c0438e40a0af56b1b07837b2fa356c374707ac4c4f34cba1f646",
+        "0xb0d084fdc6e8711b70aca34c524d40aec12ce49aa4a3e34d4fd91eb3b33ad6ad",
+        "0xc49df5e6393aa6ffca380a47f0f35808b447491afd5716cbf82f5b9b234e43e6",
+        "0x61f2a0ff1bb93bd61e758baeb0902e8e44dbd3cddf6849bad6c41ba753304071",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x417798bFeBe4D3bE45AD970da1D8a3789a377D4a",
+      "amountWei": "669059077041706884984902",
+      "liquidAmountWei": "659787614270135069183904",
+      "legacyRewardAmountWei": "9271462771571815800998",
+      "proof": [
+        "0x85b7b35d9ea398e4fd17c20f9fca42b389b29bb3606170a5e21756074713236b",
+        "0xa30a3140c9b6b7bb971dfc23e72713f5392d0f349ab9ddef8838d2be1fb28ee5",
+        "0x3a467805fcc407b55e76ef574842807a372b3412bfabd30472a6ef390a602fef",
+        "0x7b692c6ef1d95d3adacebc062991a44628bdc4dfb1c00f8229ee05771f8c0813",
+        "0x61f2a0ff1bb93bd61e758baeb0902e8e44dbd3cddf6849bad6c41ba753304071",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x4523E85f34402702c1a98A9705Ee48edF7cEEE93",
+      "amountWei": "222875150321409011647906",
+      "liquidAmountWei": "219104721452930160449417",
+      "legacyRewardAmountWei": "3770428868478851198489",
+      "proof": [
+        "0x23d2d2d7999203fa3ed201cfd0b7d6cbdea49f605836387d21b4c39e83ecbbfa",
+        "0xa30a3140c9b6b7bb971dfc23e72713f5392d0f349ab9ddef8838d2be1fb28ee5",
+        "0x3a467805fcc407b55e76ef574842807a372b3412bfabd30472a6ef390a602fef",
+        "0x7b692c6ef1d95d3adacebc062991a44628bdc4dfb1c00f8229ee05771f8c0813",
+        "0x61f2a0ff1bb93bd61e758baeb0902e8e44dbd3cddf6849bad6c41ba753304071",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x452aC9bAe9EA547D5073cdefFA5107F87F35699B",
+      "amountWei": "229093938093436863285306",
+      "liquidAmountWei": "0",
+      "legacyRewardAmountWei": "229093938093436863285306",
+      "proof": [
+        "0xdddee488a5dc00f5b0bb322e2ebab238abe770d8dcf3c38b02037839a24a6b2a",
+        "0x0e2ef67c63e9e8828d2a42afd35dd5cece07fe6f88fd7a49aaba65d0434c7602",
+        "0x3a467805fcc407b55e76ef574842807a372b3412bfabd30472a6ef390a602fef",
+        "0x7b692c6ef1d95d3adacebc062991a44628bdc4dfb1c00f8229ee05771f8c0813",
+        "0x61f2a0ff1bb93bd61e758baeb0902e8e44dbd3cddf6849bad6c41ba753304071",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x5798E36Fb828054D105598C4Ae76cBB86E799672",
+      "amountWei": "1667372991289432043506105",
+      "liquidAmountWei": "1644700752917370690426678",
+      "legacyRewardAmountWei": "22672238372061353079427",
+      "proof": [
+        "0xc4bf936a71b6198572067c6959dee331b36a00a3cb64251553ee5c4cf8b75855",
+        "0x0e2ef67c63e9e8828d2a42afd35dd5cece07fe6f88fd7a49aaba65d0434c7602",
+        "0x3a467805fcc407b55e76ef574842807a372b3412bfabd30472a6ef390a602fef",
+        "0x7b692c6ef1d95d3adacebc062991a44628bdc4dfb1c00f8229ee05771f8c0813",
+        "0x61f2a0ff1bb93bd61e758baeb0902e8e44dbd3cddf6849bad6c41ba753304071",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x5C928ac25d499b64D295D2154Bbb93727DAca67f",
+      "amountWei": "132125054365470010667803",
+      "liquidAmountWei": "129135158040507887736616",
+      "legacyRewardAmountWei": "2989896324962122931187",
+      "proof": [
+        "0x2514aeafd307148c93765a48e300ea5a0ae728f5839ba8047c655c6cb6f2f983",
+        "0x59cbb02b93079af5b69f157f2477eed87bee18e0f587dbbed716f6b659931d7a",
+        "0xe86b2857a114c22b8bc27163e8d2ae4b868bd7e041e44799c1ad5ab4de8655b8",
+        "0x7b692c6ef1d95d3adacebc062991a44628bdc4dfb1c00f8229ee05771f8c0813",
+        "0x61f2a0ff1bb93bd61e758baeb0902e8e44dbd3cddf6849bad6c41ba753304071",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x5d309F1fd824d41074dc5d8A9ED17508ab49ECCF",
+      "amountWei": "5489453502115700304560",
+      "liquidAmountWei": "0",
+      "legacyRewardAmountWei": "5489453502115700304560",
+      "proof": [
+        "0xb9fd222dd9fa3e9140f585d63988869ac2c5f18e6fdf570ec56c58725aeb93a4",
+        "0x59cbb02b93079af5b69f157f2477eed87bee18e0f587dbbed716f6b659931d7a",
+        "0xe86b2857a114c22b8bc27163e8d2ae4b868bd7e041e44799c1ad5ab4de8655b8",
+        "0x7b692c6ef1d95d3adacebc062991a44628bdc4dfb1c00f8229ee05771f8c0813",
+        "0x61f2a0ff1bb93bd61e758baeb0902e8e44dbd3cddf6849bad6c41ba753304071",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x63dB185dE4f443Bd0A64b9593E4fBF7D0F2Da1e8",
+      "amountWei": "2512270566497764067685812",
+      "liquidAmountWei": "2477003384987713617065797",
+      "legacyRewardAmountWei": "35267181510050450620015",
+      "proof": [
+        "0xcbce648e0afe10a9f34714b336e23989db2ceba28ef4d1443c522ef1130b5fcb",
+        "0xed14b41d5830de5444c21c97d8337684211327020798b4eced7818592ba824a4",
+        "0xe86b2857a114c22b8bc27163e8d2ae4b868bd7e041e44799c1ad5ab4de8655b8",
+        "0x7b692c6ef1d95d3adacebc062991a44628bdc4dfb1c00f8229ee05771f8c0813",
+        "0x61f2a0ff1bb93bd61e758baeb0902e8e44dbd3cddf6849bad6c41ba753304071",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x650D80dfA3d0636abF7a35E4619Db5421d8A871B",
+      "amountWei": "19918167527970736968817",
+      "liquidAmountWei": "0",
+      "legacyRewardAmountWei": "19918167527970736968817",
+      "proof": [
+        "0x201816c611cbfece4b603c4ce93774fc79be6db4c96b8707d725804b32202d28",
+        "0xed14b41d5830de5444c21c97d8337684211327020798b4eced7818592ba824a4",
+        "0xe86b2857a114c22b8bc27163e8d2ae4b868bd7e041e44799c1ad5ab4de8655b8",
+        "0x7b692c6ef1d95d3adacebc062991a44628bdc4dfb1c00f8229ee05771f8c0813",
+        "0x61f2a0ff1bb93bd61e758baeb0902e8e44dbd3cddf6849bad6c41ba753304071",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x6C39d7E6D7689b7a0d81aFF7Cc8a346FE054ff13",
+      "amountWei": "17919928633100032135226",
+      "liquidAmountWei": "0",
+      "legacyRewardAmountWei": "17919928633100032135226",
+      "proof": [
+        "0x1f59ed842d18e37d61e20b1c2487f3cd859c4262fb4192d890539fe9b21f6cdd",
+        "0x2398c2ae43b8d2583e2e68609da6953f12c28974c740ee7e13e923a800bbbe82",
+        "0xe82353a0819026e97f69904f6579996fee666834ba381532cfd0f6a68400c014",
+        "0x42d5e02492bb591fbcedd6f941b429cbd0eebc457ee0ef4e6600bba9d7753bbf",
+        "0xa239e8e09f9892a2ad0c8529f38b84f14def402b8bb87dcbab37c302718a7f9e",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x703373818388F14EC5e4E58b90CF5D4003943c3c",
+      "amountWei": "2421679165333932747864414",
+      "liquidAmountWei": "2389374880217399528479328",
+      "legacyRewardAmountWei": "32304285116533219385086",
+      "proof": [
+        "0xcf323063168f98a5c8f4cf49a9848b019d733fc73abcc30bba630dde5ffe6567",
+        "0x2398c2ae43b8d2583e2e68609da6953f12c28974c740ee7e13e923a800bbbe82",
+        "0xe82353a0819026e97f69904f6579996fee666834ba381532cfd0f6a68400c014",
+        "0x42d5e02492bb591fbcedd6f941b429cbd0eebc457ee0ef4e6600bba9d7753bbf",
+        "0xa239e8e09f9892a2ad0c8529f38b84f14def402b8bb87dcbab37c302718a7f9e",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x72D971041Ce8fEDB5EDD8E0e05f5D20bf647Afa3",
+      "amountWei": "65953402318320622613932",
+      "liquidAmountWei": "0",
+      "legacyRewardAmountWei": "65953402318320622613932",
+      "proof": [
+        "0x83a903ec394ecb1adf4c9eba885b37689cfd6bec8f56eb5649673b8a7050e15a",
+        "0xed007f5f279a390cb1b8b002efb3b0b0f2f1bf597d0433a3f7a21727948f1cb9",
+        "0xe82353a0819026e97f69904f6579996fee666834ba381532cfd0f6a68400c014",
+        "0x42d5e02492bb591fbcedd6f941b429cbd0eebc457ee0ef4e6600bba9d7753bbf",
+        "0xa239e8e09f9892a2ad0c8529f38b84f14def402b8bb87dcbab37c302718a7f9e",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x891A94a56369569d8d79143E9d89195094671160",
+      "amountWei": "601458122792842807246325",
+      "liquidAmountWei": "592189300347396191945401",
+      "legacyRewardAmountWei": "9268822445446615300924",
+      "proof": [
+        "0x0e45a3c9fb8241dfd50fe5d93393ba7a39d86b74f156ef411310dfdd5ce18c4c",
+        "0xed007f5f279a390cb1b8b002efb3b0b0f2f1bf597d0433a3f7a21727948f1cb9",
+        "0xe82353a0819026e97f69904f6579996fee666834ba381532cfd0f6a68400c014",
+        "0x42d5e02492bb591fbcedd6f941b429cbd0eebc457ee0ef4e6600bba9d7753bbf",
+        "0xa239e8e09f9892a2ad0c8529f38b84f14def402b8bb87dcbab37c302718a7f9e",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x8BA986D4c7fB42C9D8A95d641b83BF1AC57E7d9c",
+      "amountWei": "20278836401652769497322",
+      "liquidAmountWei": "0",
+      "legacyRewardAmountWei": "20278836401652769497322",
+      "proof": [
+        "0xb829929c8af70c51ea532719a04c9a4e3c15b629706f77a0a930bbce1183591a",
+        "0x1a5ce06f3db98991ab34a4db0c38f21d8090e556a33180c47cc157f8928442a6",
+        "0x829934d168a89b954d1e80b05b82f733612e717977ad4e2f0ef1106afefe094f",
+        "0x42d5e02492bb591fbcedd6f941b429cbd0eebc457ee0ef4e6600bba9d7753bbf",
+        "0xa239e8e09f9892a2ad0c8529f38b84f14def402b8bb87dcbab37c302718a7f9e",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x8c5b872D0aaA28aC6ac0Af71fc6360779C9f290A",
+      "amountWei": "16623338715805652601098279",
+      "liquidAmountWei": "16492489446690952375846588",
+      "legacyRewardAmountWei": "130849269114700225251691",
+      "proof": [
+        "0x71a588adda015f60a3f90c0b0257cdb4e43211e106973d63cb7f87f67cf74811",
+        "0x1a5ce06f3db98991ab34a4db0c38f21d8090e556a33180c47cc157f8928442a6",
+        "0x829934d168a89b954d1e80b05b82f733612e717977ad4e2f0ef1106afefe094f",
+        "0x42d5e02492bb591fbcedd6f941b429cbd0eebc457ee0ef4e6600bba9d7753bbf",
+        "0xa239e8e09f9892a2ad0c8529f38b84f14def402b8bb87dcbab37c302718a7f9e",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0x9fbcF5a5d406fb262A5aA2956D978D6071E5104b",
+      "amountWei": "963527570432463569871017",
+      "liquidAmountWei": "948635566059370750972562",
+      "legacyRewardAmountWei": "14892004373092818898455",
+      "proof": [
+        "0x6d862f8b0c454eb6fe395a8af990ee084aec1be1fe4e3cca37e581ba8f3d9148",
+        "0x62198512ef6cbab71bc4e1257dd99254e2ae093780139ca4599e26c3ac6fbd40",
+        "0x829934d168a89b954d1e80b05b82f733612e717977ad4e2f0ef1106afefe094f",
+        "0x42d5e02492bb591fbcedd6f941b429cbd0eebc457ee0ef4e6600bba9d7753bbf",
+        "0xa239e8e09f9892a2ad0c8529f38b84f14def402b8bb87dcbab37c302718a7f9e",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0xaC1c61373766aAcb6472e2BE7d03828FBfaBE06a",
+      "amountWei": "5320368998818598939614",
+      "liquidAmountWei": "0",
+      "legacyRewardAmountWei": "5320368998818598939614",
+      "proof": [
+        "0xe77b92c0a3b26def30aedbcd4ea54bf87850b575cd43fa7d0ca8edbc29e47383",
+        "0x62198512ef6cbab71bc4e1257dd99254e2ae093780139ca4599e26c3ac6fbd40",
+        "0x829934d168a89b954d1e80b05b82f733612e717977ad4e2f0ef1106afefe094f",
+        "0x42d5e02492bb591fbcedd6f941b429cbd0eebc457ee0ef4e6600bba9d7753bbf",
+        "0xa239e8e09f9892a2ad0c8529f38b84f14def402b8bb87dcbab37c302718a7f9e",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0xaf186526734E9038F21d2b0698ae02417c21cc70",
+      "amountWei": "5320368998818598939614",
+      "liquidAmountWei": "0",
+      "legacyRewardAmountWei": "5320368998818598939614",
+      "proof": [
+        "0x5579848c0aa3fe4bb96fdf14d2f9c7ce6d412dcc00577c9c974b39f962160212",
+        "0x4bfaf431f6b8b688a72478d1a1e75fbb5425eaacf7381d8fcd956364550c8365",
+        "0xa3f40ab5e4c90e9da16f758fcc7217631522b249dabb4d449c6793a39ebe0004",
+        "0x5b02cc49e258dc986bff6d66ae23e72f7b1b139b330421515d0f583d6e100467",
+        "0xa239e8e09f9892a2ad0c8529f38b84f14def402b8bb87dcbab37c302718a7f9e",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0xb2474941ff7313E7034690cb6E760D256813e803",
+      "amountWei": "689895904213041913338332",
+      "liquidAmountWei": "673817845764687376057447",
+      "legacyRewardAmountWei": "16078058448354537280885",
+      "proof": [
+        "0xe04eae1531f3506274a4677724972180086ef59c7873ae8bcbb91fa154e64197",
+        "0x4bfaf431f6b8b688a72478d1a1e75fbb5425eaacf7381d8fcd956364550c8365",
+        "0xa3f40ab5e4c90e9da16f758fcc7217631522b249dabb4d449c6793a39ebe0004",
+        "0x5b02cc49e258dc986bff6d66ae23e72f7b1b139b330421515d0f583d6e100467",
+        "0xa239e8e09f9892a2ad0c8529f38b84f14def402b8bb87dcbab37c302718a7f9e",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0xb2B73e992b2d7d3612B140d5920a2a19bF2D0d10",
+      "amountWei": "520876115302728905169853",
+      "liquidAmountWei": "493924303100598327405685",
+      "legacyRewardAmountWei": "26951812202130577764168",
+      "proof": [
+        "0x0665462e7aba755f899c39fd253af989193f721fd8df6678be15b19a53184743",
+        "0x85d08f19a4ae15cd77220b11d06750d21203d8b1491f6c43dcbcec0c698071ac",
+        "0xa3f40ab5e4c90e9da16f758fcc7217631522b249dabb4d449c6793a39ebe0004",
+        "0x5b02cc49e258dc986bff6d66ae23e72f7b1b139b330421515d0f583d6e100467",
+        "0xa239e8e09f9892a2ad0c8529f38b84f14def402b8bb87dcbab37c302718a7f9e",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0xCB72Fe91C73C5fDD2FB1A5A2DAcFdBB8dbbBE3e8",
+      "amountWei": "57462978939602979877457",
+      "liquidAmountWei": "0",
+      "legacyRewardAmountWei": "57462978939602979877457",
+      "proof": [
+        "0x23b7de75c3fe6fcfdbf0e55fc62bdc99347f554708856944b8a8ea17d566b1c8",
+        "0x85d08f19a4ae15cd77220b11d06750d21203d8b1491f6c43dcbcec0c698071ac",
+        "0xa3f40ab5e4c90e9da16f758fcc7217631522b249dabb4d449c6793a39ebe0004",
+        "0x5b02cc49e258dc986bff6d66ae23e72f7b1b139b330421515d0f583d6e100467",
+        "0xa239e8e09f9892a2ad0c8529f38b84f14def402b8bb87dcbab37c302718a7f9e",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0xd8ba9E5886B7000BACe2C9dbdd0BE98Ac77D4A28",
+      "amountWei": "346900843411306426913437",
+      "liquidAmountWei": "335180646523819284097827",
+      "legacyRewardAmountWei": "11720196887487142815610",
+      "proof": [
+        "0xb8bf71369f178d52517302e736a769a4ae0af8a41863e845676732692ab5eae4",
+        "0xf07d0e94e70b37de1c81138fef7613293bc6cecb8d4aec79fffac7f7d1b77d0d",
+        "0x1c8dbc8df8249109a9be93886a549ca24d1c7357747ab3d97dc403afcca4aa22",
+        "0x5b02cc49e258dc986bff6d66ae23e72f7b1b139b330421515d0f583d6e100467",
+        "0xa239e8e09f9892a2ad0c8529f38b84f14def402b8bb87dcbab37c302718a7f9e",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0xdec81C6249104e409EA10C5383d710270b679A0E",
+      "amountWei": "23104264049625229873791",
+      "liquidAmountWei": "0",
+      "legacyRewardAmountWei": "23104264049625229873791",
+      "proof": [
+        "0xf0b0c714188545f3b432a020069cd290db702e9d70e2ed053f6d6f845c930a9a",
+        "0xf07d0e94e70b37de1c81138fef7613293bc6cecb8d4aec79fffac7f7d1b77d0d",
+        "0x1c8dbc8df8249109a9be93886a549ca24d1c7357747ab3d97dc403afcca4aa22",
+        "0x5b02cc49e258dc986bff6d66ae23e72f7b1b139b330421515d0f583d6e100467",
+        "0xa239e8e09f9892a2ad0c8529f38b84f14def402b8bb87dcbab37c302718a7f9e",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0xE2797cF80F9CE3381F86E67c6DbfdE8a0B996348",
+      "amountWei": "923978677701587574406344",
+      "liquidAmountWei": "910607172342381203495065",
+      "legacyRewardAmountWei": "13371505359206370911279",
+      "proof": [
+        "0x2e096fb53dee26612b9059a67d8baf6a06dfe5ddd8f9a17fd4db88b84f76ad95",
+        "0x8cea35fa731a32d86a59622d3a5dc031a8eef0f42c18fa5a388e320d0773fce8",
+        "0x1c8dbc8df8249109a9be93886a549ca24d1c7357747ab3d97dc403afcca4aa22",
+        "0x5b02cc49e258dc986bff6d66ae23e72f7b1b139b330421515d0f583d6e100467",
+        "0xa239e8e09f9892a2ad0c8529f38b84f14def402b8bb87dcbab37c302718a7f9e",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0xE751D56c31DC1B16595a2CdfC94388687E26a674",
+      "amountWei": "3451943126542791088005519",
+      "liquidAmountWei": "3311683757091322326807010",
+      "legacyRewardAmountWei": "140259369451468761198509",
+      "proof": [
+        "0xd7b200f292f7457d349f084b1ad49cd916d56238911e893acc8cb4e9ca05de6c",
+        "0x8cea35fa731a32d86a59622d3a5dc031a8eef0f42c18fa5a388e320d0773fce8",
+        "0x1c8dbc8df8249109a9be93886a549ca24d1c7357747ab3d97dc403afcca4aa22",
+        "0x5b02cc49e258dc986bff6d66ae23e72f7b1b139b330421515d0f583d6e100467",
+        "0xa239e8e09f9892a2ad0c8529f38b84f14def402b8bb87dcbab37c302718a7f9e",
+        "0xbb19142cd5c02463b2a8728f78a9ab9301715288c6f5822cb138319cde606146"
+      ]
+    },
+    {
+      "account": "0xE945EE8d9CD80896ef2E05fEC39eb692627850B6",
+      "amountWei": "454629600233657413770598",
+      "liquidAmountWei": "448649807583733167908223",
+      "legacyRewardAmountWei": "5979792649924245862375",
+      "proof": [
+        "0x7df9423553f6d512101a04288904bb5691226dbdc7137263f4778dab4e9c46c4",
+        "0x0b90536ffc64c471cd63751fd2f209d81d67080de97815d032d8687357cd4a62"
+      ]
+    },
+    {
+      "account": "0xFfBCED86Efe630962EAE52a29f1b7Cef3FD6FB2e",
+      "amountWei": "2298109538109158034688387",
+      "liquidAmountWei": "2282536660398330169306939",
+      "legacyRewardAmountWei": "15572877710827865381448",
+      "proof": [
+        "0x77fbfb806f29bf89ff5b3e5c2eeb402e6584599d6dad218225bbc0320dddc2f6",
+        "0x0b90536ffc64c471cd63751fd2f209d81d67080de97815d032d8687357cd4a62"
+      ]
+    }
+  ]
+}

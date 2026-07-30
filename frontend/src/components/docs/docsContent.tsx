@@ -29,7 +29,7 @@ export function H3({ children }: { children: ReactNode }) {
   return <h3 className="pt-2 text-base font-semibold text-ink">{children}</h3>;
 }
 
-/** Emphasised inline term — used sparingly, for the word a sentence turns on. */
+/** Emphasised inline term â€” used sparingly, for the word a sentence turns on. */
 function K({ children }: { children: ReactNode }) {
   return <span className="font-medium text-ink">{children}</span>;
 }
@@ -63,7 +63,7 @@ function Bullets({ items }: { items: ReactNode[] }) {
   );
 }
 
-/** Parameter table — label left, live mono value right. */
+/** Parameter table â€” label left, live mono value right. */
 function Params({ rows }: { rows: [label: string, value: ReactNode][] }) {
   return (
     <dl className="divide-y divide-line-subtle overflow-hidden rounded-md border border-line bg-panel">
@@ -78,7 +78,7 @@ function Params({ rows }: { rows: [label: string, value: ReactNode][] }) {
 }
 
 /**
- * The allowlist is registry state, not copy — it is read through the same hook
+ * The allowlist is registry state, not copy â€” it is read through the same hook
  * the deposit and pool filters use, so the docs can never claim a collection
  * the contract does not accept.
  */
@@ -173,10 +173,10 @@ export const DOCS_SECTIONS: DocSection[] = [
         <P>
           A <K>purchaser</K> does not choose an NFT. They pay the current pool price and receive one position picked at
           random, weighted so that heavily backed positions come up less often. Once a position is allocated, the
-          purchaser decides what to do with it — keep the NFT, or hand it back and take most of its backing in HYPE.
+          purchaser decides what to do with it â€” keep the NFT, or hand it back and take most of its backing in HYPE.
         </P>
         <Formula caption="Every acquisition follows the same path; the randomness is requested before anyone can see the outcome.">
-          {`deposit  →  staged  →  active  →  allocated  →  settled`}
+          {`deposit  â†’  staged  â†’  active  â†’  allocated  â†’  settled`}
         </Formula>
         <P>
           Depositors earn from every acquisition: the fee paid on top of the pool price is distributed across active
@@ -215,17 +215,17 @@ odds   = weight / totalWeight`}
         </Formula>
         <P>
           Selection draws <V>randomWord % totalWeight</V> and walks the tree to the matching slot. Nothing else
-          influences the draw — not deposit order, not rarity, not how long a position has been sitting in the pool.
+          influences the draw â€” not deposit order, not rarity, not how long a position has been sitting in the pool.
         </P>
         <H3>What backing controls</H3>
         <Bullets
           items={[
             <>
-              <K>Low backing</K> — cheap for a purchaser to take, so the position is selected often. You exit quickly and
+              <K>Low backing</K> â€” cheap for a purchaser to take, so the position is selected often. You exit quickly and
               collect fewer fees along the way.
             </>,
             <>
-              <K>High backing</K> — expensive to take, so the position is selected rarely. You stay in the pool longer
+              <K>High backing</K> â€” expensive to take, so the position is selected rarely. You stay in the pool longer
               and accrue a larger share of acquisition fees, but your HYPE stays committed.
             </>,
             <>
@@ -254,17 +254,17 @@ odds   = weight / totalWeight`}
       <>
         <P>
           The pool has one price at a time, derived from the backing it holds. Expected value is the weighted mean of
-          all active backings — the amount a random draw is worth on average:
+          all active backings â€” the amount a random draw is worth on average:
         </P>
         <Formula caption={`Surcharge is fixed at ${pct(FWA_PARAMS.surchargeBps)}. The randomness service fee is charged separately, on top, and paid to the provider before the request.`}>
           {`EV          = weightedBackingTotal / totalWeight
-pool price  = EV × (10000 + ${FWA_PARAMS.surchargeBps}) / 10000
+pool price  = EV Ã— (10000 + ${FWA_PARAMS.surchargeBps}) / 10000
 total       = pool price + randomness service fee`}
         </Formula>
         <H3>Requests settle in order</H3>
         <P>
           Buying does not resolve in the same transaction. Your request reserves a batch of listings, freezes its drift
-          tolerance, and asks the randomness provider for a word. Callbacks may arrive out of order — they only
+          tolerance, and asks the randomness provider for a word. Callbacks may arrive out of order â€” they only
           authenticate and cache the word. Requests are then processed <K>strictly in sequence</K>, permissionlessly, so
           an earlier buyer is always allocated before a later one.
         </P>
@@ -278,7 +278,7 @@ total       = pool price + randomness service fee`}
           Between your request and its processing, other deposits and withdrawals can move the pool price. Drift
           tolerance is the band you accept: if the price moves outside it, the request does not execute and your fee
           becomes a claimable refund instead. The default is <V>{pct(FWA_PARAMS.defaultDriftBps)}</V> in either
-          direction. A missing random word past its deadline expires the same way — refund, no allocation.
+          direction. A missing random word past its deadline expires the same way â€” refund, no allocation.
         </P>
         <Callout tone="amber" title="No outcome is known in advance">
           <p>
@@ -290,8 +290,8 @@ total       = pool price + randomness service fee`}
         <Params
           rows={[
             ["Acquisition surcharge", pct(FWA_PARAMS.surchargeBps)],
-            ["Default drift tolerance", `± ${pct(FWA_PARAMS.defaultDriftBps)}`],
-            ["Positions per request", `1 – ${FWA_PARAMS.maxBatch}`],
+            ["Default drift tolerance", `Â± ${pct(FWA_PARAMS.defaultDriftBps)}`],
+            ["Positions per request", `1 â€“ ${FWA_PARAMS.maxBatch}`],
           ]}
         />
       </>
@@ -307,7 +307,7 @@ total       = pool price + randomness service fee`}
       <>
         <P>
           Only collections on the allowlist can be deposited or relisted. This keeps the pool made of assets with a
-          real market on HyperEVM — a random draw is only meaningful if every position in it is worth something.
+          real market on HyperEVM â€” a random draw is only meaningful if every position in it is worth something.
         </P>
         <CollectionAllowlist />
         <P>
@@ -316,7 +316,7 @@ total       = pool price + randomness service fee`}
           withdrawn or settled normally.
         </P>
         <P>
-          These are HyperEVM NFT contracts. HyperEVM is not HyperCore — assets and balances do not cross between them
+          These are HyperEVM NFT contracts. HyperEVM is not HyperCore â€” assets and balances do not cross between them
           implicitly.
         </P>
       </>
@@ -337,20 +337,20 @@ total       = pool price + randomness service fee`}
         <Bullets
           items={[
             <>
-              <K>Keep</K> — the NFT transfers to the purchaser. The depositor receives the backing, minus the{" "}
+              <K>Keep</K> â€” the NFT transfers to the purchaser. The depositor receives the backing, minus the{" "}
               <V>{pct(FWA_PARAMS.ownerSettlementFeeBps)}</V> owner cut.
             </>,
             <>
-              <K>Keep &amp; relist</K> — same payment to the depositor, and the NFT goes straight back into custody as a
+              <K>Keep &amp; relist</K> â€” same payment to the depositor, and the NFT goes straight back into custody as a
               new listing with backing chosen by the purchaser, who becomes its depositor.
             </>,
             <>
-              <K>Accept bid (HYPE)</K> — the purchaser hands the NFT back to the depositor and takes{" "}
+              <K>Accept bid (HYPE)</K> â€” the purchaser hands the NFT back to the depositor and takes{" "}
               <V>{pct(FWA_PARAMS.bidPayoutBps)}</V> of the backing in HYPE. The remaining{" "}
               <V>{pct(10_000 - FWA_PARAMS.bidPayoutBps)}</V> is retained by the protocol.
             </>,
             <>
-              <K>Accept bid as HWA</K> — identical economics, except the {pct(FWA_PARAMS.bidPayoutBps)} payout is used
+              <K>Accept bid as HWA</K> â€” identical economics, except the {pct(FWA_PARAMS.bidPayoutBps)} payout is used
               to buy HWA through the rewards module, with a minimum-out you set. Available only once that module is
               live.
             </>,
@@ -372,7 +372,7 @@ total       = pool price + randomness service fee`}
         <H3>Stuck NFTs</H3>
         <P>
           On the non-strict paths the NFT transfer is best-effort. If a recipient contract rejects it, the HYPE side
-          still settles and the NFT is recorded against a recovery address — the rightful owner retries delivery from{" "}
+          still settles and the NFT is recorded against a recovery address â€” the rightful owner retries delivery from{" "}
           <Link href="/positions" className="text-accent underline-offset-2 hover:underline">
             My Positions
           </Link>{" "}
@@ -400,7 +400,7 @@ total       = pool price + randomness service fee`}
         <P>
           The surcharge a purchaser pays on top of EV is what depositors earn for providing liquidity. From it, the
           rewards slice is taken first, then an owner cut of <V>{pct(FWA_PARAMS.ownerAcquisitionFeeBps)}</V>. The
-          remainder is split <K>equally across every active listing</K> — not pro rata by backing. A small position
+          remainder is split <K>equally across every active listing</K> â€” not pro rata by backing. A small position
           collects the same fee as a large one.
         </P>
         <P>
@@ -419,8 +419,8 @@ total       = pool price + randomness service fee`}
         </P>
         <Params
           rows={[
-            ["Owner cut — acquisition", pct(FWA_PARAMS.ownerAcquisitionFeeBps)],
-            ["Owner cut — settlement", pct(FWA_PARAMS.ownerSettlementFeeBps)],
+            ["Owner cut â€” acquisition", pct(FWA_PARAMS.ownerAcquisitionFeeBps)],
+            ["Owner cut â€” settlement", pct(FWA_PARAMS.ownerSettlementFeeBps)],
             ["Crown tithe", pct(FWA_PARAMS.crownShareBps)],
             ["Accept-bid penalty", pct(10_000 - FWA_PARAMS.bidPayoutBps)],
             ["Distribution to listings", "equal share"],
@@ -445,7 +445,7 @@ total       = pool price + randomness service fee`}
         <P>
           Taking the crown is not a tie: a new listing must beat the current crown&apos;s backing by{" "}
           <V>{pct(FWA_PARAMS.crownThresholdBps)}</V>. The pot is credited in full, once, when the crowned position
-          leaves — by withdrawal or by being allocated.
+          leaves â€” by withdrawal or by being allocated.
         </P>
         <P>
           The crown is the most heavily backed position, which by construction is also the least likely to be selected.
@@ -465,42 +465,35 @@ total       = pool price + randomness service fee`}
   {
     id: "rewards",
     title: "$HWA rewards",
-    lede: "A fixed 100M seasonal reserve plus revenue-funded buybacks. No minting after deployment.",
+    lede: "A fixed 300M reserve over 15 days plus revenue-funded buybacks. No minting after deployment.",
     body: (
       <>
-        <Callout tone="accent" title="Finite by construction">
+        <Callout tone="accent" title="FWA-parity allocation">
           <p>
-            HWA has a fixed 1B supply: 800M seeds the permanently locked Project X LP, 100M funds three launch seasons,
-            and 100M vests to the ecosystem over 24 months after a 3-month cliff. Public claims remain locked until launch.
+            HWA has a fixed 1B supply: 500M seeds the permanently locked full-range Project X LP, 300M funds the
+            15-day rewards programme, 100M vests to the ecosystem, and the final 100M migration envelope covers the
+            immutable v1 snapshot with unused capacity sent to the dead address.
           </p>
         </Callout>
-        <H3>Three 15-day seasons</H3>
+        <H3>300M over 15 days</H3>
         <P>
-          Season caps decline from <V>50M</V> to <V>30M</V> to <V>20M HWA</V>. These are maximums, not promised
-          distributions. Each settled acquisition unlocks at most <V>5%</V> of its HYPE value in HWA using the lower of
-          the launch quote and the 30-minute TWAP. Unused daily capacity is burned and never carried forward.
-        </P>
-        <H3>Who receives seasonal HWA</H3>
-        <P>
-          Half is allocated to eligible depositors by <K>square root of backing</K>; half is allocated to purchasers by
-          <K>actual settled HYPE spent</K>. Refunded and expired requests are excluded. Protocol-seeded Genesis listings
-          do not receive the pre-funded depositor allocation.
+          <V>150M HWA</V> accrues to eligible active depositors by <K>square root of backing</K>. A separate
+          <V>150M HWA</V> is split across 15 daily purchaser epochs by successful acquisition count. Refunded and
+          expired requests do not earn purchaser rewards.
         </P>
         <Formula caption="Depositor weight for an eligible active position.">
           {`weight = sqrt(backing) / Σ sqrt(eligible backing)`}
         </Formula>
         <H3>Revenue-funded buybacks</H3>
         <P>
-          After day 45 the fixed reserve stops. Protocol revenue can still buy HWA through the Project X 1% wHYPE pool,
-          protected by a 30-minute TWAP. Purchased HWA routes 40% to depositors, 40% to purchasers and 20% to permanent
-          burn. The hot/cold gap controls only the purchaser&apos;s HYPE buy allowance: zero through <V>{FWA_PARAMS.hotGapSec}s</V>,
-          then a linear ramp to 100% after <V>{COLD_MIN} min</V>.
+          Protocol revenue can buy HWA through the Project X 1% wHYPE pool. Purchased HWA routes 40% to depositors,
+          40% to purchasers and 20% to permanent burn. The hot/cold gap controls the purchaser&apos;s HYPE buy allowance:
+          zero through <V>{FWA_PARAMS.hotGapSec}s</V>, then a linear ramp to 100% after <V>{COLD_MIN} min</V>.
         </P>
-        <Params rows={[["Season 1", "50M max · days 1–15"], ["Season 2", "30M max · days 16–30"], ["Season 3", "20M max · days 31–45"], ["Value cap", "5% of settled HYPE"], ["Buyback routing", "40 / 40 / 20 burn"]]} />
+        <Params rows={[["Depositor reserve", "150M over 15 active days"], ["Purchaser reserve", "150M · 10M per daily epoch"], ["LP allocation", "500M · permanently locked"], ["Buyback routing", "40 / 40 / 20 burn"]]} />
       </>
     ),
   },
-
   // -------------------------------------------------------------- safety
   {
     id: "safety",
@@ -564,7 +557,7 @@ total       = pool price + randomness service fee`}
 /** Live parameter summary shown at the top of the page. */
 export const DOCS_PARAM_SUMMARY: [label: string, value: ReactNode][] = [
   ["Surcharge", pct(FWA_PARAMS.surchargeBps)],
-  ["Default drift", `± ${pct(FWA_PARAMS.defaultDriftBps)}`],
+  ["Default drift", `Â± ${pct(FWA_PARAMS.defaultDriftBps)}`],
   ["Min backing", <Hype key="min-backing" wei={FWA_PARAMS.minBacking} maxDecimals={4} />],
   ["Accept-bid payout", pct(FWA_PARAMS.bidPayoutBps)],
   ["Purchaser window", `${HOURS}h`],

@@ -31,6 +31,7 @@ export const DeploymentManifestSchema = z.object({
     projectXPool: AddressSchema.optional(),
     projectXLiquidityLocker: AddressSchema.optional(),
     ecosystemVesting: AddressSchema.optional(),
+    migrationDistributor: AddressSchema.optional(),
     snapshotNft: AddressSchema.optional(),
   }),
   features: z

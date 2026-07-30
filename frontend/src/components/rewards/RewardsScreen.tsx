@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { Tag } from "@/components/ui/Tag";
 import type { RewardsSnapshot } from "@/protocol/types";
 import { ProtocolPrelaunch } from "@/components/ui/ProtocolPrelaunch";
+import { MigrationClaimPanel } from "@/components/rewards/MigrationClaimPanel";
 import {
   HWA_NFT_DEPOSITS_PAUSED,
   HWA_PROTOCOL_OPERATIONS_PAUSED,
@@ -48,7 +49,7 @@ export function RewardsScreen() {
     return (
       <Shell>
         <div className="rounded-md border border-line bg-panel">
-          <EmptyState title="Rewards V2 are not deployed" detail="Seasonal incentives and revenue-funded buybacks will appear here only after the verified contracts are configured." />
+          <EmptyState title="Rewards V2 are not deployed" detail="15-day incentives and revenue-funded buybacks will appear here only after the verified contracts are configured." />
         </div>
         {rewards.holderRevenue && <HolderRevenuePanel holder={rewards.holderRevenue} />}
       </Shell>
@@ -62,6 +63,7 @@ export function RewardsScreen() {
 
   return (
     <Shell>
+      <MigrationClaimPanel />
       {DISTRIBUTION_LOCKED && (
         <div className="rounded-md border border-secondary/40 bg-secondary/10 px-4 py-3" role="status">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -75,9 +77,9 @@ export function RewardsScreen() {
       )}
 
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line bg-line-subtle lg:grid-cols-4">
-        <Metric label="Program" value={!started ? "STAGED" : ended ? "ENDED" : `SEASON ${emission?.currentSeason ?? 0}`} detail={!started ? "clock has not started" : emission?.endsAt ? `hard stop ${timeLeft(emission.endsAt)}` : undefined} />
-        <Metric label="Fixed reserve" value={emission ? `${formatHwa(emission.reserveRemaining, 0)} HWA` : "—"} detail="100M maximum across 45 days" />
-        <Metric label="Value gate" value={emission ? `${emission.valueCapBps / 100}% max` : "—"} detail="of settled HYPE volume" />
+        <Metric label="Program" value={!started ? "STAGED" : ended ? "ENDED" : "LIVE"} detail={!started ? "clock has not started" : emission?.endsAt ? `hard stop ${timeLeft(emission.endsAt)}` : undefined} />
+        <Metric label="Fixed reserve" value={emission ? `${formatHwa(emission.reserveRemaining, 0)} HWA` : "â"} detail="300M total · 150M depositors + 150M purchasers" />
+        <Metric label="Purchaser epochs" value={emission ? `${Math.min(emission.currentEpoch + 1, 15)} / 15` : ""} detail="10M HWA budget per day" />
         <Metric label="Claims" value={emission?.claimsEnabled && !HWA_REWARD_CLAIMS_PAUSED ? "OPEN" : "LOCKED"} detail="one-way explicit activation" />
       </div>
 
@@ -85,19 +87,19 @@ export function RewardsScreen() {
         <section className="space-y-2" aria-labelledby="season-roadmap">
           <div className="flex items-end justify-between gap-3">
             <div>
-              <div className="text-2xs font-semibold uppercase tracking-[0.16em] text-purple">Seasonal program</div>
-              <h2 id="season-roadmap" className="mt-0.5 text-lg font-semibold text-ink">45 days. Three shrinking caps.</h2>
+              <div className="text-2xs font-semibold uppercase tracking-[0.16em] text-purple">FWA-parity launch program</div>
+              <h2 id="season-roadmap" className="mt-0.5 text-lg font-semibold text-ink">300M HWA over 15 days.</h2>
             </div>
-            <span className="text-right text-2xs text-mute">Unused daily capacity is burned · no carry-over</span>
+            <span className="text-right text-2xs text-mute">Unused daily capacity is burned Â· no carry-over</span>
           </div>
           <div className="grid gap-3 md:grid-cols-3">
             {emission.seasons.map((season) => {
               const status = !started ? "UPCOMING" : emission.currentSeason === season.season ? "LIVE" : emission.currentSeason > season.season || ended ? "CLOSED" : "UPCOMING";
               return (
                 <div key={season.season} className={`rounded-md border p-3 ${status === "LIVE" ? "border-secondary/50 bg-secondary/10" : "border-line bg-panel"}`}>
-                  <div className="flex items-center justify-between gap-2"><span className="font-mono text-2xs text-purple">S0{season.season}</span><Tag tone={status === "LIVE" ? "accent" : "neutral"}>{status}</Tag></div>
+                  <div className="flex items-center justify-between gap-2"><span className="font-mono text-2xs text-purple">15D</span><Tag tone={status === "LIVE" ? "accent" : "neutral"}>{status}</Tag></div>
                   <div className="mt-3 num font-mono text-xl text-ink">{formatHwa(season.maxBudget, 0)} <span className="text-sm text-mute">HWA max</span></div>
-                  <div className="mt-1 text-2xs text-mute">Days {(season.season - 1) * 15 + 1}–{season.season * 15} · volume-gated, never guaranteed</div>
+                  <div className="mt-1 text-2xs text-mute">Days {(season.season - 1) * 15 + 1}â{season.season * 15} Â· volume-gated, never guaranteed</div>
                 </div>
               );
             })}
@@ -106,7 +108,7 @@ export function RewardsScreen() {
       )}
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <Panel title="Seasonal incentives" actions={<Tag tone="accent">fixed 100M reserve</Tag>}>
+        <Panel title="15-day incentives" actions={<Tag tone="accent">fixed 300M reserve</Tag>}>
           <div className="grid grid-cols-2 gap-2">
             <BigAmount label="Unlocked by volume" value={emission?.emitted ?? 0n} highlight />
             <BigAmount label="Burned / expired" value={emission?.burned ?? 0n} />
@@ -114,7 +116,7 @@ export function RewardsScreen() {
             <BigAmount label="Purchaser side" value={emission?.purchaserEmitted ?? 0n} />
           </div>
           <p className="mt-2 text-2xs leading-relaxed text-mute">
-            Each settled draw can unlock at most 5% of its HYPE value in HWA, priced with the lower of the 30-minute TWAP and launch price. Depositors split 50% by √backing; purchasers split 50% by actual HYPE spent. Protocol-seeded Genesis positions are excluded.
+            Each settled draw can unlock at most 5% of its HYPE value in HWA, priced with the lower of the 30-minute TWAP and launch price. Depositors split 50% by âbacking; purchasers split 50% by actual HYPE spent. Protocol-seeded Genesis positions are excluded.
           </p>
         </Panel>
 
@@ -124,7 +126,7 @@ export function RewardsScreen() {
             <BigAmount label="Routed to purchasers" value={rewards.buyback?.purchaserRouted ?? 0n} />
           </div>
           <div className="mt-2 rounded-sm border border-line-subtle bg-inset p-2.5 text-2xs leading-relaxed text-mute">
-            Protocol revenue buys HWA on Project X and routes purchased tokens 40% to depositors, 40% to purchasers and 20% to permanent burn. This is separate from the fixed seasonal reserve and cannot mint new HWA.
+            Protocol revenue buys HWA on Project X and routes purchased tokens 40% to depositors, 40% to purchasers and 20% to permanent burn. This is separate from the fixed 15-day reserve and cannot mint new HWA.
           </div>
         </Panel>
       </div>
@@ -141,20 +143,20 @@ export function RewardsScreen() {
               <Button className="w-full" variant="secondary" disabled={HWA_REWARD_CLAIMS_PAUSED || !emission?.claimsEnabled || (user?.depositorCredit ?? 0n) <= 0n} loading={action.submitting} onClick={() => void action.run((client) => client.claimRewards({ withdrawCredit: true }))}>Withdrawals locked</Button>
             </div>
           </Panel>
-          <Panel title="Your purchaser allocation" actions={<Tag tone="neutral">weighted by HYPE spent</Tag>}>
+          <Panel title="Your purchaser allocation" actions={<Tag tone="neutral">successful daily acquisitions</Tag>}>
             <div className="space-y-2">
               <BigAmount label="Closed epochs" value={user?.purchaserClaimable ?? 0n} highlight />
               <div className="rounded-sm border border-line-subtle bg-inset p-2.5"><div className="text-2xs text-mute">HYPE allowance for an HWA buy</div><Hype wei={user?.purchaserBuyAllowanceHype ?? 0n} className="text-lg text-ink" /></div>
               <Button className="w-full" variant="primary" disabled={HWA_REWARD_CLAIMS_PAUSED || !emission?.claimsEnabled || (user?.purchaserClaimable ?? 0n) <= 0n} loading={action.submitting} onClick={() => void action.run((client) => client.claimRewards({ epochs: user?.claimableEpochs ?? [] }))}>Claims locked</Button>
-              <div className="text-2xs text-mute">The 60s→60m hot/cold gap only changes the HYPE allowance routed to the purchaser. It does not inflate the seasonal reserve.</div>
+              <div className="text-2xs text-mute">The 60sâ60m hot/cold gap only changes the HYPE allowance routed to the purchaser. It does not inflate the 15-day reserve.</div>
             </div>
           </Panel>
         </div>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line bg-panel px-3 py-2 text-2xs text-mute">
-        <span>Maximum seasonal allocation — not APR, yield or guaranteed distribution.</span>
-        <span>{rewards.tokenAddress && <>$HWA <span className="font-mono">{shortAddress(rewards.tokenAddress)}</span> · </>}{rewards.swapRoute?.dex} 1% wHYPE pool</span>
+        <span>Fixed launch allocation â not APR, yield or guaranteed distribution.</span>
+        <span>{rewards.tokenAddress && <>$HWA <span className="font-mono">{shortAddress(rewards.tokenAddress)}</span> Â· </>}{rewards.swapRoute?.dex} 1% wHYPE pool</span>
       </div>
 
       {rewards.holderRevenue && <HolderRevenuePanel holder={rewards.holderRevenue} />}
@@ -171,7 +173,7 @@ function HolderRevenuePanel({ holder }: { holder: NonNullable<RewardsSnapshot["h
     <Panel title="Genesis holder revenue" actions={<Tag tone={holder.claimsClosed ? "neutral" : "accent"}>{holder.claimsClosed ? "Claims closed" : `${holder.nftShareBps / 100}% of protocol revenue`}</Tag>}>
       <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
         <div className="rounded-sm border border-line-subtle bg-inset p-2.5"><div className="text-2xs uppercase tracking-wide text-mute">Claimable HYPE</div><Hype wei={pending} className="text-xl text-ink" /><div className="mt-1 text-2xs text-faint">{account.status === "connected" ? `${holder.user?.ownedTokenIds.length ?? 0} eligible Genesis NFTs` : "Connect to inspect ownership"}</div></div>
-        <div className="rounded-sm border border-line-subtle bg-inset p-2.5 text-2xs text-mute">Cumulative per NFT: <Hype wei={holder.claimablePerToken} className="text-dim" /><div className="mt-1">Independent from seasonal HWA emissions.</div></div>
+        <div className="rounded-sm border border-line-subtle bg-inset p-2.5 text-2xs text-mute">Cumulative per NFT: <Hype wei={holder.claimablePerToken} className="text-dim" /><div className="mt-1">Independent from 15-day HWA emissions.</div></div>
         {account.status !== "connected" ? <Button variant="primary" onClick={account.connect}>Connect wallet</Button> : <Button variant="primary" disabled={HWA_PROTOCOL_OPERATIONS_PAUSED || holder.claimsClosed || pending <= 0n} loading={action.submitting} onClick={() => void action.run((client) => client.claimSplitterRevenue({ tokenIds: holder.user?.ownedTokenIds ?? [] }))}>{HWA_PROTOCOL_OPERATIONS_PAUSED ? "Launch locked" : "Claim HYPE"}</Button>}
       </div>
     </Panel>
@@ -179,7 +181,7 @@ function HolderRevenuePanel({ holder }: { holder: NonNullable<RewardsSnapshot["h
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto w-full max-w-[1280px] space-y-4 px-3 py-5 sm:px-6"><PageHeader eyebrow="INCENTIVES" title="Rewards" description="Finite seasons for launch discovery. Revenue-funded buybacks for the long game." meta="$HWA · fixed 1B supply" />{children}</div>;
+  return <div className="mx-auto w-full max-w-[1280px] space-y-4 px-3 py-5 sm:px-6"><PageHeader eyebrow="INCENTIVES" title="Rewards" description="FWA-parity 300M launch rewards over 15 days, plus revenue-funded buybacks." meta="$HWA Â· fixed 1B supply" />{children}</div>;
 }
 
 function Metric({ label, value, detail }: { label: string; value: string; detail?: string }) {

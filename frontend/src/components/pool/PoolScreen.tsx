@@ -160,22 +160,22 @@ export function PoolScreen() {
         <div className="rounded-xl border border-secondary/30 bg-secondary/8 p-4 sm:p-5">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <div className="mlabel text-secondary-readable">HWA SEASONS</div>
-              <h3 className="mt-1 text-xl font-semibold text-ink">Finite launch incentives. Permanent buyback loop.</h3>
+              <div className="mlabel text-secondary-readable">HWA REWARDS</div>
+              <h3 className="mt-1 text-xl font-semibold text-ink">300M over 15 days. Permanent buyback loop.</h3>
             </div>
-            <a href="/rewards" className="text-xs font-medium text-accent hover:underline">Inspect reward accounting →</a>
+            <a href="/rewards" className="text-xs font-medium text-accent hover:underline">Inspect reward accounting â</a>
           </div>
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            {[["S01", "50M max", "Days 1–15"], ["S02", "30M max", "Days 16–30"], ["S03", "20M max", "Days 31–45"]].map(([season, cap, days]) => (
+            {[["DEP", "150M", "Depositors · 15 days"], ["BUY", "150M", "Purchasers · 15 epochs"], ["LP", "500M", "Locked full range"]].map(([season, cap, days]) => (
               <div key={season} className="rounded-lg border border-line/70 bg-inset/60 px-3 py-2.5">
                 <div className="font-mono text-2xs text-purple">{season}</div>
                 <div className="mt-1 font-mono text-base font-semibold text-ink">{cap}</div>
-                <div className="text-2xs text-mute">{days} · volume-gated</div>
+                <div className="text-2xs text-mute">{days}</div>
               </div>
             ))}
           </div>
           <p className="mt-3 text-2xs leading-relaxed text-mute">
-            Seasonal HWA is capped at 5% of settled HYPE volume and unused daily capacity is burned. After day 45, only protocol-revenue buybacks continue. No new HWA can be minted.
+            The FWA-parity reserve is fixed at 300M HWA: 150M for active depositors and 150M across 15 daily purchaser epochs. Protocol-revenue buybacks continue afterward. No new HWA can be minted.
           </p>
         </div>
         <div className="flex flex-col gap-3 rounded-xl border border-amber/25 bg-amber/6 p-4 sm:flex-row sm:items-start sm:gap-5">
@@ -194,7 +194,7 @@ export function PoolScreen() {
             <h2 className="mt-1 text-xl font-semibold text-ink">Live protocol state</h2>
           </div>
           <span className="hidden text-2xs text-faint sm:block">
-            {env.dataMode === "mock" ? "Deterministic demo telemetry" : "Browser sampled · never estimated"}
+            {env.dataMode === "mock" ? "Deterministic demo telemetry" : "Browser sampled Â· never estimated"}
           </span>
         </div>
 
@@ -276,7 +276,7 @@ export function PoolScreen() {
             <div className="card border-red/30">
               <EmptyState
                 title="Couldn't load listings"
-                detail="The data source did not respond. The pool may be fine — this is a connection problem, not an empty pool."
+                detail="The data source did not respond. The pool may be fine â this is a connection problem, not an empty pool."
                 action={
                   <Button variant="outline" onClick={() => void refetch()}>
                     Retry
@@ -413,7 +413,7 @@ function HeroStatsBar({
         href="#pool"
         className="mlabel hidden h-14 shrink-0 items-center justify-center border-l border-line px-6 text-mute transition-colors hover:text-accent lg:flex"
       >
-        View Pool ↓
+        View Pool â
       </a>
     </div>
   );
