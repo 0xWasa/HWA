@@ -87,7 +87,7 @@ if (!/^[a-z0-9-]{1,64}$/u.test(logRpcApiKeyHeader)) throw new Error("Invalid HYP
 const fairnessAlertBlocks = positiveBigInt("FWA_DRAND_FAIRNESS_ALERT_BLOCKS", "120");
 const heartbeatIntervalMs = Number(positiveBigInt("FWA_DRAND_HEARTBEAT_INTERVAL_MS", "180000"));
 if (!Number.isSafeInteger(heartbeatIntervalMs) || heartbeatIntervalMs < 30_000) throw new Error("Invalid heartbeat interval");
-const acquisitionProcessBatch = positiveBigInt("FWA_ACQUISITION_PROCESS_BATCH", "16");
+const acquisitionProcessBatch = positiveBigInt("FWA_ACQUISITION_PROCESS_BATCH", "3");
 if (acquisitionProcessBatch === 0n) throw new Error("FWA_ACQUISITION_PROCESS_BATCH must be positive");
 const submitterKey = required("FWA_DRAND_SUBMITTER_PRIVATE_KEY");
 const forge = foundryBinary("forge", "FOUNDRY_FORGE");
