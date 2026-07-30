@@ -943,6 +943,23 @@ export class ViemProtocolClient implements ProtocolClient {
     };
   }
 
+  /**
+   * The settled outcome as the event recorded it, or undefined.
+   *
+   * Never throws: an unreachable indexer must leave the caller on its on-chain
+   * inference rather than fail a detail view outright.
+   */
+  private async indexedSettlement(id: bigint): Promise<SettlementOutcome | undefined> {
+    if (!this.indexerUrl) return undefined;
+    try {
+      const rows = await this.indexedListingRows({ where: [`listingId: ${JSON.stringify(id.toString())}`], first: 1 });
+      const value = rows[0]?.settlement;
+      return isSettlementOutcome(value) ? value : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
   async getListing(id: bigint, indexedTokenURI?: string | null): Promise<Listing | null> {
     const raw = await this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "listings", args: [id] });
     const status = LISTING_STATUS_BY_CODE[raw[10] as keyof typeof LISTING_STATUS_BY_CODE];
@@ -954,19 +971,26 @@ export class ViemProtocolClient implements ProtocolClient {
     ]);
     let settlement: Listing["settlement"];
     if (status === "settled") {
-      try {
-        const nftOwner = await this.pub.readContract({
-          address: raw[0],
-          abi: erc721Abi,
-          functionName: "ownerOf",
-          args: [raw[3]],
-        });
-        if (raw[2] !== ZERO_ADDRESS && sameAddress(nftOwner, raw[2])) settlement = "kept";
-        else if (sameAddress(nftOwner, raw[1])) settlement = "bid_accepted";
-        else if (sameAddress(nftOwner, this.core)) settlement = "relisted";
-      } catch {
-        // A burned or hostile ERC-721 may make ownerOf unavailable. The UI then
-        // reports the outcome as unknown instead of inventing an event history.
+      // The event is the only source that can tell a HYPE exit from an HWA one:
+      // both send the NFT back to the depositor, so ownerOf sees them as the
+      // same thing. Taking the bid as HWA was being reported as "bid accepted",
+      // which reads as the HYPE exit the purchaser did not choose.
+      settlement = await this.indexedSettlement(id);
+      if (!settlement) {
+        try {
+          const nftOwner = await this.pub.readContract({
+            address: raw[0],
+            abi: erc721Abi,
+            functionName: "ownerOf",
+            args: [raw[3]],
+          });
+          if (raw[2] !== ZERO_ADDRESS && sameAddress(nftOwner, raw[2])) settlement = "kept";
+          else if (sameAddress(nftOwner, raw[1])) settlement = "bid_accepted";
+          else if (sameAddress(nftOwner, this.core)) settlement = "relisted";
+        } catch {
+          // A burned or hostile ERC-721 may make ownerOf unavailable. The UI then
+          // reports the outcome as unknown instead of inventing an event history.
+        }
       }
     }
     return {

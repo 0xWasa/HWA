@@ -316,6 +316,53 @@ describe("ViemProtocolClient indexer boundary", () => {
     expect(indexerQuery).toContain("orderBy: listedAt");
   });
 
+  it("reports a token exit as a token exit on the detail view, where ownerOf cannot tell", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        response({
+          listings: [
+            {
+              id: "113",
+              listingId: "113",
+              status: "settled",
+              collection: "0x0000000000000000000000000000000000000010",
+              tokenId: "121",
+              depositor: "0x0000000000000000000000000000000000000020",
+              purchaser: "0x0000000000000000000000000000000000000030",
+              backing: "300",
+              weight: "0",
+              listedAt: "1700000000",
+              allocatedAt: "1700000100",
+              acquiredFor: "270",
+              settlement: "bid_accepted_tokens",
+              isCrown: false,
+            },
+          ],
+        }),
+      ),
+    );
+    const client = new ViemProtocolClient(manifest, "http://localhost:8545", 999, "https://indexer.example/graphql");
+    const readContract = vi.fn(async ({ functionName }: { functionName: string }) => {
+      if (functionName === "listings") {
+        return [
+          "0x0000000000000000000000000000000000000010",
+          "0x0000000000000000000000000000000000000020",
+          "0x0000000000000000000000000000000000000030",
+          121n, 0n, 300n, 0n, 0n, 1n, 1_700_000_100n, 4,
+        ] as const;
+      }
+      // The NFT went back to the depositor, which a HYPE exit does too.
+      if (functionName === "ownerOf") return "0x0000000000000000000000000000000000000020";
+      return 0n;
+    });
+    Object.assign(client, { pub: { readContract } });
+
+    const listing = await client.getListing(113n);
+
+    expect(listing?.settlement).toBe("bid_accepted_tokens");
+  });
+
   it("carries the indexed settlement outcome that on-chain state cannot express", async () => {
     vi.stubGlobal(
       "fetch",

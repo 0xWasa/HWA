@@ -12,6 +12,18 @@ import { Button } from "@/components/ui/Button";
 import { Countdown } from "@/components/ui/Countdown";
 import { Hype } from "@/components/ui/Hype";
 
+/* Wording contract shared with the feed chips. Keyed by the union so a new
+   outcome fails the build instead of leaking a raw enum into the sentence. */
+const OUTCOME_TEXT: Record<NonNullable<Listing["settlement"]>, string> = {
+  kept: "you kept the NFT",
+  relisted: "relisted as your own position",
+  bid_accepted: "bid accepted, paid in HYPE",
+  bid_accepted_tokens: "bid accepted, paid in $HWA",
+  depositor_reclaim_nft: "the depositor took the NFT back",
+  depositor_reclaim_backing: "the depositor took the backing",
+  finalized: "finalized after the settlement window",
+};
+
 /** Four purchaser outcomes, kept inline on the acquisition result surface. */
 export function InlineSettlementPanel({
   listing,
@@ -44,7 +56,7 @@ export function InlineSettlementPanel({
         <div className="mlabel text-green">SETTLEMENT RECORDED</div>
         <p className="mt-1 text-sm text-dim">
           This position is no longer awaiting a purchaser decision
-          {listing.settlement ? ` — outcome: ${listing.settlement.replaceAll("_", " ")}.` : "."}
+          {listing.settlement ? `: ${OUTCOME_TEXT[listing.settlement]}.` : "."}
         </p>
       </div>
     );
