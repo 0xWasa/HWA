@@ -60,7 +60,7 @@ export function DepositFlow() {
   const account = useAccountState();
   const { writesEnabled, prelaunch } = useProtocol();
   const { data: snapshot } = usePoolSnapshot();
-  const { data: owned, isLoading: loadingNfts } = useOwnedNfts();
+  const { data: ownedRaw, isLoading: loadingNfts } = useOwnedNfts();
   const { data: balance } = useNativeBalance();
   const { data: positions, refetch: refetchPositions } = usePositions();
   const { data: txs } = useTrackedTxs();
@@ -82,6 +82,25 @@ export function DepositFlow() {
    * interrupted deposit still works.
    */
   const [retiredTxIds, setRetiredTxIds] = useState<string[]>(readRetired);
+
+  /**
+   * Wallet holdings, minus anything already escrowed by the pool.
+   *
+   * Discovery runs through the indexer, which trails the chain by a few blocks,
+   * so an NFT just deposited kept sitting in the picker. Selecting it there and
+   * pressing approve sends an ERC-721 approval for a token the wallet no longer
+   * owns, which reverts: the deposit had worked, and the app still handed back
+   * a failure. Positions are the same account's own listings, so a token that
+   * appears there cannot also be in the wallet.
+   */
+  const owned: OwnedNFT[] | undefined = useMemo(() => {
+    if (!ownedRaw) return ownedRaw;
+    const escrowed = new Set(
+      (positions?.deposited ?? []).map((listing) => `${listing.collection.toLowerCase()}:${listing.tokenId}`),
+    );
+    if (escrowed.size === 0) return ownedRaw;
+    return ownedRaw.filter((n) => !escrowed.has(`${n.collection.toLowerCase()}:${n.tokenId}`));
+  }, [ownedRaw, positions]);
 
   const selected: OwnedNFT | undefined = useMemo(
     () => owned?.find((n) => `${n.collection}:${n.tokenId}` === selectedKey),
