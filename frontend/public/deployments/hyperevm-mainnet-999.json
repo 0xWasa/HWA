@@ -58,6 +58,13 @@
       "testnetFixture": false
     },
     {
+      "address": "0xCC3D60fF11a268606C6a57bD6Db74b4208f1D30c",
+      "name": "TinyHyperCats",
+      "symbol": "THC",
+      "deploymentBlock": 18034,
+      "testnetFixture": false
+    },
+    {
       "address": "0x89D52133B105E9548Df16dE4d7cf59c412daf191",
       "name": "HWA Genesis Snapshot",
       "symbol": "HWA-GEN",
