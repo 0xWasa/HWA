@@ -43,13 +43,16 @@ const COLLECTION_FLOORS: Record<string, CollectionFloorConfig> = {
     image: "/collections/hypurr.webp",
     marketplaceUrl: "https://opensea.io/collection/hypurr-hyperevm",
   },
+  "0xcc3d60ff11a268606c6a57bd6db74b4208f1d30c": {
+    slug: "tiny-hyper-cats-hyperevm",
+    // Fully on-chain pixel art: the token's own SVG is the thumbnail, so it
+    // stays crisp at any size and costs less than a raster export.
+    image: "/collections/tinyhypercats.svg",
+    marketplaceUrl: "https://opensea.io/collection/tiny-hyper-cats-hyperevm",
+  },
   "0x89d52133b105e9548df16de4d7cf59c412daf191": {
     seedReferenceHype: "0.25",
     image: "/collections/genesis.webp",
-  },
-  "0xcc3d60ff11a268606c6a57bd6db74b4208f1d30c": {
-    slug: "tiny-hyper-cats-hyperevm",
-    marketplaceUrl: "https://opensea.io/collection/tiny-hyper-cats-hyperevm",
   },
 };
 

@@ -103,10 +103,53 @@ const RPC_TRANSPORT_OPTIONS = {
 } as const;
 
 // Wallet discovery can surface hundreds of NFTs at once. Pace metadata calls
-// so a legitimate collection view does not trip the public Nginx/API limits or
-// create hundreds of simultaneous upstream IPFS requests.
-const NFT_METADATA_MAX_CONCURRENCY = 8;
-const NFT_METADATA_START_INTERVAL_MS = 50;
+// so a legitimate collection view does not create hundreds of simultaneous
+// upstream fetches. The server budget is per MINUTE, not per second, so the
+// pacing only needs to stop a thundering herd, not to ration: a full pool used
+// to spend eleven seconds in this queue while the responses themselves took
+// under a tenth of a second each.
+const NFT_METADATA_MAX_CONCURRENCY = 12;
+const NFT_METADATA_START_INTERVAL_MS = 12;
+
+/**
+ * Resolved metadata, kept across reloads.
+ *
+ * A tokenURI describes one immutable token, so re-asking on every refresh only
+ * bought latency. Entries carrying an inline data: image are skipped: they are
+ * tens of kilobytes each and would exhaust the quota for no gain, since the
+ * browser decodes them locally anyway.
+ */
+const NFT_METADATA_STORE_KEY = "hwa.nftmeta";
+const NFT_METADATA_STORE_MAX = 400;
+const NFT_METADATA_STORE_MAX_VALUE = 512;
+
+type StoredMetadata = { name?: string; imageUrl?: string };
+
+function readMetadataStore(): Map<string, StoredMetadata> {
+  if (typeof window === "undefined") return new Map();
+  try {
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(NFT_METADATA_STORE_KEY) ?? "null");
+    if (!Array.isArray(parsed)) return new Map();
+    return new Map(
+      parsed.filter(
+        (entry): entry is [string, StoredMetadata] =>
+          Array.isArray(entry) && typeof entry[0] === "string" && !!entry[1] && typeof entry[1] === "object",
+      ),
+    );
+  } catch {
+    return new Map();
+  }
+}
+
+function persistMetadata(store: Map<string, StoredMetadata>): void {
+  if (typeof window === "undefined") return;
+  try {
+    const tail = [...store].slice(-NFT_METADATA_STORE_MAX);
+    window.localStorage.setItem(NFT_METADATA_STORE_KEY, JSON.stringify(tail));
+  } catch {
+    /* private mode / quota — the in-memory cache still applies */
+  }
+}
 type MetadataJob<T> = {
   run: () => Promise<T>;
   resolve: (value: T) => void;
@@ -273,6 +316,7 @@ export class ViemProtocolClient implements ProtocolClient {
   private txs: TrackedTransaction[] = [];
   private receiptWatchers = new Set<string>();
   private metadataCache = new Map<string, Promise<{ name?: string; imageUrl?: string }>>();
+  private metadataStore = readMetadataStore();
   private collectionMetadataCache = new Map<string, Promise<{ name?: string; symbol?: string }>>();
   private poolSwapCache?: { pool: Address; throughBlock: bigint; samples: PoolSwapSample[] };
 
@@ -487,6 +531,15 @@ export class ViemProtocolClient implements ProtocolClient {
   private resolveNFTMetadata(tokenURI: string): Promise<{ name?: string; imageUrl?: string }> {
     const existing = this.metadataCache.get(tokenURI);
     if (existing) return existing;
+    // A reload starts with an empty in-memory cache, so without this every
+    // token queued behind the pacer again even though its answer had not
+    // changed and was already in the browser's HTTP cache.
+    const stored = this.metadataStore.get(tokenURI);
+    if (stored) {
+      const resolved = Promise.resolve(stored);
+      this.metadataCache.set(tokenURI, resolved);
+      return resolved;
+    }
     const request = scheduleMetadataRequest(() =>
       tokenURI.startsWith("data:application/json")
         ? fetch("/api/nft-metadata", {
@@ -499,10 +552,18 @@ export class ViemProtocolClient implements ProtocolClient {
       .then(async (response) => {
         if (!response.ok) return {};
         const value = (await response.json()) as { name?: unknown; imageUrl?: unknown };
-        return {
+        const resolved = {
           name: typeof value.name === "string" ? value.name : undefined,
           imageUrl: typeof value.imageUrl === "string" ? value.imageUrl : undefined,
         };
+        const compact =
+          (resolved.imageUrl?.length ?? 0) <= NFT_METADATA_STORE_MAX_VALUE &&
+          (resolved.name?.length ?? 0) <= NFT_METADATA_STORE_MAX_VALUE;
+        if (compact && (resolved.name || resolved.imageUrl)) {
+          this.metadataStore.set(tokenURI, resolved);
+          persistMetadata(this.metadataStore);
+        }
+        return resolved;
       })
       .catch(() => ({}));
     this.metadataCache.set(tokenURI, request);
