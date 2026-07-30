@@ -435,9 +435,22 @@ export class ViemProtocolClient implements ProtocolClient {
       multicallAddress: MULTICALL3_ADDRESS,
     }) as readonly unknown[];
     const topId = state[state.length - 1] as bigint;
+    let mismatched = 0;
     const items = await Promise.all(
       rows.map(async (row, index) => {
-        const listing = this.listingFromTelemetry(BigInt(row.listingId), state[index] as ListingTelemetryRaw);
+        const raw = state[index] as ListingTelemetryRaw;
+        // The indexer and the core are two independent sources keyed by the same
+        // uint256. Point them at different deployments and every id still
+        // resolves, so economic fields silently describe another contract's
+        // listing while names and images stay from the row. That shipped once:
+        // the subgraph was left on the v1 core after the v2 cutover and the pool
+        // rendered real backings against the wrong NFTs. The row already carries
+        // its own identity, so proving it costs nothing.
+        if (!sameAddress(raw[0], row.collection as Address) || raw[3] !== BigInt(row.tokenId)) {
+          mismatched += 1;
+          return null;
+        }
+        const listing = this.listingFromTelemetry(BigInt(row.listingId), raw);
         if (!listing) return null;
         if (includeMetadata) {
           listing.nft = await this.resolveListingNFT(listing.collection, listing.tokenId, row.tokenURI);
@@ -455,6 +468,17 @@ export class ViemProtocolClient implements ProtocolClient {
         return listing;
       }),
     );
+    // A stray mismatch is just a row the core has since cleared. A wholesale one
+    // means the indexer is describing a different deployment, and then no row is
+    // trustworthy: fail closed onto the direct on-chain reader rather than
+    // render a plausible-looking pool.
+    if (mismatched > rows.length / 4) {
+      throw new ProtocolError(
+        "INDEXER_DOWN",
+        "The indexer is reporting listings from a different core deployment.",
+        `${mismatched} of ${rows.length} indexed rows did not match the core`,
+      );
+    }
     const listings = items.filter((listing): listing is Listing => listing !== null);
     for (const listing of listings) listing.isCrown = listing.id === topId;
     return listings;

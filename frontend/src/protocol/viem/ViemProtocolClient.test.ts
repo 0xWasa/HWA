@@ -207,6 +207,94 @@ describe("ViemProtocolClient indexer boundary", () => {
     expect(page.items[0]?.listedAt).toBe(1_700_000_000);
     expect(page.items[0]?.isCrown).toBe(true);
   });
+  it("refuses a pool whose indexed rows describe a different core deployment", async () => {
+    // Every id resolves on both cores, so the only tell is that the struct the
+    // core returns is not the NFT the indexer said that id holds.
+    const rows = Array.from({ length: 8 }, (_, i) => ({
+      id: `${i + 1}`,
+      listingId: `${i + 1}`,
+      status: "active",
+      collection: "0x0000000000000000000000000000000000000010",
+      tokenId: `${100 + i}`,
+      depositor: "0x0000000000000000000000000000000000000020",
+      purchaser: null,
+      backing: "1000",
+      weight: "100",
+      listedAt: "1700000000",
+      allocatedAt: null,
+      acquiredFor: null,
+      settlement: null,
+      isCrown: false,
+    }));
+    vi.stubGlobal("fetch", vi.fn(async () => response({ listings: rows })));
+    const client = new ViemProtocolClient(manifest, "http://localhost:8545", 999, "https://indexer.example/graphql");
+    // The other deployment holds a different collection under the same ids.
+    const foreign = [
+      "0x00000000000000000000000000000000000000ff",
+      "0x0000000000000000000000000000000000000020",
+      "0x0000000000000000000000000000000000000000",
+      999n, 100n, 5_000n, 0n, 0n, 1n, 0n, 1,
+    ] as const;
+    const readContract = vi.fn(async () => 0n);
+    const multicall = vi.fn(async ({ contracts }: { contracts: { functionName: string }[] }) =>
+      contracts.map((c) => (c.functionName === "topListingId" ? 1n : foreign)),
+    );
+    Object.assign(client, { pub: { readContract, multicall } });
+
+    const page = await client.getListings({ view: "pool", sort: "value", direction: "desc", limit: 24, includeMetadata: false });
+
+    // Fails closed onto the direct core reader: an empty pool is the honest
+    // answer, and not one row of the foreign deployment reaches the UI.
+    expect(page.items).toEqual([]);
+    expect(readContract).toHaveBeenCalledWith(expect.objectContaining({ functionName: "nextListingId" }));
+  });
+
+  it("drops a single stale row without condemning the whole pool", async () => {
+    const rows = Array.from({ length: 8 }, (_, i) => ({
+      id: `${i + 1}`,
+      listingId: `${i + 1}`,
+      status: "active",
+      collection: "0x0000000000000000000000000000000000000010",
+      tokenId: `${100 + i}`,
+      depositor: "0x0000000000000000000000000000000000000020",
+      purchaser: null,
+      backing: "1000",
+      weight: "100",
+      listedAt: "1700000000",
+      allocatedAt: null,
+      acquiredFor: null,
+      settlement: null,
+      isCrown: false,
+    }));
+    vi.stubGlobal("fetch", vi.fn(async () => response({ listings: rows })));
+    const client = new ViemProtocolClient(manifest, "http://localhost:8545", 999, "https://indexer.example/graphql");
+    const at = (tokenId: bigint) =>
+      [
+        "0x0000000000000000000000000000000000000010",
+        "0x0000000000000000000000000000000000000020",
+        "0x0000000000000000000000000000000000000000",
+        tokenId, 100n, 1_000n, 0n, 0n, 1n, 0n, 1,
+      ] as const;
+    const readContract = vi.fn(async ({ functionName }: { functionName: string }) => {
+      if (functionName === "totalWeight") return 800n;
+      throw new Error(`Unexpected read: ${functionName}`);
+    });
+    let seen = 0;
+    const multicall = vi.fn(async ({ contracts }: { contracts: { functionName: string }[] }) =>
+      contracts.map((c) => {
+        if (c.functionName === "topListingId") return 1n;
+        const i = seen++;
+        // One row the core has since re-used for another token.
+        return at(i === 3 ? 777n : BigInt(100 + i));
+      }),
+    );
+    Object.assign(client, { pub: { readContract, multicall } });
+
+    const page = await client.getListings({ view: "pool", sort: "value", direction: "desc", limit: 24, includeMetadata: false });
+
+    expect(page.items).toHaveLength(7);
+  });
+
   it("carries the indexed settlement outcome that on-chain state cannot express", async () => {
     vi.stubGlobal(
       "fetch",
