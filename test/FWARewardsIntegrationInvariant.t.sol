@@ -29,8 +29,8 @@ import {TestBase, Vm} from "./utils/TestBase.sol";
 ///      plain EOA constant, and both stateful campaigns run a core whose `rewards` is the zero
 ///      address. Mainnet is the opposite: `DeployHyperEVMMainnetCore` latches
 ///      `REWARDS_REQUIRED_FOR_ACTIVATION` one-way, so acquisitions can only ever open WITH a rewards
-///      module bound. Every reward hook â€” `registerAcquisition`, `settleAcquisition`,
-///      `refundAcquisition`, `startEmission`, `buyFor` â€” was therefore unreachable at the gate.
+///      module bound. Every reward hook — `registerAcquisition`, `settleAcquisition`,
+///      `refundAcquisition`, `startEmission`, `buyFor` — was therefore unreachable at the gate.
 ///
 ///      Actions are total: an unavailable transition is a no-op rather than a campaign-invalidating
 ///      revert, so `fail_on_revert` stays meaningful.
@@ -220,9 +220,9 @@ contract FWARewardsIntegrationInvariantTest is TestBase, StdInvariant {
     uint24 internal constant POOL_FEE = 10_000;
     int24 internal constant TICK_SPACING = 200;
 
-    uint256 internal constant DEPOSITOR_EMISSION = 50_000_000 ether;
-    uint256 internal constant PURCHASER_EMISSION = 50_000_000 ether;
-    uint256 internal constant REWARDS_FUNDING = 100_000_000 ether;
+    uint256 internal constant DEPOSITOR_EMISSION = 150_000_000 ether;
+    uint256 internal constant PURCHASER_EMISSION = 150_000_000 ether;
+    uint256 internal constant REWARDS_FUNDING = 300_000_000 ether;
 
     MockProofOfPlayVRNG internal provider;
     PoPRandomnessAdapter internal randomness;
@@ -278,7 +278,6 @@ contract FWARewardsIntegrationInvariantTest is TestBase, StdInvariant {
 
         // --- bind the module the way mainnet does, then open ------------------
         rewards.setEmission(DEPOSITOR_EMISSION, PURCHASER_EMISSION);
-        rewards.enableClaims();
         rewards.setFWA(address(pool));
         token.mint(address(rewards), REWARDS_FUNDING);
         pool.setRewards(address(rewards));

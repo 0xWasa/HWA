@@ -15,7 +15,7 @@ interface VmHWAV2Allocations {
     function stopBroadcast() external;
 }
 
-/// @notice Funds immutable migration and vesting contracts, retires excess supply, and leaves exactly 100M for seasons.
+/// @notice Funds immutable migration and vesting contracts, retires excess supply, and leaves exactly 300M for the FWA-parity 15-day rewards.
 contract ConfigureHWAV2Allocations {
     VmHWAV2Allocations internal constant vm =
         VmHWAV2Allocations(address(uint160(uint256(keccak256("hevm cheat code")))));
@@ -23,10 +23,10 @@ contract ConfigureHWAV2Allocations {
     uint256 internal constant TESTNET = 998;
     uint256 internal constant MAINNET = 999;
     uint256 public constant TOTAL_SUPPLY = 1_000_000_000 ether;
-    uint256 public constant LP_ALLOCATION = 125_000_000 ether;
-    uint256 public constant REWARDS_ALLOCATION = 100_000_000 ether;
+    uint256 public constant LP_ALLOCATION = 500_000_000 ether;
+    uint256 public constant REWARDS_ALLOCATION = 300_000_000 ether;
     uint256 public constant ECOSYSTEM_ALLOCATION = 100_000_000 ether;
-    uint256 public constant MAX_MIGRATION_ALLOCATION = 675_000_000 ether;
+    uint256 public constant MAX_MIGRATION_ALLOCATION = 100_000_000 ether;
     address public constant RETIRED_ALLOCATION = 0x000000000000000000000000000000000000dEaD;
 
     event HWAV2AllocationsConfigured(

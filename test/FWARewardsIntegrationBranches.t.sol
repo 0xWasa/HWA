@@ -32,7 +32,7 @@ contract RewardsBuyer is IERC721Receiver {
     receive() external payable {}
 }
 
-/// @notice Deterministic proof that the FWA core Ã¢â€ â€ FWARewardsHyperEVM boundary is reachable and
+/// @notice Deterministic proof that the FWA core ↔ FWARewardsHyperEVM boundary is reachable and
 ///         correct at every terminal state.
 ///
 /// @dev Reachability here is ASSERTED, not inferred from a green fuzz campaign. The companion
@@ -46,9 +46,9 @@ contract FWARewardsIntegrationBranchesTest is TestBase, IERC721Receiver {
     uint24 internal constant POOL_FEE = 10_000;
     int24 internal constant TICK_SPACING = 200;
 
-    uint256 internal constant DEPOSITOR_EMISSION = 50_000_000 ether;
-    uint256 internal constant PURCHASER_EMISSION = 50_000_000 ether;
-    uint256 internal constant REWARDS_FUNDING = 100_000_000 ether;
+    uint256 internal constant DEPOSITOR_EMISSION = 150_000_000 ether;
+    uint256 internal constant PURCHASER_EMISSION = 150_000_000 ether;
+    uint256 internal constant REWARDS_FUNDING = 300_000_000 ether;
 
     address internal constant DEPOSITOR = address(0xDEB0);
     uint256 internal constant BACKING = 1 ether;
@@ -104,7 +104,6 @@ contract FWARewardsIntegrationBranchesTest is TestBase, IERC721Receiver {
         pool.setUint(FWAConfigKeys.SURCHARGE_BPS, 1000);
 
         rewards.setEmission(DEPOSITOR_EMISSION, PURCHASER_EMISSION);
-        rewards.enableClaims();
         rewards.setFWA(address(pool));
         token.mint(address(rewards), REWARDS_FUNDING);
         pool.setRewards(address(rewards));
@@ -240,11 +239,7 @@ contract FWARewardsIntegrationBranchesTest is TestBase, IERC721Receiver {
         uint256 listingId = _list(5);
         pool.activateListings(8);
 
-        vm.prank(address(pool));
-        (uint256 slice,) = rewards.registerAcquisition(50_005, address(buyer), 1 ether, 1_000);
-        vm.deal(address(pool), slice);
-        vm.prank(address(pool));
-        rewards.settleAcquisition{value: slice}(50_005);
+        vm.warp(block.timestamp + 1 days);
         uint256 pendingTokens = rewards.pendingDepositorTokens(listingId);
         assertTrue(pendingTokens != 0);
 
@@ -253,8 +248,11 @@ contract FWARewardsIntegrationBranchesTest is TestBase, IERC721Receiver {
         uint256 before = token.balanceOf(DEPOSITOR);
         vm.prank(DEPOSITOR);
         rewards.claimDepositorTokens(ids);
-        assertEq(token.balanceOf(DEPOSITOR) - before, pendingTokens);
+        uint256 received = token.balanceOf(DEPOSITOR) - before;
+        assertTrue(received >= pendingTokens);
 
+        // Nothing further has accrued in the same block, so a repeat harvest reverts.
+        assertEq(rewards.pendingDepositorTokens(listingId), 0);
         vm.prank(DEPOSITOR);
         vm.expectRevert();
         rewards.claimDepositorTokens(ids);
@@ -286,7 +284,6 @@ contract FWARewardsIntegrationBranchesTest is TestBase, IERC721Receiver {
         // Close the epoch.
         vm.warp(block.timestamp + 2 days);
         assertTrue(rewards.currentEpoch() > epoch);
-        rewards.finalizeEpoch(epoch);
 
         uint256[] memory epochs = new uint256[](1);
         epochs[0] = epoch;

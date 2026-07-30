@@ -20,7 +20,7 @@ const LISTING_ACTIVATED_TOPIC = keccak256(
   toHex("ListingRewardActivated(uint256,address,uint256,uint256)"),
 );
 const ZERO = "0x0000000000000000000000000000000000000000";
-const MAX_DEFAULT = 675_000_000n * 10n ** 18n;
+const MAX_DEFAULT = 100_000_000n * 10n ** 18n;
 
 const tokenAbi = parseAbi([
   "function totalSupply() view returns (uint256)",

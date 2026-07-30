@@ -16,7 +16,7 @@ interface VmProjectXTokenV2Deploy {
     function stopBroadcast() external;
 }
 
-/// @notice Deploys the HWA v2 migration market: 1B supply, 125M one-sided LP, a circa $20k launch FDV and FWA-style full range.
+/// @notice Deploys the HWA v2 migration market: 1B supply, 500M one-sided LP, a circa $40k launch FDV and FWA-style full range.
 /// @dev This script only creates and locks the market. It deliberately leaves external buys disabled.
 contract DeployProjectXTokenV2 {
     VmProjectXTokenV2Deploy internal constant vm =
@@ -26,8 +26,8 @@ contract DeployProjectXTokenV2 {
     uint256 internal constant MAINNET = 999;
     uint256 internal constant Q96 = 1 << 96;
     uint256 public constant TOTAL_SUPPLY = 1_000_000_000 ether;
-    uint256 public constant LAUNCH_ALLOCATION = 125_000_000 ether;
-    uint256 public constant POST_LP_ALLOCATION = 875_000_000 ether;
+    uint256 public constant LAUNCH_ALLOCATION = 500_000_000 ether;
+    uint256 public constant POST_LP_ALLOCATION = 500_000_000 ether;
 
     address internal constant PROJECTX_FACTORY = 0xFf7B3e8C00e57ea31477c32A5B52a58Eea47b072;
     address internal constant PROJECTX_NFPM = 0xeaD19AE861c29bBb2101E834922B2FEee69B9091;
@@ -60,7 +60,7 @@ contract DeployProjectXTokenV2 {
         if (block.chainid != TESTNET && block.chainid != MAINNET) revert WrongChain(block.chainid);
         if (
             !vm.envBool("HWA_V2_TOKENOMICS_CONFIRMED") || !vm.envBool("HWA_V2_FULL_RANGE_CONFIRMED")
-                || !vm.envBool("HWA_V2_20K_USD_FDV_CONFIRMED")
+                || !vm.envBool("HWA_V2_40K_USD_FDV_CONFIRMED")
         ) revert ConfirmationMissing();
         if (
             block.chainid == MAINNET

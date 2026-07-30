@@ -18,8 +18,6 @@ interface IERC20MockTransfer {
 contract MockHyperSwapERC20 is ERC20 {
     string private _tokenName;
     string private _tokenSymbol;
-    uint256 public launchHwaPerHypeX96 = 1 << 96;
-    uint256 public twapHwaPerHypeX96 = 1 << 96;
 
     constructor(string memory name_, string memory symbol_) {
         _tokenName = name_;
@@ -32,11 +30,6 @@ contract MockHyperSwapERC20 is ERC20 {
 
     function symbol() public view override returns (string memory) {
         return _tokenSymbol;
-    }
-
-    function setSeasonQuotes(uint256 launchQuoteX96, uint256 twapQuoteX96) external {
-        launchHwaPerHypeX96 = launchQuoteX96;
-        twapHwaPerHypeX96 = twapQuoteX96;
     }
 
     function mint(address to, uint256 amount) external {

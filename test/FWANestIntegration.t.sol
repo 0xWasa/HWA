@@ -137,17 +137,16 @@ contract FWANestIntegrationTest is TestBase {
         uint256 amountOut = token.buyback();
 
         assertTrue(amountOut != 0);
-        // Before seasonal emissions start there is no eligible depositor or
-        // purchaser accounting period, so both reward routes and the explicit
-        // burn route are burned rather than becoming unclaimable liabilities.
-        assertEq(token.totalSupply(), supplyBefore - amountOut);
+        // With no active depositor weight, the depositor route is burned by
+        // rewards in addition to the token's explicit burn route.
+        uint256 burnedBps = token.routeBurnBps() + token.routeDepositorBps();
+        assertEq(token.totalSupply(), supplyBefore - amountOut * burnedBps / 10_000);
         assertEq(address(adapter).balance, 0);
         assertFalse(token.externalBuysEnabled());
     }
 
     function testPurchaserAccruedClaimUsesNestWhileExternalBuysStayClosed() public {
         rewards.setForcedTokenShareBps(10_000);
-        rewards.enableClaims();
         (uint256 slice,) = rewards.registerAcquisition(77, USER, 1.1 ether, 1_000);
         vm.deal(address(this), slice);
         rewards.settleAcquisition{value: slice}(77);
@@ -170,20 +169,24 @@ contract FWANestIntegrationTest is TestBase {
         token.buyback();
 
         assertTrue(rewards.accTokenPerSqrt() > 0);
-        assertEq(rewards.purchaserEpochPot(rewards.currentEpoch()), 0);
+        assertTrue(rewards.purchaserEpochPot(rewards.currentEpoch()) > 0);
         assertTrue(rewards.pendingDepositorTokens(9) > 0);
     }
 
     function testRewardsRescueRequiresCoreWindDownSignal() public {
+        rewards.setEmission(15 ether, 15 ether);
         token.transfer(address(rewards), 40 ether);
         vm.expectRevert(FWARewardsHyperEVM.RescueNotAllowed.selector);
         rewards.rescueTokens(USER);
 
         rescueAllowed = true;
+        uint256 expectedSurplus = token.balanceOf(address(rewards)) - rewards.tokenLiability();
         uint256 rescued = rewards.rescueTokens(USER);
-        assertEq(rescued, 40 ether);
-        assertEq(token.balanceOf(USER), 40 ether);
-        assertEq(token.balanceOf(address(rewards)), 0);
+        assertEq(rescued, expectedSurplus);
+        assertEq(token.balanceOf(USER), expectedSurplus);
+        assertEq(token.balanceOf(address(rewards)), rewards.tokenLiability());
+        assertEq(rewards.depositorRatePerSec(), 15 ether / rewards.EMISSION_DURATION());
+        assertEq(rewards.purchaserDailyPot(), 1 ether);
     }
 
     function testOutsiderCannotSpoofProtocolRecipientWhileMarketIsClosed() public {

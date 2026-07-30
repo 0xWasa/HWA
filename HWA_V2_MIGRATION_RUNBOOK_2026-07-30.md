@@ -1,58 +1,50 @@
-# HWA v2 migration runbook — 20k USD launch FDV
+# HWA v2 migration runbook — FWA economic parity
 
-Status: implementation and tests complete; no HWA v2 mainnet transaction has been broadcast.
+Status: implementation/testing in progress; no HWA v2 mainnet deployment transaction has been broadcast.
 
 ## Frozen economics
 
 - Fixed supply: `1,000,000,000 HWA`.
-- Migration: 1:1 for eligible liquid HWA v1 balances, plus a separate exact compensation for legacy rewards already earned but not yet claimable.
-- Project X launch LP: `125,000,000 HWA` (12.5% of supply), one-sided and permanently locked.
-- Range: widest valid one-sided Project X range, mirrored according to HWA/WHYPE token ordering, reaching tick `-887200` or `+887200`.
-- Target launch FDV: approximately `20,000 USD`, converted to HYPE immediately before the deployment simulation.
-- Seasonal rewards: `100,000,000 HWA`, with three 15-day budgets of `50M`, `30M`, then `20M`.
-- Ecosystem vesting: `100,000,000 HWA`, immutable 90-day cliff and 730-day duration.
-- Any supply not required by LP, migration, reward compensation, seasons, or vesting is sent to `0x000000000000000000000000000000000000dEaD`. This preserves the nominal 1B supply while preventing the surplus from becoming sell pressure.
+- Project X launch LP: `500,000,000 HWA`, matching FWA's 50% launch allocation; principal permanently locked.
+- Rewards: `300,000,000 HWA` over 15 days, matching FWA: `150M` for depositors and `150M` for purchasers.
+- Legacy allocation: `200,000,000 HWA`, matching FWA's remaining 20% bucket. For HWA it contains:
+  - up to `100,000,000 HWA` for liquid 1:1 migration plus legacy rewards already earned;
+  - `100,000,000 HWA` in the existing ecosystem vesting schedule;
+  - any unused migration amount permanently retired at `0x000000000000000000000000000000000000dEaD`.
+- Target launch FDV: approximately `40,000 USD`.
+- Range: FWA's near-full-range shape mirrored for HWA/WHYPE and rounded only as required by Project X tick spacing `200`, reaching usable tick `-887200` or `+887200`.
 
-## Volatility and exit liquidity
+Project X imposes a 1% pool fee and a 200 tick spacing. Those venue-level constraints prevent byte-for-byte pool identity with FWA, but supply, LP share, reward quantity/duration, legacy share, launch FDV, and one-sided near-full-range economics match FWA.
 
-At 20k USD FDV, the 125M launch inventory has an initial mark value of only 2,500 USD. With the 1% Project X fee and no sells, the full-range constant-product approximation is:
+## Expected volatility and exits
+
+At 40k USD FDV, the 500M launch inventory has an initial mark value of 20k USD. With the 1% Project X fee and no sells, the full-range approximation is:
 
 | Gross buy pressure | Estimated price / FDV move |
 | ---: | ---: |
-| 1,000 USD | +94.8816% (x1.948816) |
-| 5,000 USD | +788.04% (x8.8804) |
-| 10,000 USD | +2,360.16% (x24.6016) |
-| 40,000 USD | +28,258.56% (x283.5856) |
+| 1,000 USD | +10.145025% (x1.10145025) |
+| 5,000 USD | +55.625625% (x1.55625625) |
+| 10,000 USD | +123.5025% (x2.235025) |
+| 40,000 USD | +788.04% (x8.8804) |
 
-The pool launches with HWA inventory and no HYPE inventory. Sellers can only withdraw HYPE previously supplied by buyers. A high displayed market cap therefore does not represent cash that all holders can exit at once; large sells reverse the curve with extreme negative price impact. This is intentional for the selected volatility profile.
+The one-sided pool starts without HYPE inventory. Sellers can only withdraw HYPE previously supplied by buyers, so displayed market cap is not simultaneously realizable exit liquidity.
 
 ## Legacy rewards preservation
 
-Read-only state checked at HyperEVM block `41849020`:
+The currently deployed HWA rewards v2 contract differs from FWA and must be treated as legacy state. At the read-only check block `41849020`, it had unlocked `819,680.124158439997849925 HWA`, retained `99,180,319.875841560002150075 HWA` in its seasonal reserve, had burned none, and still held 100M HWA while claims were disabled.
 
-- reward emission had started;
-- claims remained disabled;
-- `819,680.124158439997849925 HWA` had been unlocked;
-- `99,180,319.875841560002150075 HWA` remained in the seasonal reserve;
-- no seasonal HWA had been burned;
-- the reward contract still held exactly `100,000,000 HWA`.
-
-The final snapshot generator adds each wallet's unclaimed depositor credit, pending active-listing reward, and pro-rata purchaser epoch reward to its liquid 1:1 allocation. The new seasons still receive exactly 100M HWA; legacy earned rights are funded from the migration allocation, not deducted from or silently reset inside the new seasonal budget.
+The final migration snapshot adds each wallet's liquid HWA v1 balance and exact unclaimed legacy reward entitlement. The new market then starts the independent FWA-parity reward schedule of 300M HWA over 15 days.
 
 ## Mandatory cutover order
 
-1. Disable new v1 deposits and acquisitions. Do not open legacy reward claims during snapshot preparation.
-2. Settle or refund every pending acquisition. Wait for the active reward epoch to close and finalize it; the snapshot script rejects pending acquisitions and unfinalized closed epochs.
-3. Add the legacy token and rewards addresses to the authorized archive log RPC list. Generate the final snapshot at a fixed block and publish the block hash, exclusions, Merkle root, proofs, liquid total, and legacy reward compensation total.
-4. Independently verify that reconstructed balances equal v1 `totalSupply()` at the snapshot block and that the migration allocation is at most 675M HWA.
-5. Deploy the new core and splitter in withdraw/operation-disabled mode.
-6. Convert 20,000 USD to a HYPE FDV using the deployment-time HYPE/USD reference, derive both token-order sqrt prices, and double-enter the selected sqrt price and narrow allowed HYPE-FDV bounds.
-7. Deploy HWA v2 and the locked 125M full-range LP with external buys disabled.
-8. Deploy and fund the immutable migration distributor and ecosystem vesting; retire excess allocation; confirm exactly 100M remains for rewards.
-9. Deploy the adapter and rewards module; fund exactly 100M and verify 50M/30M/20M season budgets. Keep claims, external token buys, acquisitions, and deposits closed.
-10. Update the production manifest and UI to mark the old pool/token as legacy and expose migration proofs.
-11. Run the complete read-only verification gate. Public activation requires a separate, explicit owner authorization after all addresses and amounts are reviewed.
-
-## Required final confirmations
-
-The deployment scripts intentionally require separate confirmations for: 20k USD FDV, 125M LP tokenomics, widest range, permanent LP lock, snapshot/exclusions, allocations, reward funding, module wiring, and mainnet broadcast. A simulation revert prevents broadcast when any price, owner, balance, range, or allocation invariant differs.
+1. Close v1 acquisitions and enter withdraw-only mode; keep legacy token external buys disabled.
+2. Settle or refund every pending acquisition and wait for/finalize the active legacy reward epoch.
+3. Authorize legacy token and rewards addresses on the archive log RPC. Generate and publish the final fixed-block snapshot, block hash, exclusions, Merkle root, proofs, and totals.
+4. Verify reconstructed balances equal v1 total supply and migration plus reward compensation is at most 100M HWA.
+5. Deploy the new core and supporting modules fail-closed.
+6. Convert 40,000 USD to HYPE at deployment time; derive and double-enter the selected sqrt price and narrow HYPE-FDV bounds.
+7. Deploy HWA v2, its one-sided 500M near-full-range position and permanent LP locker with public buys disabled.
+8. Fund the immutable migration distributor, the 100M ecosystem vesting, retire unused legacy allocation, and verify exactly 300M remains with the owner.
+9. Deploy/fund FWA-parity rewards with exactly 150M depositor plus 150M purchaser emission over 15 days. Keep acquisitions, emission, deposits, and external buys closed; the FWA rewards contract has no claim-pause switch, but has no claimable emission before activation.
+10. Publish the new production manifest and migration UI; label v1 token/pool as legacy.
+11. Run the complete read-only verification gate, then activate only after a separate final owner confirmation of the emitted addresses and amounts.

@@ -36,8 +36,8 @@ contract DeployProjectXV2Modules {
     address internal constant TESTNET_V3_ROUTER = 0xD81F56576B1FF2f3Ef18e9Cc71Adaa42516fD990;
     address internal constant TESTNET_WHYPE = 0xADcb2f358Eae6492F61A5F87eb8893d09391d160;
 
-    uint256 public constant DEPOSITOR_EMISSION = 50_000_000 ether;
-    uint256 public constant PURCHASER_EMISSION = 50_000_000 ether;
+    uint256 public constant DEPOSITOR_EMISSION = 150_000_000 ether;
+    uint256 public constant PURCHASER_EMISSION = 150_000_000 ether;
     uint256 public constant ECOSYSTEM_ALLOCATION = 100_000_000 ether;
 
     event ProjectXV2ModulesPrepared(
@@ -86,7 +86,7 @@ contract DeployProjectXV2Modules {
         }
         if (token.owner() != deployer || locker.owner() != deployer) revert UnauthorizedDeployer();
         if (
-            token.totalSupply() != 1_000_000_000 ether || token.balanceOf(deployer) != 100_000_000 ether
+            token.totalSupply() != 1_000_000_000 ether || token.balanceOf(deployer) != 300_000_000 ether
                 || !token.launched() || token.externalBuysEnabled() || token.POOL_FEE() != 10_000
                 || token.POOL_TICK_SPACING() != 200 || address(token.FACTORY()) != expectedFactory
                 || token.WHYPE() != expectedWhype || !locker.bound() || locker.tokenId() != token.lpTokenId()
@@ -122,8 +122,8 @@ contract DeployProjectXV2Modules {
         vm.stopBroadcast();
 
         if (
-            token.balanceOf(address(rewards)) != 100_000_000 ether || token.balanceOf(deployer) != 0
-                || rewards.emissionStart() != 0 || rewards.claimsEnabled() || token.externalBuysEnabled()
+            token.balanceOf(address(rewards)) != 300_000_000 ether || token.balanceOf(deployer) != 0
+                || rewards.emissionStart() != 0 || token.externalBuysEnabled()
         ) revert InvalidConfig();
 
         emit ProjectXV2ModulesPrepared(

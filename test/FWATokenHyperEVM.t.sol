@@ -292,7 +292,7 @@ contract FWATokenHyperEVMTest is TestBase {
             "Hyper World Assets",
             "HWA",
             SUPPLY,
-            125_000_000 ether,
+            500_000_000 ether,
             address(freshFactory),
             address(freshPositionManager),
             highWhype,
@@ -306,7 +306,7 @@ contract FWATokenHyperEVMTest is TestBase {
         assertTrue(address(launchFactory.token()) < highWhype);
         assertEq(uint256(int256(launchFactory.tickLower())), 0);
         assertEq(uint256(int256(launchFactory.tickUpper())), 887_200);
-        assertEq(launchFactory.token().balanceOf(OWNER), SUPPLY - 125_000_000 ether);
+        assertEq(launchFactory.token().balanceOf(OWNER), SUPPLY - 500_000_000 ether);
     }
 
     function testFactoryFullRangeMirrorsFwaWhenHwaIsToken1() public {
@@ -322,7 +322,7 @@ contract FWATokenHyperEVMTest is TestBase {
             "Hyper World Assets",
             "HWA",
             SUPPLY,
-            125_000_000 ether,
+            500_000_000 ether,
             address(freshFactory),
             address(freshPositionManager),
             lowWhype,
@@ -336,7 +336,7 @@ contract FWATokenHyperEVMTest is TestBase {
         assertTrue(address(launchFactory.token()) > lowWhype);
         assertEq(uint256(int256(launchFactory.tickLower()) + 887_200), 0);
         assertEq(uint256(int256(launchFactory.tickUpper())), 0);
-        assertEq(launchFactory.token().balanceOf(OWNER), SUPPLY - 125_000_000 ether);
+        assertEq(launchFactory.token().balanceOf(OWNER), SUPPLY - 500_000_000 ether);
     }
     function testFactoryRoundsAboveAlignedTickWhenPriceIsNotExactBoundary() public {
         address highWhype = address(0xF000000000000000000000000000000000000001);
