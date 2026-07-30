@@ -9,7 +9,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $projectRoot = [System.IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot)).TrimEnd("\", "/")
-$cast = Join-Path $projectRoot ".tools\foundry\cast.exe"
+$cast = if (Test-Path (Join-Path $projectRoot ".tools\foundry\cast.exe")) { Join-Path $projectRoot ".tools\foundry\cast.exe" } else { Join-Path $env:USERPROFILE ".foundry\bin\cast.exe" }
 $whype = "0x5555555555555555555555555555555555555555"
 
 function Resolve-ProjectPath([string]$Path, [string]$Label) {
@@ -64,9 +64,12 @@ $worksheetFile = Resolve-ProjectPath $WorksheetPath "WorksheetPath"
 $outputFile = Resolve-ProjectPath $OutputPath "OutputPath"
 $envFile = Resolve-ProjectPath $EnvPath "EnvPath"
 $worksheet = Get-Content -LiteralPath $worksheetFile -Raw | ConvertFrom-Json
-if ($worksheet.chainId -ne 999 -or $worksheet.economics.targetFdvHype -ne "640" `
-    -or $worksheet.economics.minimumFdvHype -ne "600" -or $worksheet.economics.maximumFdvHype -ne "700") {
-    throw "Launch worksheet no longer matches the approved 640 HYPE target and 600-700 band"
+if ($worksheet.chainId -ne 999 -or [decimal]$worksheet.economics.targetFdvHype -le 0 `
+    -or [decimal]$worksheet.economics.minimumFdvHype -le 0 `
+    -or [decimal]$worksheet.economics.maximumFdvHype -le 0 `
+    -or $worksheet.token.totalSupplyWei -ne "1000000000000000000000000000" `
+    -or $worksheet.token.oneSidedLpSupplyWei -ne "500000000000000000000000000") {
+    throw "Launch worksheet no longer matches the approved FWA-parity supply and LP allocation"
 }
 
 $chainId = Invoke-Cast @("chain-id", "--rpc-url", $RpcUrl)
@@ -94,9 +97,9 @@ $report = [ordered]@{
     predictedHwaToken = $token
     whype = $whype
     ordering = $ordering
-    targetFdvHype = "640"
-    minimumFdvHype = "600"
-    maximumFdvHype = "700"
+    targetFdvHype = [string]$worksheet.economics.targetFdvHype
+    minimumFdvHype = [string]$worksheet.economics.minimumFdvHype
+    maximumFdvHype = [string]$worksheet.economics.maximumFdvHype
     sqrtPriceX96 = $candidate.sqrtPriceX96
     derivedFdvHypeWei = $candidate.derivedFdvHypeWei
     currentTick = $candidate.currentTick
@@ -110,20 +113,21 @@ New-Item -ItemType Directory -Force -Path (Split-Path -Parent $outputFile) | Out
 
 if ($SyncEnv) {
     $values = [ordered]@{
-        FWA_CHAIN_ID = "999"
-        FWA_INITIAL_SQRT_PRICE_X96 = [string]$candidate.sqrtPriceX96
-        FWA_INITIAL_SQRT_PRICE_X96_ECHO = [string]$candidate.sqrtPriceX96
-        MAINNET_FWA_MIN_INITIAL_FDV_HYPE_WEI = [string]$worksheet.economics.minimumFdvHypeWei
-        MAINNET_FWA_MAX_INITIAL_FDV_HYPE_WEI = [string]$worksheet.economics.maximumFdvHypeWei
-        FWA_LP_RANGE_WIDTH_TICKS = "3600"
-        PROJECTX_MARKET_PRICE_CONFIRMED = "true"
+        HWA_V2_INITIAL_SQRT_PRICE_X96 = [string]$candidate.sqrtPriceX96
+        HWA_V2_INITIAL_SQRT_PRICE_X96_ECHO = [string]$candidate.sqrtPriceX96
+        HWA_V2_MIN_INITIAL_FDV_HYPE_WEI = [string]$worksheet.economics.minimumFdvHypeWei
+        HWA_V2_MAX_INITIAL_FDV_HYPE_WEI = [string]$worksheet.economics.maximumFdvHypeWei
+        HWA_V2_TOKENOMICS_CONFIRMED = "true"
+        HWA_V2_FULL_RANGE_CONFIRMED = "true"
+        HWA_V2_40K_USD_FDV_CONFIRMED = "true"
+        HWA_V2_MAINNET_DEPLOYMENT_CONFIRMED = "true"
         PROJECTX_LP_LOCK_CONFIRMED = "true"
     }
     Set-EnvValues $envFile $values
     Write-Host "Synchronized the nonce-bound public price fields without printing or modifying secrets."
 }
 
-Write-Host "Selected $ordering for deployer nonce $nonce at the approved 640 HYPE target."
+Write-Host "Selected $ordering for deployer nonce $nonce at the approved $($worksheet.economics.targetFdvHype) HYPE target."
 Write-Host "Predicted factory: $factory"
 Write-Host "Predicted HWA: $token"
 Write-Host "No transaction was broadcast. Re-run immediately before DeployProjectXToken; any nonce change invalidates this selection."

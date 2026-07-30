@@ -22,7 +22,7 @@ interface VmProjectXV2ModulesDeploy {
     function stopBroadcast() external;
 }
 
-/// @notice Wires the fresh v2 core to the 100M seasonal reserve while keeping claims and public buys closed.
+/// @notice Wires the fresh v2 core to the FWA-parity 300M / 15-day reserve while keeping public buys closed.
 contract DeployProjectXV2Modules {
     VmProjectXV2ModulesDeploy internal constant vm =
         VmProjectXV2ModulesDeploy(address(uint160(uint256(keccak256("hevm cheat code")))));
