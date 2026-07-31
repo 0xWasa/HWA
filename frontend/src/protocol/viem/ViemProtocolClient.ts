@@ -1640,6 +1640,32 @@ export class ViemProtocolClient implements ProtocolClient {
       this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "topListingPot" }),
     ]);
     const mineAsDepositor = listings.filter((listing) => sameAddress(listing.depositor, account));
+    // List surfaces skip the per-listing fee read because the public pool does
+    // not need it. This is the one surface that does: the claim button and the
+    // earnings tab both key off pendingFees, so leaving it at zero hid real
+    // accrued HYPE from the depositor who earned it. Scoped to the account's
+    // own active deposits, so it costs one aggregate, not a pool-wide scan.
+    const feeBearing = mineAsDepositor.filter((listing) => listing.status === "active");
+    if (feeBearing.length > 0) {
+      try {
+        const fees = (await this.pub.multicall({
+          contracts: feeBearing.map((listing) => ({
+            address: this.core,
+            abi: fwaCoreAbi,
+            functionName: "pendingFees",
+            args: [listing.id],
+          })) as never,
+          allowFailure: false,
+          multicallAddress: MULTICALL3_ADDRESS,
+        })) as readonly bigint[];
+        feeBearing.forEach((listing, index) => {
+          listing.pendingFees = fees[index] ?? 0n;
+        });
+      } catch {
+        // A failed fee read must not take the whole positions view down; the
+        // claim stays reachable from the listing detail.
+      }
+    }
     return {
       account,
       deposited: mineAsDepositor.filter((listing) => listing.status === "active" || listing.status === "staged"),

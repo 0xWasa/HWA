@@ -716,3 +716,4 @@ describe("ViemProtocolClient acquisition funding", () => {
     expect(sentValue).toBe(10n ** 17n + 4_000n);
   });
 });
+
