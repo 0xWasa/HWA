@@ -8,6 +8,7 @@ describe("collection floor references", () => {
     expect(collectionFloorConfig("0xCC3D60fF11a268606C6a57bD6Db74b4208f1D30c")?.slug).toBe(
       "tiny-hyper-cats-hyperevm",
     );
+    expect(collectionFloorConfig("0x822C4F30414299E003EF39E9ABA49D8F8D4445BA")?.slug).toBe("rekt-wolves-hype");
   });
 
   it("does not treat an unknown collection as a fetchable destination", () => {

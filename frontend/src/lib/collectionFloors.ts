@@ -50,6 +50,11 @@ const COLLECTION_FLOORS: Record<string, CollectionFloorConfig> = {
     image: "/collections/tinyhypercats.svg",
     marketplaceUrl: "https://opensea.io/collection/tiny-hyper-cats-hyperevm",
   },
+  "0x822c4f30414299e003ef39e9aba49d8f8d4445ba": {
+    slug: "rekt-wolves-hype",
+    image: "/collections/rekt-wolf.webp",
+    marketplaceUrl: "https://opensea.io/collection/rekt-wolves-hype",
+  },
   "0x89d52133b105e9548df16de4d7cf59c412daf191": {
     seedReferenceHype: "0.25",
     image: "/collections/genesis.webp",
