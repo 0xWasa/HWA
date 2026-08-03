@@ -216,6 +216,9 @@ export interface RewardsSnapshot {
     currentEpoch: number;
     claimsEnabled: boolean;
     configured: boolean;
+    /** Wei of HWA emitted per second across all active deposits. Set once at
+     *  configuration and immutable afterwards, but read rather than assumed. */
+    depositorRatePerSec: bigint;
     reserveRemaining: bigint;
     emitted: bigint;
     burned: bigint;
@@ -370,6 +373,7 @@ export type TxKind =
   | "claim_crown"
   | "claim_splitter"
   | "claim_rewards"
+  | "approve_token"
   | "swap";
 
 export interface TrackedTransaction {

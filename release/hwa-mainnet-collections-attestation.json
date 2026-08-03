@@ -9,7 +9,8 @@
     "canary": "Hypio only",
     "postCanaryWave1": [
       "PiP & Friends",
-      "Odd Otties"
+      "Odd Otties",
+      "Rekt Wolf"
     ],
     "indexedButClosed": [
       "Hypurr"
@@ -69,6 +70,32 @@
       "metadataAuthority": "otties.mypinata.cloud",
       "manifestIndexed": true,
       "launchPolicy": "post-canary-wave-1"
+    },
+    {
+      "name": "Rekt Wolf",
+      "symbol": "Rekt",
+      "address": "0x822c4f30414299e003ef39e9aba49d8f8d4445ba",
+      "creationTransaction": "0xd34b0d7206e810064bb4e748d33638b06afbb45c8ecc56b25f5eb73a6d3f9b3c",
+      "creationKind": "internal-factory-creation",
+      "factory": "0x98b2920d53612483f91f12ed7754e51b4a77919e",
+      "deploymentBlock": 12654397,
+      "runtimeBytes": 680,
+      "runtimeCodeHash": "0x932cddc50793da935ccf915651ad67f6b746e9936fcc5614f0ff492563782c75",
+      "proxyKind": "erc1967",
+      "erc1967Implementation": "0xba2d3ecb375b492d05cae1e0e67cf9797f47434d",
+      "upgradeable": true,
+      "collectionOwner": "0x4025f89b4e8e7764e4009377187b954c71d5cb46",
+      "collectionOwnerIsEoa": true,
+      "erc721": true,
+      "observedSupply": 488,
+      "sampleTokenId": 1,
+      "sampleTokenUri": "https://app.mintdao.io/api/metadata/rekt-wolf-hyper/1.json",
+      "metadataAuthority": "app.mintdao.io",
+      "manifestIndexed": true,
+      "launchPolicy": "post-canary-wave-1",
+      "verifiedAtUtc": "2026-08-02T00:00:00Z",
+      "verifiedAtBlock": 42107006,
+      "note": "Upgradeable ERC1967 proxy: the 680-byte runtime delegates to implementation 0xba2d3ecb..., and the ERC1967 admin slot is empty (UUPS). Upgrade authority therefore lives in the implementation and was NOT read from source; collectionOwner is an EOA with no code. A swapped implementation could change transferFrom/ownerOf/tokenURI semantics on custodied tokens. Metadata is served by app.mintdao.io, which 302-redirects to mygateway.io and resolves to ipfs://bafybeiaqnqe6pzft7li3daut6nzbt6jzmewn5qhysyx6mbv6qkd5xygmi4/ for images. Accepted by operator decision on 2026-08-02; unlike Hypio, PiP & Friends and Odd Otties, this collection is not an immutable top-level contract."
     },
     {
       "name": "Catbal",

@@ -15,11 +15,15 @@ import { env } from "@/config/env";
 export const wagmiConfig = createConfig({
   chains: env.chainId === 999 ? [hyperevmMainnet, hyperevmTestnet] : [hyperevmTestnet, hyperevmMainnet],
   connectors: [injected()],
+  // EIP-6963: each extension announces itself, so Rabby, MetaMask and Phantom
+  // appear as separate choices instead of racing for window.ethereum. Explicit
+  // rather than relying on the default, since the connect UI depends on it.
+  multiInjectedProviderDiscovery: true,
   transports: {
     [hyperevmTestnet.id]: fallback([
       http(env.chainId === 998 && env.rpcUrl ? env.rpcUrl : "https://rpcs.chain.link/hyperevm/testnet", {
         batch: { batchSize: 40, wait: 20 },
-        retryCount: 2,
+        retryCount: 1,
         retryDelay: 500,
       }),
       http("https://rpc.hyperliquid-testnet.xyz/evm", {
@@ -30,7 +34,7 @@ export const wagmiConfig = createConfig({
     ]),
     [hyperevmMainnet.id]: http(env.chainId === 999 && env.rpcUrl ? env.rpcUrl : undefined, {
       batch: { batchSize: 40, wait: 20 },
-      retryCount: 2,
+      retryCount: 1,
       retryDelay: 500,
     }),
   },

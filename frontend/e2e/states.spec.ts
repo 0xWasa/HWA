@@ -42,16 +42,21 @@ test.describe("Degraded and environment states", () => {
 
   test("rewards: honest inactive state, active module claims", async ({ page }) => {
     await page.goto("/rewards?scenario=default");
-    await expect(page.getByText("HWA rewards are not activated yet")).toBeVisible();
+    await expect(page.getByText("Rewards V2 are not deployed")).toBeVisible();
     // No invented APR anywhere
     await expect(page.locator("body")).not.toContainText("APR");
 
     await page.goto("/rewards?scenario=rewardsActive");
     await page.getByTestId("connect-wallet").click();
-    await expect(page.getByText("Depositor rewards")).toBeVisible({ timeout: 10_000 });
-    await page.getByTestId("claim-depositor").click();
+    const claim = page.getByTestId("claim-depositor");
+    await expect(claim).toBeVisible({ timeout: 10_000 });
+    // An open programme must never tell a holder their rewards are locked.
+    await expect(claim).toBeEnabled({ timeout: 10_000 });
+    await expect(claim).toHaveText("Claim HWA");
+    await claim.click();
     await expect(page.getByTestId("tx-claim_rewards")).toHaveAttribute("data-phase", "completed", { timeout: 15_000 });
-    await expect(page.getByTestId("claim-depositor")).toBeDisabled({ timeout: 10_000 });
+    await expect(claim).toBeDisabled({ timeout: 10_000 });
+    await expect(claim).toHaveText("Nothing to claim");
   });
 
   test("reload during a pending acquisition resumes tracking", async ({ page }) => {

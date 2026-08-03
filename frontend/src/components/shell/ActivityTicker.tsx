@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { sanitizeLabel, timeAgo } from "@/lib/format";
+import { sanitizeLabel, shortId, timeAgo } from "@/lib/format";
 import { formatHwa, formatHype } from "@/lib/units";
 import type { ActivityItem, ActivityType } from "@/protocol/types";
 import { useActivity, useCollections } from "@/state/queries";
@@ -84,7 +84,12 @@ export function ActivityTicker() {
     return map;
   }, [collections]);
 
-  const items = useMemo(() => page?.items ?? [], [page]);
+  // The ticker is the public heartbeat: deployment parameter writes are noise
+  // here (and render raw wei), so they stay on /activity under Protocol.
+  const items = useMemo(
+    () => (page?.items ?? []).filter((item) => item.type !== "config_set"),
+    [page],
+  );
 
   // The marquee translates by -50%, so the track must be two identical halves.
   // Short feeds repeat inside each half instead of leaving a gap mid-loop.
@@ -228,7 +233,8 @@ function subjectOf(item: ActivityItem, names: Map<string, string>): string {
   const name = item.collection ? names.get(item.collection.toLowerCase()) : undefined;
   const token = item.tokenId !== undefined ? `#${item.tokenId.toString()}` : "";
   if (name) return `${sanitizeLabel(name, "Collection")}${token ? ` ${token}` : ""}`;
-  if (item.listingId !== undefined) return `Listing #${item.listingId.toString()}`;
+  // Randomness rows carry a uint256 request id here, not a small listing id.
+  if (item.listingId !== undefined) return `Listing #${shortId(item.listingId)}`;
   return token;
 }
 

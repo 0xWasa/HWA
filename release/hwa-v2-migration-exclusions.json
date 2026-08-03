@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "chainId": 999,
+  "token": "0x0d3433Df3D9f5A5746384C79Ada7B1808E155971",
+  "core": "0x13aB222c1079084064F75713e72defCE20751f4A",
+  "rewards": "0xdac6E20EeAE89beE1D4810c7754f1Cc35F25960f",
+  "deploymentBlock": 41791962,
+  "excluded": [
+    { "address": "0x0d3433Df3D9f5A5746384C79Ada7B1808E155971", "reason": "legacy token contract / buyback inventory" },
+    { "address": "0x13aB222c1079084064F75713e72defCE20751f4A", "reason": "legacy protocol core" },
+    { "address": "0xdac6E20EeAE89beE1D4810c7754f1Cc35F25960f", "reason": "legacy rewards reserve; user liabilities are compensated separately" },
+    { "address": "0x92e5701F30767101A7A0032eaD053c3D4A406523", "reason": "legacy ecosystem vesting; recreated once on v2" },
+    { "address": "0x2e98a09e6412AC1C55972832B4F1E841A0BD07e5", "reason": "permanently locked legacy LP" },
+    { "address": "0x00F8dA9A528aFf254D77C8a8CF6106Ac8e87A70d", "reason": "legacy LP locker" },
+    { "address": "0x5F946be27739446C546f9827c8E78465931E5C45", "reason": "legacy Project X adapter" },
+    { "address": "0xE8196d684e354De6cadcDd838bf2fc57CB4e6903", "reason": "legacy protocol splitter" },
+    { "address": "0x000000000000000000000000000000000000dEaD", "reason": "irrecoverable balance" }
+  ]
+}

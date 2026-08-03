@@ -8,7 +8,7 @@ import { formatHwa } from "@/lib/units";
 import { useAccountState, useProtocol } from "@/protocol/provider";
 import type { SwapSide, TokenMarket } from "@/protocol/types";
 import { useProtocolAction } from "@/state/actions";
-import { useSwapQuote } from "@/state/queries";
+import { useSwapQuote, useTradeAllowance } from "@/state/queries";
 import { AmountInput } from "@/components/ui/AmountInput";
 import { Button } from "@/components/ui/Button";
 import { Hype } from "@/components/ui/Hype";
@@ -51,8 +51,15 @@ export function SwapPanel({ market }: { market: TokenMarket }) {
   // cleared from the outside.
   const [fieldKey, setFieldKey] = useState(0);
 
-  const externalVenue = market.externalBuysEnabled !== undefined;
-  const quote = useSwapQuote(side, externalVenue ? null : amountIn, slippageBps);
+  // The venue is only off-limits while the token contract keeps public buys
+  // shut. Once they are open the app quotes and submits the trade itself,
+  // delivering straight from the pool to the trader, which is the only shape
+  // HWA's transfer guard accepts.
+  const venueClosed = market.externalBuysEnabled === false;
+  const quote = useSwapQuote(side, venueClosed ? null : amountIn, slippageBps);
+  const allowance = useTradeAllowance(side === "sell" ? account.address : undefined);
+  const needsApproval =
+    side === "sell" && amountIn !== null && allowance.data !== undefined && allowance.data < amountIn;
 
   const payUnit: Unit = side === "buy" ? "HYPE" : "HWA";
   const receiveUnit: Unit = side === "buy" ? "HWA" : "HYPE";
@@ -63,8 +70,8 @@ export function SwapPanel({ market }: { market: TokenMarket }) {
   const testHarnessOnly =
     manifestState.status === "ready" && manifestState.manifest.features.dexMode === "projectx-v3-compat-testnet";
 
-  if (externalVenue) {
-    const open = market.externalBuysEnabled === true;
+  if (venueClosed) {
+    const open = false;
     return (
       <section
         data-testid="swap-panel"
@@ -121,6 +128,15 @@ export function SwapPanel({ market }: { market: TokenMarket }) {
       setAmountIn(null);
       setFieldKey((n) => n + 1);
     }
+  }
+
+  // Selling moves HWA through the venue, so it needs an allowance first. The
+  // approval is for this sale only: a standing unlimited one is a permanent
+  // claim on the balance for a token this volatile.
+  async function onApprove() {
+    if (amountIn === null) return;
+    const tx = await action.run((client) => client.approveTradeToken(amountIn));
+    if (tx) void allowance.refetch();
   }
 
   const ctaLabel = insufficient
@@ -296,6 +312,18 @@ export function SwapPanel({ market }: { market: TokenMarket }) {
           onClick={() => void account.switchToAppNetwork()}
         >
           Switch to {chainLabel(env.chainId)}
+        </Button>
+      ) : needsApproval ? (
+        <Button
+          variant="primary"
+          size="lg"
+          className="w-full"
+          data-testid="swap-approve"
+          loading={action.submitting}
+          disabled={insufficient}
+          onClick={() => void onApprove()}
+        >
+          {insufficient ? `Insufficient ${payUnit} balance` : "Approve HWA to sell"}
         </Button>
       ) : (
         <Button

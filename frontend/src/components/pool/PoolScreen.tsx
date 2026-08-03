@@ -8,7 +8,7 @@ import { RARITY_COLOR, RARITY_LABEL, rarityFromOdds } from "@/protocol/rarity";
 import { FWA_PARAMS } from "@/protocol/params";
 import { useProtocol } from "@/protocol/provider";
 import type { Listing, ListingsQuery, PoolSnapshot, RarityTier } from "@/protocol/types";
-import { useCollections, useListings, usePoolSnapshot, usePositions } from "@/state/queries";
+import { useCollections, useListings, usePoolSnapshot, usePositions, useRewards } from "@/state/queries";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { SkeletonCard, SkeletonRow } from "@/components/ui/Skeleton";
@@ -19,10 +19,12 @@ import { ListingDetailDrawer } from "./ListingDetailDrawer";
 import { PoolStatCards } from "./PoolStatCards";
 import { PoolMissionHud } from "./PoolMissionHud";
 import { PurchaseSidebar } from "./PurchaseSidebar";
+import { SupportedCollections } from "./SupportedCollections";
 import { RandomnessFlightDeck } from "@/components/tx/RandomnessFlightDeck";
 import { ProtocolPrelaunch } from "@/components/ui/ProtocolPrelaunch";
 
 const PAGE_SIZE = 24;
+const MAX_POOL_POSITIONS = 1_000;
 
 export function PoolScreen() {
   const router = useRouter();
@@ -31,25 +33,22 @@ export function PoolScreen() {
   const { prelaunch, writesEnabled } = useProtocol();
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [limit, setLimit] = useState(PAGE_SIZE);
+  const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE);
   const [filters, setFilters] = useState<
     Pick<ListingsQuery, "search" | "collections" | "rarities" | "sort" | "direction">
   >({ sort: "value", direction: "desc" });
 
-  const query: ListingsQuery = useMemo(() => ({ view: "deposits", limit, ...filters }), [limit, filters]);
+  // One authoritative active/staged inventory feeds both the hero deck and the
+  // explorer. The explorer reveals it in 24-card slices without refetching.
+  const query: ListingsQuery = useMemo(
+    () => ({ view: "deposits", limit: MAX_POOL_POSITIONS, ...filters }),
+    [filters],
+  );
 
   const { data: snapshot } = usePoolSnapshot();
   const { data: page, isLoading, isError, refetch } = useListings(query);
-  // Whole active pool, up to the client's explicit 1,000-row hydration bound.
-  // The strip hides rather than renormalising a partial window to a false 100%.
-  const { data: poolAll } = useListings({
-    view: "pool",
-    sort: "value",
-    direction: "desc",
-    limit: 1_000,
-    includeMetadata: false,
-  });
   const { data: collections } = useCollections();
+  const { data: rewards } = useRewards();
   const { data: positions } = usePositions();
 
   const inFlightTickets = useMemo(
@@ -78,6 +77,7 @@ export function PoolScreen() {
   }, [router, pathname, searchParams]);
 
   const totalWeight = snapshot?.totalWeight ?? 0n;
+  const visibleListings = useMemo(() => page?.items.slice(0, visibleLimit) ?? [], [page?.items, visibleLimit]);
   const poolIsConfirmedEmpty = !prelaunch && snapshot !== undefined && snapshot.activeListingCount === 0;
 
   return (
@@ -97,7 +97,7 @@ export function PoolScreen() {
         <div className="relative z-10 grid h-full w-full lg:grid-cols-[minmax(0,1fr)_432px]">
           {/* left: stats bar + prize stack */}
           <div className="flex min-h-0 min-w-0 flex-col">
-            <HeroStatsBar snapshot={snapshot} listings={poolAll?.items} prelaunch={prelaunch} />
+            <HeroStatsBar snapshot={snapshot} listings={page?.items} prelaunch={prelaunch} />
             <PoolMissionHud snapshot={snapshot} inFlightCount={inFlightTickets.length} prelaunch={prelaunch} paused={!writesEnabled} />
             <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-hidden px-4 py-6 lg:py-2">
               {prelaunch ? (
@@ -109,7 +109,7 @@ export function PoolScreen() {
               ) : inFlightTickets.length > 0 ? (
                 <RandomnessFlightDeck tickets={inFlightTickets} snapshot={snapshot} />
               ) : (
-                <HeroPrizeStack listings={page?.items ?? poolAll?.items ?? []} snapshot={snapshot} onOpen={openListing} />
+                <HeroPrizeStack listings={page?.items ?? []} snapshot={snapshot} onOpen={openListing} />
               )}
             </div>
           </div>
@@ -125,78 +125,61 @@ export function PoolScreen() {
 
       {/* ------------------------------------------------------ info strip */}
       <section id="mechanics" className="mx-auto flex w-full max-w-5xl scroll-mt-24 flex-col gap-8 px-6 py-14">
-        <div className="max-w-2xl">
-          <div className="mlabel mb-2 text-secondary-readable">THE PLAYBOOK</div>
-          <h2 className="text-2xl font-semibold text-ink sm:text-[2rem] sm:leading-tight">
-            Back the pool. Draw the book. Choose your exit.
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-mute">
-            One shared NFT market with the transparency of a trading venue: visible depth, explicit odds and on-chain
-            settlement on HyperEVM.
-          </p>
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-3">
+        {/* The loop, one line: a newcomer must get it without reading a page. */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-2">
           {[
-            ["01", "Supply / LP", "Back an allowlisted NFT with HYPE. Your capital becomes a standing bid and defines its draw weight."],
-            ["02", "Draw / Market", "Enter at the displayed pool price. Randomness selects one active position in strict request order."],
-            ["03", "Resolve / Exit", "Keep the NFT, relist it with fresh backing, or accept the protocol bid under visible settlement rules."],
-          ].map(([index, title, detail]) => (
-            <div
-              key={index}
-              className="card group relative overflow-hidden p-5 transition-transform duration-300 hover:-translate-y-1"
-            >
-              <div aria-hidden className="absolute -right-8 -top-8 size-24 rounded-full bg-secondary/10 blur-2xl transition-colors group-hover:bg-secondary/18" />
-              <div className="flex items-center justify-between gap-3">
-                <div className="num font-mono text-2xs text-accent">{index} / 03</div>
-                <span className="mlabel rounded-full border border-line/80 bg-inset/70 px-2 py-1 text-faint">
-                  {index === "01" ? "LIQUIDITY" : index === "02" ? "RANDOMNESS" : "SETTLEMENT"}
-                </span>
-              </div>
-              <h3 className="mt-6 text-lg font-semibold text-ink">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-mute">{detail}</p>
+            ["Back", "Deposit an NFT with HYPE behind it."],
+            ["Draw", "Pay the pool price, get a random NFT."],
+            ["Exit", "Keep it, relist it, or take the bid."],
+          ].map(([title, detail], i) => (
+            <div key={title} className="flex flex-1 items-baseline gap-2">
+              <span className="num shrink-0 font-mono text-2xs text-accent">0{i + 1}</span>
+              <span className="min-w-0">
+                <span className="text-sm font-semibold text-ink">{title}</span>{" "}
+                <span className="text-sm text-mute">{detail}</span>
+              </span>
             </div>
           ))}
         </div>
 
+        <SupportedCollections
+          collections={collections ?? []}
+          depositorRatePerSec={rewards?.emission?.depositorRatePerSec}
+        />
+
         <div className="rounded-xl border border-secondary/30 bg-secondary/8 p-4 sm:p-5">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <div className="mlabel text-secondary-readable">HWA SEASONS</div>
-              <h3 className="mt-1 text-xl font-semibold text-ink">Finite launch incentives. Permanent buyback loop.</h3>
+              <h3 className="text-lg font-semibold text-ink">$HWA · 1B supply, no minting after launch</h3>
             </div>
             <a href="/rewards" className="text-xs font-medium text-accent hover:underline">Inspect reward accounting →</a>
           </div>
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            {[["S01", "50M max", "Days 1–15"], ["S02", "30M max", "Days 16–30"], ["S03", "20M max", "Days 31–45"]].map(([season, cap, days]) => (
-              <div key={season} className="rounded-lg border border-line/70 bg-inset/60 px-3 py-2.5">
-                <div className="font-mono text-2xs text-purple">{season}</div>
-                <div className="mt-1 font-mono text-base font-semibold text-ink">{cap}</div>
-                <div className="text-2xs text-mute">{days} · volume-gated</div>
+            {[
+              ["500M", "Liquidity, locked forever"],
+              ["300M", "Earned by playing"],
+              ["100M", "Ecosystem"],
+            ].map(([cap, label]) => (
+              <div key={label} className="rounded-lg border border-line/70 bg-inset/60 px-3 py-2.5">
+                <div className="font-mono text-base font-semibold text-ink">{cap}</div>
+                <div className="text-2xs text-mute">{label}</div>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-2xs leading-relaxed text-mute">
-            Seasonal HWA is capped at 5% of settled HYPE volume and unused daily capacity is burned. After day 45, only protocol-revenue buybacks continue. No new HWA can be minted.
-          </p>
         </div>
-        <div className="flex flex-col gap-3 rounded-xl border border-amber/25 bg-amber/6 p-4 sm:flex-row sm:items-start sm:gap-5">
-          <span className="mlabel shrink-0 rounded-full border border-amber/25 px-2.5 py-1 text-amber">RISK ENGINE</span>
+        <div className="flex flex-col gap-3 rounded-xl border border-amber/25 bg-amber/6 p-4 sm:flex-row sm:items-center sm:gap-5">
+          <span className="mlabel shrink-0 rounded-full border border-amber/25 px-2.5 py-1 text-amber">RISK</span>
           <p className="text-sm leading-relaxed text-dim">
-            Depositing provides liquidity and carries risk of loss: your NFT can be selected earlier than its
-            weight-implied average. Randomness decides the outcome;{" "}
-            <span className="font-medium text-ink">no result is known before settlement</span>. HWA rewards have no
+            Your NFT can be drawn at any time.{" "}
+            <span className="font-medium text-ink">No outcome is known before settlement</span>, and HWA rewards have no
             guaranteed value.
           </p>
         </div>
 
         <div className="flex items-end justify-between border-t border-line/60 pt-8">
-          <div>
-            <div className="mlabel text-secondary-readable">POOL TELEMETRY</div>
-            <h2 className="mt-1 text-xl font-semibold text-ink">Live protocol state</h2>
-          </div>
+          <h2 className="text-xl font-semibold text-ink">Live protocol state</h2>
           <span className="hidden text-2xs text-faint sm:block">
-            {env.dataMode === "mock" ? "Deterministic demo telemetry" : "Browser sampled · never estimated"}
+            {env.dataMode === "mock" ? "Deterministic demo telemetry" : "Read from the contracts"}
           </span>
         </div>
 
@@ -236,7 +219,7 @@ export function PoolScreen() {
           </div>
           {page && (
             <span className="mlabel text-mute">
-              {page.items.length} of {page.total}
+              {visibleListings.length} of {page.total}
             </span>
           )}
         </div>
@@ -245,7 +228,7 @@ export function PoolScreen() {
           query={query}
           onChange={(patch) => {
             setFilters((f) => ({ ...f, ...patch }));
-            setLimit(PAGE_SIZE);
+            setVisibleLimit(PAGE_SIZE);
           }}
           collections={collections ?? []}
           viewMode={viewMode}
@@ -278,7 +261,7 @@ export function PoolScreen() {
             <div className="card border-red/30">
               <EmptyState
                 title="Couldn't load listings"
-                detail="The data source did not respond. The pool may be fine — this is a connection problem, not an empty pool."
+                detail="The data source did not respond. This is a connection problem, not an empty pool."
                 action={
                   <Button variant="outline" onClick={() => void refetch()}>
                     Retry
@@ -300,7 +283,7 @@ export function PoolScreen() {
             </div>
           ) : viewMode === "grid" ? (
             <div className="deck-tilt grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6" data-testid="listing-grid">
-              {page.items.map((l) => (
+              {visibleListings.map((l) => (
                 <ListingCard key={l.id.toString()} listing={l} totalWeight={totalWeight} onOpen={openListing} />
               ))}
             </div>
@@ -315,17 +298,17 @@ export function PoolScreen() {
                 <span className="text-right">Rarity</span>
                 <span className="text-right">Age</span>
               </div>
-              {page.items.map((l) => (
+              {visibleListings.map((l) => (
                 <ListingRow key={l.id.toString()} listing={l} totalWeight={totalWeight} onOpen={openListing} />
               ))}
             </div>
           )}
         </div>
 
-        {page?.nextCursor && (
+        {page && visibleListings.length < page.items.length && (
           <div className="mt-4 flex justify-center">
-            <Button variant="secondary" onClick={() => setLimit((n) => n + PAGE_SIZE)}>
-              Show more ({page.total - page.items.length} left)
+            <Button variant="secondary" onClick={() => setVisibleLimit((n) => n + PAGE_SIZE)}>
+              Show more ({page.items.length - visibleListings.length} left)
             </Button>
           </div>
         )}

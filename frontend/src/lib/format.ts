@@ -9,6 +9,16 @@ export function shortHash(hash: string): string {
   return shortAddress(hash, 6);
 }
 
+/**
+ * Numeric on-chain ids are uint256: a randomness requestId prints as ~60
+ * digits and will blow any fixed-width panel open. Short ids stay whole, long
+ * ones keep their head and tail so they remain matchable against an explorer.
+ */
+export function shortId(id: bigint | string, keep = 6): string {
+  const s = typeof id === "bigint" ? id.toString() : id;
+  return s.length <= keep * 2 + 1 ? s : `${s.slice(0, keep)}…${s.slice(-4)}`;
+}
+
 export function timeAgo(unixSec: number, nowSec = Math.floor(Date.now() / 1000)): string {
   if (!Number.isFinite(unixSec) || unixSec <= 0) return "time unavailable";
   const d = Math.max(0, nowSec - unixSec);

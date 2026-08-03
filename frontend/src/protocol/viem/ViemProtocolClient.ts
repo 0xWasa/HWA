@@ -7,7 +7,9 @@ import {
   decodeFunctionResult,
   encodeFunctionData,
   http,
+  HttpRequestError,
   parseAbiItem,
+  TimeoutError,
   type EIP1193Provider,
   type Hash,
   type PublicClient,
@@ -37,6 +39,7 @@ import type {
   RewardsSnapshot,
   SettlementChoice,
   SettlementInfo,
+  SettlementOutcome,
   SwapQuote,
   SwapSide,
   TokenMarket,
@@ -51,11 +54,24 @@ import {
   fwaCoreAbi,
   fwaRewardsAbi,
   LISTING_STATUS_BY_CODE,
+  projectXAdapterAbi,
   v3PoolAbi,
+  v3PoolLiquidityAbi,
+  v3RouterAbi,
   splitterAbi,
 } from "./abi";
 import { buildPoolMarketHistory, type PoolSwapSample } from "./market";
 import { hypePerHwaFromSqrtPrice } from "./price";
+
+/**
+ * Gas-price headroom used to fund the randomness fee.
+ *
+ * That fee is priced from `tx.gasprice`, which the wallet chooses, not us. Four
+ * times the observed price covers an aggressive wallet setting; the core
+ * refunds the difference, and the fee is a ten-thousandth of the pool price, so
+ * the headroom costs the buyer nothing in practice.
+ */
+const ACQUIRE_GAS_PRICE_HEADROOM = 4n;
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
 const MAX_ENUMERATED_LISTINGS = 1_000n;
@@ -69,6 +85,7 @@ const MAX_LOG_DISCOVERY_BLOCK_SPAN = 50_000_000n;
 const MARKET_HISTORY_BLOCK_WINDOW = 100_000n;
 const MARKET_LOG_WINDOW_BATCH_SIZE = 20;
 const MAX_ACCOUNT_LOG_RESULTS = 5_000;
+const MULTICALL3_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11" as Address;
 const HWA_TOKEN_NAME = "Hyper World Assets";
 const HWA_TOKEN_SYMBOL = "HWA";
 const HWA_TOKEN_DECIMALS = 18;
@@ -92,15 +109,64 @@ const POOL_SWAP_EVENT = parseAbiItem(
 // JSON-RPC batch instead of spending one HTTP request per field.
 const RPC_TRANSPORT_OPTIONS = {
   batch: { batchSize: 40, wait: 20 },
-  retryCount: 2,
+  // One bounded retry is enough for a user-facing read. More retries multiply
+  // provider load during an outage and can turn throttling into a retry storm.
+  retryCount: 1,
   retryDelay: 500,
 } as const;
 
 // Wallet discovery can surface hundreds of NFTs at once. Pace metadata calls
-// so a legitimate collection view does not trip the public Nginx/API limits or
-// create hundreds of simultaneous upstream IPFS requests.
-const NFT_METADATA_MAX_CONCURRENCY = 8;
-const NFT_METADATA_START_INTERVAL_MS = 50;
+// so a legitimate collection view does not create hundreds of simultaneous
+// upstream fetches.
+//
+// The interval is a HARD ceiling, not a preference: the edge allows 30 req/s
+// per IP with a burst of 60 and sheds the excess as a 503 rather than queueing
+// it. 40ms caps starts at 25/s, which leaves headroom. Loosening this to 12ms
+// once put a full pool at ~83/s and cost 43 dropped requests, each one a card
+// rendering with no name and no art. Raise the edge limit before raising this.
+// Concurrency is the softer knob: extra slots only absorb slow upstreams.
+const NFT_METADATA_MAX_CONCURRENCY = 12;
+const NFT_METADATA_START_INTERVAL_MS = 40;
+
+/**
+ * Resolved metadata, kept across reloads.
+ *
+ * A tokenURI describes one immutable token, so re-asking on every refresh only
+ * bought latency. Entries carrying an inline data: image are skipped: they are
+ * tens of kilobytes each and would exhaust the quota for no gain, since the
+ * browser decodes them locally anyway.
+ */
+const NFT_METADATA_STORE_KEY = "hwa.nftmeta";
+const NFT_METADATA_STORE_MAX = 400;
+const NFT_METADATA_STORE_MAX_VALUE = 512;
+
+type StoredMetadata = { name?: string; imageUrl?: string };
+
+function readMetadataStore(): Map<string, StoredMetadata> {
+  if (typeof window === "undefined") return new Map();
+  try {
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(NFT_METADATA_STORE_KEY) ?? "null");
+    if (!Array.isArray(parsed)) return new Map();
+    return new Map(
+      parsed.filter(
+        (entry): entry is [string, StoredMetadata] =>
+          Array.isArray(entry) && typeof entry[0] === "string" && !!entry[1] && typeof entry[1] === "object",
+      ),
+    );
+  } catch {
+    return new Map();
+  }
+}
+
+function persistMetadata(store: Map<string, StoredMetadata>): void {
+  if (typeof window === "undefined") return;
+  try {
+    const tail = [...store].slice(-NFT_METADATA_STORE_MAX);
+    window.localStorage.setItem(NFT_METADATA_STORE_KEY, JSON.stringify(tail));
+  } catch {
+    /* private mode / quota — the in-memory cache still applies */
+  }
+}
 type MetadataJob<T> = {
   run: () => Promise<T>;
   resolve: (value: T) => void;
@@ -167,6 +233,34 @@ interface GraphListingRow {
   settlement?: string | null;
   isCrown: boolean;
 }
+
+const SETTLEMENT_OUTCOMES = [
+  "kept",
+  "relisted",
+  "bid_accepted",
+  "bid_accepted_tokens",
+  "depositor_reclaim_nft",
+  "depositor_reclaim_backing",
+  "finalized",
+] as const;
+
+function isSettlementOutcome(value: unknown): value is SettlementOutcome {
+  return typeof value === "string" && (SETTLEMENT_OUTCOMES as readonly string[]).includes(value);
+}
+
+type ListingTelemetryRaw = readonly [
+  Address,
+  Address,
+  Address,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  number,
+];
 
 interface GraphActivityRow {
   id: string;
@@ -239,6 +333,8 @@ export class ViemProtocolClient implements ProtocolClient {
   private txs: TrackedTransaction[] = [];
   private receiptWatchers = new Set<string>();
   private metadataCache = new Map<string, Promise<{ name?: string; imageUrl?: string }>>();
+  private metadataStore = readMetadataStore();
+  private venueCache?: { router: Address; whype: Address; pool: Address; fee: number; token: Address };
   private collectionMetadataCache = new Map<string, Promise<{ name?: string; symbol?: string }>>();
   private poolSwapCache?: { pool: Address; throughBlock: bigint; samples: PoolSwapSample[] };
 
@@ -336,7 +432,7 @@ export class ViemProtocolClient implements ProtocolClient {
     where?: string[];
     first?: number;
     skip?: number;
-    orderBy?: "backing" | "weight" | "listedAt" | "listingId";
+    orderBy?: "backing" | "weight" | "listedAt" | "allocatedAt" | "listingId";
     direction?: "asc" | "desc";
   }): Promise<GraphListingRow[]> {
     const first = Math.max(1, Math.min(input.first ?? INDEXER_PAGE_SIZE, 1_000));
@@ -353,8 +449,7 @@ export class ViemProtocolClient implements ProtocolClient {
     return data.listings;
   }
 
-  private async getListingTelemetry(id: bigint): Promise<Listing | null> {
-    const raw = await this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "listings", args: [id] });
+  private listingFromTelemetry(id: bigint, raw: ListingTelemetryRaw): Listing | null {
     const status = LISTING_STATUS_BY_CODE[raw[10] as keyof typeof LISTING_STATUS_BY_CODE];
     if (!status) return null;
     const collection = this.collectionInfo(raw[0]);
@@ -370,7 +465,7 @@ export class ViemProtocolClient implements ProtocolClient {
       listedAt: 0,
       allocatedAt: raw[9] > 0n ? Number(raw[9]) : undefined,
       isCrown: false,
-      // This path is used only for aggregate odds/hero placeholders. Detail views re-read fees and recovery state.
+      // List surfaces do not need detail-only fee, recovery or ownerOf reads.
       pendingFees: 0n,
       nft: {
         name: `${collection?.symbol ?? "NFT"} #${raw[3].toString()}`,
@@ -380,22 +475,72 @@ export class ViemProtocolClient implements ProtocolClient {
     };
   }
 
-  private async hydrateIndexedListing(row: GraphListingRow, includeMetadata = true): Promise<Listing | null> {
-    const listing = includeMetadata
-      ? await this.getListing(BigInt(row.listingId), row.tokenURI)
-      : await this.getListingTelemetry(BigInt(row.listingId));
-    if (!listing) return null;
-    listing.listedAt = Number(row.listedAt);
-    // Economic fields stay on-chain-derived. The indexer contributes only the event timestamp and,
-    // when requested, its tokenURI snapshot as a display-only metadata hint.
-    return listing;
+  private async getListingTelemetry(id: bigint): Promise<Listing | null> {
+    const raw = await this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "listings", args: [id] });
+    return this.listingFromTelemetry(id, raw);
   }
 
   private async hydrateIndexedListings(rows: GraphListingRow[], includeMetadata = true): Promise<Listing[]> {
-    const [items, topId] = await Promise.all([
-      Promise.all(rows.map((row) => this.hydrateIndexedListing(row, includeMetadata))),
-      this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "topListingId" }),
-    ]);
+    if (rows.length === 0) return [];
+    const contracts = [
+      ...rows.map((row) => ({
+        address: this.core,
+        abi: fwaCoreAbi,
+        functionName: "listings",
+        args: [BigInt(row.listingId)],
+      })),
+      { address: this.core, abi: fwaCoreAbi, functionName: "topListingId" },
+    ] as never;
+    const state = await this.pub.multicall({
+      contracts,
+      allowFailure: false,
+      multicallAddress: MULTICALL3_ADDRESS,
+    }) as readonly unknown[];
+    const topId = state[state.length - 1] as bigint;
+    let mismatched = 0;
+    const items = await Promise.all(
+      rows.map(async (row, index) => {
+        const raw = state[index] as ListingTelemetryRaw;
+        // The indexer and the core are two independent sources keyed by the same
+        // uint256. Point them at different deployments and every id still
+        // resolves, so economic fields silently describe another contract's
+        // listing while names and images stay from the row. That shipped once:
+        // the subgraph was left on the v1 core after the v2 cutover and the pool
+        // rendered real backings against the wrong NFTs. The row already carries
+        // its own identity, so proving it costs nothing.
+        if (!sameAddress(raw[0], row.collection as Address) || raw[3] !== BigInt(row.tokenId)) {
+          mismatched += 1;
+          return null;
+        }
+        const listing = this.listingFromTelemetry(BigInt(row.listingId), raw);
+        if (!listing) return null;
+        if (includeMetadata) {
+          listing.nft = await this.resolveListingNFT(listing.collection, listing.tokenId, row.tokenURI);
+        }
+        listing.listedAt = Number(row.listedAt);
+        // The settled outcome is an event fact, not an economic value: on-chain
+        // state cannot distinguish an HYPE sale from an HWA one (both return the
+        // NFT to the depositor), so without this every settled row rendered as
+        // "Pending claim". Validated against the union before it is trusted.
+        if (listing.status === "settled" && isSettlementOutcome(row.settlement)) {
+          listing.settlement = row.settlement;
+        }
+        // Economic fields stay on-chain-derived. The indexer contributes only
+        // event time and its tokenURI snapshot as a display-only metadata hint.
+        return listing;
+      }),
+    );
+    // A stray mismatch is just a row the core has since cleared. A wholesale one
+    // means the indexer is describing a different deployment, and then no row is
+    // trustworthy: fail closed onto the direct on-chain reader rather than
+    // render a plausible-looking pool.
+    if (mismatched > rows.length / 4) {
+      throw new ProtocolError(
+        "INDEXER_DOWN",
+        "The indexer is reporting listings from a different core deployment.",
+        `${mismatched} of ${rows.length} indexed rows did not match the core`,
+      );
+    }
     const listings = items.filter((listing): listing is Listing => listing !== null);
     for (const listing of listings) listing.isCrown = listing.id === topId;
     return listings;
@@ -404,6 +549,15 @@ export class ViemProtocolClient implements ProtocolClient {
   private resolveNFTMetadata(tokenURI: string): Promise<{ name?: string; imageUrl?: string }> {
     const existing = this.metadataCache.get(tokenURI);
     if (existing) return existing;
+    // A reload starts with an empty in-memory cache, so without this every
+    // token queued behind the pacer again even though its answer had not
+    // changed and was already in the browser's HTTP cache.
+    const stored = this.metadataStore.get(tokenURI);
+    if (stored) {
+      const resolved = Promise.resolve(stored);
+      this.metadataCache.set(tokenURI, resolved);
+      return resolved;
+    }
     const request = scheduleMetadataRequest(() =>
       tokenURI.startsWith("data:application/json")
         ? fetch("/api/nft-metadata", {
@@ -416,10 +570,18 @@ export class ViemProtocolClient implements ProtocolClient {
       .then(async (response) => {
         if (!response.ok) return {};
         const value = (await response.json()) as { name?: unknown; imageUrl?: unknown };
-        return {
+        const resolved = {
           name: typeof value.name === "string" ? value.name : undefined,
           imageUrl: typeof value.imageUrl === "string" ? value.imageUrl : undefined,
         };
+        const compact =
+          (resolved.imageUrl?.length ?? 0) <= NFT_METADATA_STORE_MAX_VALUE &&
+          (resolved.name?.length ?? 0) <= NFT_METADATA_STORE_MAX_VALUE;
+        if (compact && (resolved.name || resolved.imageUrl)) {
+          this.metadataStore.set(tokenURI, resolved);
+          persistMetadata(this.metadataStore);
+        }
+        return resolved;
       })
       .catch(() => ({}));
     this.metadataCache.set(tokenURI, request);
@@ -511,6 +673,12 @@ export class ViemProtocolClient implements ProtocolClient {
 
   private createTransaction(kind: TxKind, label: string, meta: Record<string, string>): TrackedTransaction {
     const timestamp = nowSec();
+    // The dock is stored per chain and contract, not per wallet, so switching
+    // accounts used to leave the previous wallet's transactions in place and
+    // the deposit flow resumed one of them: a screen about an NFT the new
+    // account does not own, with no way forward. Stamping the signer lets a
+    // reader tell whose transaction it is.
+    const signer = getAccount(wagmiConfig).address;
     const tx: TrackedTransaction = {
       id: txId(),
       kind,
@@ -518,7 +686,7 @@ export class ViemProtocolClient implements ProtocolClient {
       phase: "wallet",
       createdAt: timestamp,
       updatedAt: timestamp,
-      meta,
+      meta: signer ? { ...meta, account: signer.toLowerCase() } : meta,
     };
     this.txs.unshift(tx);
     this.persistTransactions();
@@ -586,6 +754,23 @@ export class ViemProtocolClient implements ProtocolClient {
       return new ProtocolError(
         "RPC_DOWN",
         "Receipt confirmation timed out. The transaction outcome is unknown; check the explorer before retrying.",
+        message,
+      );
+    }
+    // A transport failure is not a revert. Once the write is broadcast, an
+    // upstream 429 or 5xx while awaiting the receipt says nothing about the
+    // transaction, which may still mine. Calling that "the on-chain call
+    // failed" invites a second submission of a deposit that already landed.
+    if (
+      error instanceof HttpRequestError ||
+      error instanceof TimeoutError ||
+      /HTTP request failed|too many requests|rate limit|socket hang up|ECONNRESET|Failed to fetch|Load failed/i.test(
+        message,
+      )
+    ) {
+      return new ProtocolError(
+        "RPC_DOWN",
+        "The RPC connection dropped, so the transaction outcome is unknown. Check the explorer before retrying.",
         message,
       );
     }
@@ -680,8 +865,8 @@ export class ViemProtocolClient implements ProtocolClient {
     }
   }
 
-  private async readQuote() {
-    const gasPrice = await this.pub.getGasPrice();
+  private async readQuote(gasPriceMultiplier = 1n) {
+    const gasPrice = (await this.pub.getGasPrice()) * gasPriceMultiplier;
     const data = encodeFunctionData({
       abi: fwaCoreAbi,
       functionName: "quoteAcquisitionPrice",
@@ -698,30 +883,56 @@ export class ViemProtocolClient implements ProtocolClient {
   }
 
   async getPoolSnapshot(): Promise<PoolSnapshot> {
-    const [block, priced, activeCount, stagedCount, activeBackingTotal, totalWeight, weightedBackingTotal, pending, slippageBps, surchargeBps, minBacking, maxBatch, settlementWindow, finalizeWindow, settlementDiscountBps, onchainAcquisitionsEnabled, withdrawOnly, topId, topPot, topShare, topThreshold] =
-      await Promise.all([
-        this.pub.getBlock(),
-        this.readQuote(),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "activeListingCount" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "stagedCount" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "activeBackingTotal" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "totalWeight" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "weightedBackingTotal" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "pendingAcquisitionCount" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "selectionSlippageBps" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "surchargeBps" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "minBacking" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "maxAcquisitionsPerTx" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "settlementWindow" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "finalizeWindow" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "settlementDiscountBps" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "acquisitionsEnabled" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "withdrawOnly" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "topListingId" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "topListingPot" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "topListingShareBps" }),
-        this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "topThresholdBps" }),
-      ]);
+    const contracts = [
+      "activeListingCount",
+      "stagedCount",
+      "activeBackingTotal",
+      "totalWeight",
+      "weightedBackingTotal",
+      "pendingAcquisitionCount",
+      "selectionSlippageBps",
+      "surchargeBps",
+      "minBacking",
+      "maxAcquisitionsPerTx",
+      "settlementWindow",
+      "finalizeWindow",
+      "settlementDiscountBps",
+      "acquisitionsEnabled",
+      "withdrawOnly",
+      "topListingId",
+      "topListingPot",
+      "topListingShareBps",
+      "topThresholdBps",
+    ].map((functionName) => ({ address: this.core, abi: fwaCoreAbi, functionName })) as never;
+    const [block, priced, state] = await Promise.all([
+      this.pub.getBlock(),
+      this.readQuote(),
+      this.pub.multicall({ contracts, allowFailure: false, multicallAddress: MULTICALL3_ADDRESS }),
+    ]);
+    const [
+      activeCount,
+      stagedCount,
+      activeBackingTotal,
+      totalWeight,
+      weightedBackingTotal,
+      pending,
+      slippageBps,
+      surchargeBps,
+      minBacking,
+      maxBatch,
+      settlementWindow,
+      finalizeWindow,
+      settlementDiscountBps,
+      onchainAcquisitionsEnabled,
+      withdrawOnly,
+      topId,
+      topPot,
+      topShare,
+      topThreshold,
+    ] = state as readonly [
+      bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint,
+      bigint, bigint, bigint, boolean, boolean, bigint, bigint, bigint, bigint,
+    ];
     const [fee, vrf, total] = priced.quote;
     return {
       chainId: this.chainId,
@@ -752,6 +963,23 @@ export class ViemProtocolClient implements ProtocolClient {
     };
   }
 
+  /**
+   * The settled outcome as the event recorded it, or undefined.
+   *
+   * Never throws: an unreachable indexer must leave the caller on its on-chain
+   * inference rather than fail a detail view outright.
+   */
+  private async indexedSettlement(id: bigint): Promise<SettlementOutcome | undefined> {
+    if (!this.indexerUrl) return undefined;
+    try {
+      const rows = await this.indexedListingRows({ where: [`listingId: ${JSON.stringify(id.toString())}`], first: 1 });
+      const value = rows[0]?.settlement;
+      return isSettlementOutcome(value) ? value : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
   async getListing(id: bigint, indexedTokenURI?: string | null): Promise<Listing | null> {
     const raw = await this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "listings", args: [id] });
     const status = LISTING_STATUS_BY_CODE[raw[10] as keyof typeof LISTING_STATUS_BY_CODE];
@@ -763,19 +991,26 @@ export class ViemProtocolClient implements ProtocolClient {
     ]);
     let settlement: Listing["settlement"];
     if (status === "settled") {
-      try {
-        const nftOwner = await this.pub.readContract({
-          address: raw[0],
-          abi: erc721Abi,
-          functionName: "ownerOf",
-          args: [raw[3]],
-        });
-        if (raw[2] !== ZERO_ADDRESS && sameAddress(nftOwner, raw[2])) settlement = "kept";
-        else if (sameAddress(nftOwner, raw[1])) settlement = "bid_accepted";
-        else if (sameAddress(nftOwner, this.core)) settlement = "relisted";
-      } catch {
-        // A burned or hostile ERC-721 may make ownerOf unavailable. The UI then
-        // reports the outcome as unknown instead of inventing an event history.
+      // The event is the only source that can tell a HYPE exit from an HWA one:
+      // both send the NFT back to the depositor, so ownerOf sees them as the
+      // same thing. Taking the bid as HWA was being reported as "bid accepted",
+      // which reads as the HYPE exit the purchaser did not choose.
+      settlement = await this.indexedSettlement(id);
+      if (!settlement) {
+        try {
+          const nftOwner = await this.pub.readContract({
+            address: raw[0],
+            abi: erc721Abi,
+            functionName: "ownerOf",
+            args: [raw[3]],
+          });
+          if (raw[2] !== ZERO_ADDRESS && sameAddress(nftOwner, raw[2])) settlement = "kept";
+          else if (sameAddress(nftOwner, raw[1])) settlement = "bid_accepted";
+          else if (sameAddress(nftOwner, this.core)) settlement = "relisted";
+        } catch {
+          // A burned or hostile ERC-721 may make ownerOf unavailable. The UI then
+          // reports the outcome as unknown instead of inventing an event history.
+        }
       }
     }
     return {
@@ -865,7 +1100,9 @@ export class ViemProtocolClient implements ProtocolClient {
     const search = query.search?.trim().toLowerCase();
     let items = snapshot.filter((listing) => {
       if (query.view === "pool" && listing.status !== "active") return false;
-      if (query.view === "top" && !listing.isCrown) return false;
+      if (query.view === "deposits" && listing.status !== "active" && listing.status !== "staged") return false;
+      if (query.view === "top" && (listing.status !== "active" || !listing.isCrown)) return false;
+      if (query.view === "recent" && listing.status === "withdrawn") return false;
       if (query.collections?.length && !query.collections.some((address) => sameAddress(address, listing.collection))) return false;
       if (query.statuses?.length && !query.statuses.includes(listing.status)) return false;
       if (query.rarities?.length && !query.rarities.includes(rarityFromOdds(listing.weight, totalWeight))) return false;
@@ -877,6 +1114,12 @@ export class ViemProtocolClient implements ProtocolClient {
       if (query.sort === "value") return (a.backing < b.backing ? -1 : a.backing > b.backing ? 1 : 0) * direction;
       if (query.sort === "odds") return (a.weight < b.weight ? -1 : a.weight > b.weight ? 1 : 0) * direction;
       if (query.sort === "name") return (a.nft.name ?? "").localeCompare(b.nft.name ?? "") * direction;
+      if (query.sort === "date") {
+        // Same rule as the indexed path: the feed is ordered by the moment a
+        // position was drawn, every other view by the moment it was deposited.
+        const at = (l: Listing) => (query.view === "recent" ? (l.allocatedAt ?? l.listedAt) : l.listedAt);
+        return (at(a) - at(b)) * direction;
+      }
       return (a.id < b.id ? -1 : a.id > b.id ? 1 : 0) * direction;
     });
     const offset = Number.parseInt(query.cursor ?? "0", 10) || 0;
@@ -887,7 +1130,9 @@ export class ViemProtocolClient implements ProtocolClient {
   private async getIndexedListings(query: ListingsQuery): Promise<Page<Listing>> {
     const where: string[] = [];
     if (query.view === "pool") where.push('status: "active"');
-    if (query.view === "top") where.push("isCrown: true");
+    if (query.view === "deposits") where.push('status_in: ["active", "staged"]');
+    if (query.view === "top") where.push('status: "active"', "isCrown: true");
+    if (query.view === "recent") where.push('status_not: "withdrawn"');
     if (query.statuses?.length) {
       where.push(`status_in: [${query.statuses.map((status) => JSON.stringify(status)).join(", ")}]`);
     }
@@ -896,8 +1141,14 @@ export class ViemProtocolClient implements ProtocolClient {
         `collection_in: [${query.collections.map((address) => JSON.stringify(address.toLowerCase())).join(", ")}]`,
       );
     }
+    // The acquisition feed shows when a position was DRAWN and every other view
+    // shows when it was deposited, so "date" cannot mean one column for both.
+    // Ordering the feed by listedAt sorted fresh spins by the age of the
+    // deposit behind them: a draw from a minute ago on a listing deposited
+    // three hours earlier landed at the bottom and never surfaced.
+    const dateField = query.view === "recent" ? "allocatedAt" : "listedAt";
     const orderBy =
-      query.sort === "value" ? "backing" : query.sort === "odds" ? "weight" : query.sort === "date" ? "listedAt" : "listingId";
+      query.sort === "value" ? "backing" : query.sort === "odds" ? "weight" : query.sort === "date" ? dateField : "listingId";
     const offset = Number.parseInt(query.cursor ?? "0", 10) || 0;
     const scanSize = Math.min(1_000, Math.max(query.limit * 4, query.limit + 1));
     const rows = await this.indexedListingRows({
@@ -1332,7 +1583,7 @@ export class ViemProtocolClient implements ProtocolClient {
         if (!sameAddress(acquisition[0], account)) return null;
         let requestedAt = 0;
         try {
-          requestedAt = Number((await logPub.getBlock({ blockNumber: acquisition[1] })).timestamp);
+          requestedAt = Number((await this.pub.getBlock({ blockNumber: acquisition[1] })).timestamp);
         } catch {
           requestedAt = nowSec();
         }
@@ -1389,6 +1640,32 @@ export class ViemProtocolClient implements ProtocolClient {
       this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "topListingPot" }),
     ]);
     const mineAsDepositor = listings.filter((listing) => sameAddress(listing.depositor, account));
+    // List surfaces skip the per-listing fee read because the public pool does
+    // not need it. This is the one surface that does: the claim button and the
+    // earnings tab both key off pendingFees, so leaving it at zero hid real
+    // accrued HYPE from the depositor who earned it. Scoped to the account's
+    // own active deposits, so it costs one aggregate, not a pool-wide scan.
+    const feeBearing = mineAsDepositor.filter((listing) => listing.status === "active");
+    if (feeBearing.length > 0) {
+      try {
+        const fees = (await this.pub.multicall({
+          contracts: feeBearing.map((listing) => ({
+            address: this.core,
+            abi: fwaCoreAbi,
+            functionName: "pendingFees",
+            args: [listing.id],
+          })) as never,
+          allowFailure: false,
+          multicallAddress: MULTICALL3_ADDRESS,
+        })) as readonly bigint[];
+        feeBearing.forEach((listing, index) => {
+          listing.pendingFees = fees[index] ?? 0n;
+        });
+      } catch {
+        // A failed fee read must not take the whole positions view down; the
+        // claim stays reachable from the listing detail.
+      }
+    }
     return {
       account,
       deposited: mineAsDepositor.filter((listing) => listing.status === "active" || listing.status === "staged"),
@@ -1432,21 +1709,11 @@ export class ViemProtocolClient implements ProtocolClient {
       start,
       emissionDuration,
       configured,
-      claimsEnabled,
-      currentSeason,
       currentEpoch,
       reserveRemaining,
-      seasonalEmitted,
-      seasonalBurned,
-      depositorEmitted,
-      purchaserEmitted,
-      buybackDepositorRouted,
-      buybackPurchaserRouted,
-      effectiveQuoteX96,
-      valueCapBps,
-      seasonOne,
-      seasonTwo,
-      seasonThree,
+      tokenLiability,
+      depositorRatePerSec,
+      purchaserDailyPot,
       hotGap,
       coldGap,
       lastAcquisitionAt,
@@ -1457,21 +1724,11 @@ export class ViemProtocolClient implements ProtocolClient {
       this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "emissionStart" }),
       this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "EMISSION_DURATION" }),
       this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "emissionConfigured" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "claimsEnabled" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "currentSeason" }),
       this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "currentEpoch" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "seasonalReserveRemaining" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "seasonalEmitted" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "seasonalBurned" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "seasonalDepositorEmitted" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "seasonalPurchaserEmitted" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "buybackDepositorRouted" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "buybackPurchaserRouted" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "effectiveSeasonQuoteX96" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "VALUE_CAP_BPS" }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "seasonBudget", args: [0n] }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "seasonBudget", args: [1n] }),
-      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "seasonBudget", args: [2n] }),
+      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "depositorEmissionRemaining" }),
+      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "tokenLiability" }),
+      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "depositorRatePerSec" }),
+      this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "purchaserDailyPot" }),
       this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "hotGap" }),
       this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "coldGap" }),
       this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "lastAcquisitionTs" }),
@@ -1510,17 +1767,15 @@ export class ViemProtocolClient implements ProtocolClient {
       const epochRows = await Promise.all(
         Array.from({ length: epochCount }, async (_, epoch) => {
           const epochId = BigInt(epoch);
-          const [mine, total, pendingCount, finalized, claimed, swept, pot] = await Promise.all([
-            this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "userSettledHypeInEpoch", args: [epochId, account] }),
-            this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "settledHypeInEpoch", args: [epochId] }),
+          const [mine, total, pendingCount, claimed, swept, pot] = await Promise.all([
+            this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "userAcquisitionsInEpoch", args: [epochId, account] }),
+            this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "acquisitionsInEpoch", args: [epochId] }),
             this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "pendingAcquisitionsInEpoch", args: [epochId] }),
-            this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "epochFinalized", args: [epochId] }),
             this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "purchaserClaimed", args: [epochId, account] }),
             this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "purchaserEpochSwept", args: [epochId] }),
             this.pub.readContract({ address: rewards, abi: fwaRewardsAbi, functionName: "purchaserEpochAmount", args: [epochId] }),
           ]);
-          const seasonalClosed = epoch >= 45 || finalized;
-          if (mine === 0n || total === 0n || pendingCount !== 0n || !seasonalClosed || claimed || swept) return null;
+          if (mine === 0n || total === 0n || pendingCount !== 0n || claimed || swept) return null;
           return { epoch, amount: (pot * mine) / total };
         }),
       );
@@ -1532,7 +1787,9 @@ export class ViemProtocolClient implements ProtocolClient {
     const startNumber = Number(start);
     const durationNumber = Number(emissionDuration);
     const chainNow = Number((await this.pub.getBlock()).timestamp);
-    const seasonBudgets = [seasonOne, seasonTwo, seasonThree];
+    const depositorBudget = depositorRatePerSec * emissionDuration;
+    const purchaserBudget = purchaserDailyPot * 15n;
+    const fixedBudget = depositorBudget + purchaserBudget;
     return {
       moduleActive: true,
       tokenSymbol: "HWA",
@@ -1540,25 +1797,26 @@ export class ViemProtocolClient implements ProtocolClient {
       emission: {
         startedAt: startNumber,
         endsAt: startNumber === 0 ? 0 : startNumber + durationNumber,
-        currentSeason: Number(currentSeason),
+        currentSeason: startNumber === 0 ? 0 : 1,
         currentEpoch: Number(currentEpoch),
-        claimsEnabled,
+        claimsEnabled: startNumber !== 0,
         configured,
-        reserveRemaining,
-        emitted: seasonalEmitted,
-        burned: seasonalBurned,
-        depositorEmitted,
-        purchaserEmitted,
-        effectiveQuoteX96,
-        valueCapBps: Number(valueCapBps),
-        seasons: seasonBudgets.map((maxBudget, index) => ({
-          season: index + 1,
-          startsAt: startNumber === 0 ? 0 : startNumber + index * 15 * 86_400,
-          endsAt: startNumber === 0 ? 0 : startNumber + (index + 1) * 15 * 86_400,
-          maxBudget,
-        })),
+        depositorRatePerSec,
+        reserveRemaining: tokenLiability,
+        emitted: fixedBudget > tokenLiability ? fixedBudget - tokenLiability : 0n,
+        burned: 0n,
+        depositorEmitted: depositorBudget > reserveRemaining ? depositorBudget - reserveRemaining : 0n,
+        purchaserEmitted: 0n,
+        effectiveQuoteX96: 0n,
+        valueCapBps: 0,
+        seasons: [{
+          season: 1,
+          startsAt: startNumber,
+          endsAt: startNumber === 0 ? 0 : startNumber + durationNumber,
+          maxBudget: fixedBudget,
+        }],
       },
-      buyback: { depositorRouted: buybackDepositorRouted, purchaserRouted: buybackPurchaserRouted },
+      buyback: { depositorRouted: 0n, purchaserRouted: 0n },
       epoch: {
         current: Number(currentEpoch),
         mode: Number(lastAcquisitionAt) > 0 && chainNow - Number(lastAcquisitionAt) <= Number(hotGap) ? "hot" : "cold",
@@ -1571,7 +1829,6 @@ export class ViemProtocolClient implements ProtocolClient {
       holderRevenue,
     };
   }
-
   private async getHolderRevenue(account?: Address): Promise<NonNullable<RewardsSnapshot["holderRevenue"]>> {
     const splitter = this.manifest.contracts.splitter;
     const [snapshotNft, snapshotSupply, maxTokenId, sweepAvailableAt, claimsClosed, splitFrozen, nftShareBps, claimablePerToken] =
@@ -1839,7 +2096,10 @@ export class ViemProtocolClient implements ProtocolClient {
     const deployedBlock = BigInt(deploymentBlock);
     if (deployedBlock > head) return undefined;
     const historyFloor = head > MARKET_HISTORY_BLOCK_WINDOW ? head - MARKET_HISTORY_BLOCK_WINDOW : 0n;
-    const firstBlock = deployedBlock > historyFloor ? deployedBlock : historyFloor;
+    // Stable provider-sized boundaries make the same historical requests
+    // reusable by the server cache across browsers and refreshes.
+    const alignedHistoryFloor = (historyFloor / this.logRpcMaxBlockRange) * this.logRpcMaxBlockRange;
+    const firstBlock = deployedBlock > alignedHistoryFloor ? deployedBlock : alignedHistoryFloor;
 
     const samePool = sameAddress(this.poolSwapCache?.pool, pool);
     const previous = samePool ? this.poolSwapCache : undefined;
@@ -1905,16 +2165,24 @@ export class ViemProtocolClient implements ProtocolClient {
     const pool = this.manifest.contracts.projectXPool;
     if (!token || !pool) return { moduleActive: false, symbol: "HWA" };
     let user: TokenMarket["user"];
-    const [externalBuysEnabled, token0, token1, slot0, totalSupply, tokenName, tokenSymbol, tokenDecimals] = await Promise.all([
-      this.pub.readContract({ address: token, abi: erc20Abi, functionName: "externalBuysEnabled" }),
-      this.pub.readContract({ address: pool, abi: v3PoolAbi, functionName: "token0" }),
-      this.pub.readContract({ address: pool, abi: v3PoolAbi, functionName: "token1" }),
-      this.pub.readContract({ address: pool, abi: v3PoolAbi, functionName: "slot0" }),
-      this.pub.readContract({ address: token, abi: erc20Abi, functionName: "totalSupply" }),
-      this.pub.readContract({ address: token, abi: erc20Abi, functionName: "name" }),
-      this.pub.readContract({ address: token, abi: erc20Abi, functionName: "symbol" }),
-      this.pub.readContract({ address: token, abi: erc20Abi, functionName: "decimals" }),
+    const [marketState, samples] = await Promise.all([
+      this.pub.multicall({
+        contracts: [
+          { address: token, abi: erc20Abi, functionName: "externalBuysEnabled" },
+          { address: pool, abi: v3PoolAbi, functionName: "token0" },
+          { address: pool, abi: v3PoolAbi, functionName: "token1" },
+          { address: pool, abi: v3PoolAbi, functionName: "slot0" },
+          { address: token, abi: erc20Abi, functionName: "totalSupply" },
+          { address: token, abi: erc20Abi, functionName: "name" },
+          { address: token, abi: erc20Abi, functionName: "symbol" },
+          { address: token, abi: erc20Abi, functionName: "decimals" },
+        ],
+        allowFailure: false,
+        multicallAddress: MULTICALL3_ADDRESS,
+      }),
+      this.getPoolSwapSamples(pool).catch(() => undefined),
     ]);
+    const [externalBuysEnabled, token0, token1, slot0, totalSupply, tokenName, tokenSymbol, tokenDecimals] = marketState;
     if (tokenName !== HWA_TOKEN_NAME || tokenSymbol !== HWA_TOKEN_SYMBOL || tokenDecimals !== HWA_TOKEN_DECIMALS) {
       throw new ProtocolError("CONTRACT_MISCONFIGURED", "The configured market token is not Hyper World Assets ($HWA).");
     }
@@ -1924,15 +2192,9 @@ export class ViemProtocolClient implements ProtocolClient {
     }
     const price = hypePerHwaFromSqrtPrice(slot0[0], hwaIsToken0);
     const history =
-      price === undefined
+      price === undefined || samples === undefined
         ? undefined
-        : await this.getPoolSwapSamples(pool)
-            .then((samples) =>
-              samples === undefined
-                ? undefined
-                : buildPoolMarketHistory(samples, hwaIsToken0, price, Math.floor(Date.now() / 1_000)),
-            )
-            .catch(() => undefined);
+        : buildPoolMarketHistory(samples, hwaIsToken0, price, Math.floor(Date.now() / 1_000));
     if (account) {
       const [hypeBalance, tokenBalance] = await Promise.all([
         this.pub.getBalance({ address: account }),
@@ -1991,12 +2253,164 @@ export class ViemProtocolClient implements ProtocolClient {
     };
   }
 
-  async quoteSwap(_input: { side: SwapSide; amountIn: bigint; slippageBps: number }): Promise<SwapQuote> {
-    throw new ProtocolError("NOT_ELIGIBLE", "Public swaps use the reviewed Project X interface after the owner opens buys.");
+  /**
+   * Venue addresses taken from the protocol's own adapter, never from a
+   * manifest entry, so the app cannot route through a different market than the
+   * one the buyback and the HWA settlements already use.
+   */
+  private async venue(): Promise<{ router: Address; whype: Address; pool: Address; fee: number; token: Address }> {
+    if (this.venueCache) return this.venueCache;
+    const adapter = this.manifest.contracts.projectXAdapter;
+    const token = this.manifest.contracts.token;
+    if (!adapter || !token) throw new ProtocolError("NOT_ELIGIBLE", "The HWA market is not configured for this deployment.");
+    const [router, whype, pool, fee] = await Promise.all([
+      this.pub.readContract({ address: adapter, abi: projectXAdapterAbi, functionName: "ROUTER" }),
+      this.pub.readContract({ address: adapter, abi: projectXAdapterAbi, functionName: "WHYPE" }),
+      this.pub.readContract({ address: adapter, abi: projectXAdapterAbi, functionName: "POOL" }),
+      this.pub.readContract({ address: adapter, abi: projectXAdapterAbi, functionName: "POOL_FEE" }),
+    ]);
+    this.venueCache = { router, whype, pool, fee: Number(fee), token };
+    return this.venueCache;
   }
 
-  async swap(_input: { quote: SwapQuote }): Promise<TrackedTransaction> {
-    throw new ProtocolError("NOT_ELIGIBLE", "Public swaps use the reviewed Project X interface after the owner opens buys.");
+  async quoteSwap(input: { side: SwapSide; amountIn: bigint; slippageBps: number }): Promise<SwapQuote> {
+    if (input.amountIn <= 0n) throw new ProtocolError("NOT_ELIGIBLE", "Enter an amount to quote.");
+    const { pool, whype, fee } = await this.venue();
+    const [slot0, liquidity, token0] = await Promise.all([
+      this.pub.readContract({ address: pool, abi: v3PoolAbi, functionName: "slot0" }),
+      this.pub.readContract({ address: pool, abi: v3PoolLiquidityAbi, functionName: "liquidity" }),
+      this.pub.readContract({ address: pool, abi: v3PoolAbi, functionName: "token0" }),
+    ]);
+    const sqrtP = slot0[0];
+    const L = liquidity;
+    if (L === 0n || sqrtP === 0n) throw new ProtocolError("NOT_ELIGIBLE", "The pool has no liquidity at the current price.");
+
+    // Which side of the pair HYPE sits on is read, not assumed.
+    const hypeIsToken0 = sameAddress(token0, whype);
+    const spendingHype = input.side === "buy";
+    const zeroForOne = spendingHype ? hypeIsToken0 : !hypeIsToken0;
+
+    const Q96 = 2n ** 96n;
+    const afterFee = (input.amountIn * BigInt(1_000_000 - fee)) / 1_000_000n;
+    let amountOut: bigint;
+    if (zeroForOne) {
+      // token0 in: the price walks down, output is token1.
+      const sqrtNew = (L * sqrtP) / (L + (afterFee * sqrtP) / Q96);
+      amountOut = (L * (sqrtP - sqrtNew)) / Q96;
+    } else {
+      // token1 in: the price walks up, output is token0.
+      const sqrtNew = sqrtP + (afterFee * Q96) / L;
+      amountOut = (L * Q96 * (sqrtNew - sqrtP)) / (sqrtP * sqrtNew);
+    }
+    if (amountOut <= 0n) throw new ProtocolError("NOT_ELIGIBLE", "The pool cannot fill an amount this small.");
+
+    // Impact against the spot price, fee included: what the trade costs versus
+    // trading an infinitesimal amount at the current tick.
+    const spotOut = zeroForOne
+      ? (input.amountIn * sqrtP * sqrtP) / (Q96 * Q96)
+      : (input.amountIn * Q96 * Q96) / (sqrtP * sqrtP);
+    const priceImpactBps = spotOut > 0n ? Number(((spotOut - amountOut) * 10_000n) / spotOut) : 0;
+
+    return {
+      side: input.side,
+      amountIn: input.amountIn,
+      amountOut,
+      minOut: (amountOut * BigInt(10_000 - input.slippageBps)) / 10_000n,
+      slippageBps: input.slippageBps,
+      priceImpactBps: Math.max(0, priceImpactBps),
+      feeBps: fee / 100,
+      quotedAt: nowSec(),
+    };
+  }
+
+  /** Allowance the router needs before an HWA sale can be submitted. */
+  async tradeAllowance(account: Address): Promise<bigint> {
+    const { router, token } = await this.venue();
+    return this.pub.readContract({ address: token, abi: erc20Abi, functionName: "allowance", args: [account, router] });
+  }
+
+  async approveTradeToken(amount: bigint): Promise<TrackedTransaction> {
+    const { wallet, account } = await this.connectedWallet();
+    const { router, token } = await this.venue();
+    return this.executeWrite("approve_token", "Approve HWA for trading", { amount: amount.toString() }, () =>
+      wallet.writeContract({ account, address: token, abi: erc20Abi, functionName: "approve", args: [router, amount] }),
+    );
+  }
+
+  async swap(input: { quote: SwapQuote }): Promise<TrackedTransaction> {
+    const { wallet, account } = await this.connectedWallet();
+    const { router, whype, fee, token } = await this.venue();
+    const { side, amountIn, minOut } = input.quote;
+    if (minOut <= 0n) {
+      // Never submit an unguarded swap: without a floor a sandwich can take the
+      // whole trade, and this market moves double digits in minutes.
+      throw new ProtocolError("NOT_ELIGIBLE", "This trade has no minimum output. Refresh the quote before submitting.");
+    }
+    const deadline = BigInt(nowSec() + 600);
+
+    if (side === "buy") {
+      // Native HYPE in: the router wraps it, and the pool delivers HWA straight
+      // to the buyer. Any route that parks HWA on the router first reverts.
+      return this.executeWrite("swap", "Buy HWA", { amountIn: amountIn.toString(), minOut: minOut.toString() }, () =>
+        wallet.writeContract({
+          account,
+          address: router,
+          abi: v3RouterAbi,
+          functionName: "exactInputSingle",
+          args: [{
+            tokenIn: whype,
+            tokenOut: token,
+            fee,
+            recipient: account,
+            deadline,
+            amountIn,
+            amountOutMinimum: minOut,
+            sqrtPriceLimitX96: 0n,
+          }],
+          value: amountIn,
+        }),
+      );
+    }
+
+    const allowance = await this.pub.readContract({
+      address: token,
+      abi: erc20Abi,
+      functionName: "allowance",
+      args: [account, router],
+    });
+    if (allowance < amountIn) {
+      throw new ProtocolError("NOT_ELIGIBLE", "Approve HWA for trading before selling.");
+    }
+    // Selling returns wHYPE to the router, which unwraps it to native HYPE for
+    // the seller in the same transaction.
+    const swapCall = encodeFunctionData({
+      abi: v3RouterAbi,
+      functionName: "exactInputSingle",
+      args: [{
+        tokenIn: token,
+        tokenOut: whype,
+        fee,
+        recipient: router,
+        deadline,
+        amountIn,
+        amountOutMinimum: minOut,
+        sqrtPriceLimitX96: 0n,
+      }],
+    });
+    const unwrapCall = encodeFunctionData({
+      abi: v3RouterAbi,
+      functionName: "unwrapWETH9",
+      args: [minOut, account],
+    });
+    return this.executeWrite("swap", "Sell HWA", { amountIn: amountIn.toString(), minOut: minOut.toString() }, () =>
+      wallet.writeContract({
+        account,
+        address: router,
+        abi: v3RouterAbi,
+        functionName: "multicall",
+        args: [[swapCall, unwrapCall]],
+      }),
+    );
   }
 
   async approveNFT(input: { collection: Address; tokenId: bigint }): Promise<TrackedTransaction> {
@@ -2075,11 +2489,20 @@ export class ViemProtocolClient implements ProtocolClient {
       throw new ProtocolError("ACQUISITIONS_DISABLED", "The supervised drand relayer session is not open.");
     }
     const { wallet, account } = await this.connectedWallet();
-    const [priced, weightedBackingTotal] = await Promise.all([
+    // The randomness fee is `gasEstimate * tx.gasprice * margin + flat`, so it
+    // is only known once the wallet picks a gas price, and wallets routinely
+    // ignore the one a dapp suggests. Funding the fee measured at our own gas
+    // price made every acquisition revert with InsufficientPayment whenever the
+    // wallet bid higher. The second quote reprices that fee with headroom,
+    // using the contract's own formula rather than a guessed multiple, and the
+    // core refunds every wei above the real cost.
+    const [priced, headroom, weightedBackingTotal] = await Promise.all([
       this.readQuote(),
+      this.readQuote(ACQUIRE_GAS_PRICE_HEADROOM),
       this.pub.readContract({ address: this.core, abi: fwaCoreAbi, functionName: "weightedBackingTotal" }),
     ]);
-    const [poolFeePerItem, serviceFeePerItem] = priced.quote;
+    const [poolFeePerItem] = priced.quote;
+    const fundedServiceFeePerItem = headroom.quote[1];
     if (poolFeePerItem > input.quote.maxAcquisitionFeePerItem) {
       throw new ProtocolError("PRICE_DRIFTED", "The pool fee is above the signed quote guard.");
     }
@@ -2089,7 +2512,7 @@ export class ViemProtocolClient implements ProtocolClient {
     // `_acquire` may activate staged listings before repricing the pool. Fund the
     // signed ceiling, not the pre-activation spot quote; the core refunds every
     // wei above the final pool fee + randomness service fee.
-    const value = (input.quote.maxAcquisitionFeePerItem + serviceFeePerItem) * BigInt(input.quote.quantity);
+    const value = (input.quote.maxAcquisitionFeePerItem + fundedServiceFeePerItem) * BigInt(input.quote.quantity);
     const submit = () =>
       input.quote.quantity === 1
         ? wallet.writeContract({

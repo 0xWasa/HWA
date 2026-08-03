@@ -79,13 +79,13 @@ $ratio = [double]$TargetFdvHype / 1000000000.0
 $tickHwaToken0 = Get-FloorTick $ratio
 $tickHwaToken1 = Get-FloorTick (1.0 / $ratio)
 $spacing = 200
-$rangeWidth = 3600
+
 $floor0 = Get-FloorToSpacing $tickHwaToken0 $spacing
 $floor1 = Get-FloorToSpacing $tickHwaToken1 $spacing
 $lower0 = $floor0 + $spacing
-$upper0 = $lower0 + $rangeWidth
+$upper0 = 887200
 $upper1 = $floor1
-$lower1 = $upper1 - $rangeWidth
+$lower1 = -887200
 
 $report = [ordered]@{
     schemaVersion = 1
@@ -129,7 +129,7 @@ $report = [ordered]@{
         }
     }
     selectionRule = "Predict the launch factory and HWA CREATE addresses from the funded deployer nonce, select exactly one candidate, then reproduce the FDV independently in the Foundry simulation before broadcast."
-    rationale = "Rounded native-asset purchasing-power parity with the forensic FWA launch (~25 ETH FDV) at the 27 July 2026 ETH/HYPE reference ratio; final approval remains explicit because the pool price is irreversible."
+    rationale = "FWA-parity one-sided launch with 500M HWA in the widest valid Project X range and a spot-calibrated circa-USD-40k initial FDV; the pool price is irreversible."
 }
 
 $projectRoot = Split-Path -Parent $PSScriptRoot

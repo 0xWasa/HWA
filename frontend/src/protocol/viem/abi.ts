@@ -391,6 +391,8 @@ export const fwaRewardsAbi = [
   { type: "function", name: "userSettledHypeInEpoch", stateMutability: "view", inputs: [{ name: "epoch", type: "uint256" }, { name: "purchaser", type: "address" }], outputs: [{ type: "uint256" }] },
   { type: "function", name: "epochFinalized", stateMutability: "view", inputs: [{ name: "epoch", type: "uint256" }], outputs: [{ type: "bool" }] },
   { type: "function", name: "emissionStart", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "depositorEmissionRemaining", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "tokenLiability", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   {
     type: "function",
     name: "depositorRatePerSec",
@@ -540,6 +542,26 @@ export const erc20Abi = [
     outputs: [{ type: "uint256" }],
   },
   { type: "function", name: "externalBuysEnabled", stateMutability: "view", inputs: [], outputs: [{ type: "bool" }] },
+  {
+    type: "function",
+    name: "allowance",
+    stateMutability: "view",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "approve",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ type: "bool" }],
+  },
 ] as const;
 
 export const v3PoolAbi = [
@@ -559,6 +581,70 @@ export const v3PoolAbi = [
       { name: "feeProtocol", type: "uint8" },
       { name: "unlocked", type: "bool" },
     ],
+  },
+] as const;
+
+/** Concentrated liquidity at the current tick, for quoting. */
+export const v3PoolLiquidityAbi = [
+  { type: "function", name: "liquidity", stateMutability: "view", inputs: [], outputs: [{ type: "uint128" }] },
+] as const;
+
+/** The venue addresses, read from the protocol's own adapter rather than a
+ *  manifest entry, so the app can never route through a different market than
+ *  the one the buyback uses. */
+export const projectXAdapterAbi = [
+  { type: "function", name: "ROUTER", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", name: "WHYPE", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", name: "POOL", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", name: "POOL_FEE", stateMutability: "view", inputs: [], outputs: [{ type: "uint24" }] },
+] as const;
+
+/**
+ * SwapRouter01 shape, confirmed against the deployed venue: the struct carries
+ * a deadline and `exactInputSingle` is payable, so a HYPE buy is one call with
+ * the buyer as recipient. That recipient matters beyond convenience: HWA only
+ * moves to or from its pool, so a route that parks the token on the router
+ * first reverts.
+ */
+export const v3RouterAbi = [
+  {
+    type: "function",
+    name: "exactInputSingle",
+    stateMutability: "payable",
+    inputs: [
+      {
+        type: "tuple",
+        name: "params",
+        components: [
+          { name: "tokenIn", type: "address" },
+          { name: "tokenOut", type: "address" },
+          { name: "fee", type: "uint24" },
+          { name: "recipient", type: "address" },
+          { name: "deadline", type: "uint256" },
+          { name: "amountIn", type: "uint256" },
+          { name: "amountOutMinimum", type: "uint256" },
+          { name: "sqrtPriceLimitX96", type: "uint160" },
+        ],
+      },
+    ],
+    outputs: [{ name: "amountOut", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "unwrapWETH9",
+    stateMutability: "payable",
+    inputs: [
+      { name: "amountMinimum", type: "uint256" },
+      { name: "recipient", type: "address" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "multicall",
+    stateMutability: "payable",
+    inputs: [{ name: "data", type: "bytes[]" }],
+    outputs: [{ type: "bytes[]" }],
   },
 ] as const;
 

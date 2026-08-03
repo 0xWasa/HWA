@@ -328,8 +328,13 @@ export class MockEngine {
         endsAt: started + 45 * 86_400,
         currentSeason: 1,
         currentEpoch: 3,
-        claimsEnabled: false,
+        // Mainnet opens claims the moment emission starts, so the mock has to
+        // as well: with this false the claim path could not be exercised at
+        // all, which is how the buttons shipped labelled "Claims locked".
+        claimsEnabled: true,
         configured: true,
+        // 10M HWA a day, the same shape the mainnet module was configured with.
+        depositorRatePerSec: (10_000_000n * WEI) / 86_400n,
         reserveRemaining: 96_000_000n * WEI,
         emitted: 4_000_000n * WEI,
         burned: 1_000_000n * WEI,

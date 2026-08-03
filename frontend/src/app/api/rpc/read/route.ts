@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const MAX_BODY_BYTES = 64 * 1024;
+// A Multicall3 aggregate over a full pool is the largest legitimate body here:
+// past roughly 190 positions it crossed 64 KB, the proxy answered 413, and the
+// pool rendered empty. MAX_BATCH_SIZE still bounds the call count, which is
+// what actually costs the upstream.
+const MAX_BODY_BYTES = 512 * 1024;
 const MAX_BATCH_SIZE = 50;
 const MAX_RESPONSE_BYTES = 4 * 1024 * 1024;
-const UPSTREAM_TIMEOUT_MS = 6_000;
+const UPSTREAM_TIMEOUT_MS = 12_000;
 const MAX_RATE_BUCKETS = 4_096;
 const RATE_WINDOW_MS = 60_000;
 const DEFAULT_RATE_LIMIT = 240;
@@ -61,7 +65,7 @@ function envUint(name: string, fallback: number): number {
 }
 
 function clientKey(request: NextRequest): string {
-  const trustedHeader = (process.env.HYPEREVM_LOG_RPC_TRUSTED_CLIENT_IP_HEADER ?? "").trim().toLowerCase();
+  const trustedHeader = (process.env.HYPEREVM_READ_RPC_TRUSTED_CLIENT_IP_HEADER ?? "").trim().toLowerCase();
   if (!trustedHeader) return "shared";
   const candidate = request.headers.get(trustedHeader)?.split(",", 1)[0]?.trim();
   return candidate && candidate.length <= 128 ? candidate : "unknown";
@@ -151,40 +155,102 @@ function isValidCall(value: unknown): value is JsonRpcRequest {
   return false;
 }
 
-function parseUpstream(raw: string, headers: Record<string, string>): { url: URL; headers: Record<string, string> } | null {
+function upstreamConfig(): { url: URL; headers: Record<string, string> } | null {
   try {
-    const url = new URL(raw);
+    const url = new URL(process.env.HYPEREVM_READ_RPC_UPSTREAM_URL ?? "");
     if (url.protocol !== "https:" || url.username || url.password) return null;
+    const apiKey = process.env.HYPEREVM_READ_RPC_API_KEY?.trim();
+    const headerName = (process.env.HYPEREVM_READ_RPC_API_KEY_HEADER ?? "x-api-key").trim().toLowerCase();
+    if (!/^[a-z0-9-]{1,64}$/.test(headerName)) return null;
+    const headers: Record<string, string> = { "content-type": "application/json", accept: "application/json" };
+    if (apiKey) headers[headerName] = apiKey;
     return { url, headers };
   } catch {
     return null;
   }
 }
 
-function upstreamConfigs(): { url: URL; headers: Record<string, string> }[] {
-  const apiKey = process.env.HYPEREVM_LOG_RPC_API_KEY?.trim();
-  const headerName = (process.env.HYPEREVM_LOG_RPC_API_KEY_HEADER ?? "x-api-key").trim().toLowerCase();
-  if (!/^[a-z0-9-]{1,64}$/.test(headerName)) return [];
+type RpcTemplate = { result?: unknown; error?: unknown };
+type CachedRead = { expiresAt: number; templates: RpcTemplate[] };
+const MAX_READ_CACHE_ENTRIES = 512;
+const readCache = new Map<string, CachedRead>();
+const readInflight = new Map<string, Promise<RpcTemplate[]>>();
 
-  const primaryHeaders: Record<string, string> = { "content-type": "application/json", accept: "application/json" };
-  if (apiKey) primaryHeaders[headerName] = apiKey;
-  const primary = parseUpstream(process.env.HYPEREVM_LOG_RPC_UPSTREAM_URL ?? "", primaryHeaders);
-  const fallback = parseUpstream(process.env.HYPEREVM_READ_RPC_FALLBACK_URL ?? "", {
-    "content-type": "application/json",
-    accept: "application/json",
-  });
-  const upstreams = [primary, fallback].filter(
-    (item): item is { url: URL; headers: Record<string, string> } => item !== null,
-  );
-  return upstreams.filter((item, index) => upstreams.findIndex((candidate) => candidate.url.href === item.url.href) === index);
+function readCacheKey(calls: JsonRpcRequest[]): string {
+  return JSON.stringify(calls.map(({ method, params }) => ({ method, params: params ?? [] })));
+}
+
+function pruneReadCache(now: number): void {
+  for (const [key, entry] of readCache) if (entry.expiresAt <= now) readCache.delete(key);
+  while (readCache.size >= MAX_READ_CACHE_ENTRIES) readCache.delete(readCache.keys().next().value ?? "");
+}
+
+async function fetchReadTemplates(
+  calls: JsonRpcRequest[],
+  upstream: { url: URL; headers: Record<string, string> },
+): Promise<RpcTemplate[]> {
+  const forwarded = calls.map((call, index) => ({ ...call, id: index + 1 }));
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+  try {
+    const response = await fetch(upstream.url, {
+      method: "POST",
+      headers: upstream.headers,
+      body: JSON.stringify(forwarded.length === 1 ? forwarded[0] : forwarded),
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    const raw = await response.text();
+    if (Buffer.byteLength(raw, "utf8") > MAX_RESPONSE_BYTES) throw new Error("upstream response too large");
+    if (!response.ok) throw new Error(`upstream HTTP ${response.status}`);
+    const parsed = JSON.parse(raw) as unknown;
+    const responses = Array.isArray(parsed) ? parsed : [parsed];
+    return forwarded.map((_, index) => {
+      const item = responses.find(
+        (candidate): candidate is { id: JsonRpcId; result?: unknown; error?: unknown } =>
+          !!candidate && typeof candidate === "object" && !Array.isArray(candidate) &&
+          (candidate as { id?: unknown }).id === index + 1,
+      );
+      if (!item || (!("result" in item) && !("error" in item))) throw new Error("invalid upstream response");
+      return "error" in item ? { error: item.error } : { result: item.result };
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function cachedRead(
+  calls: JsonRpcRequest[],
+  upstream: { url: URL; headers: Record<string, string> },
+): Promise<RpcTemplate[]> {
+  const key = readCacheKey(calls);
+  const now = Date.now();
+  const cached = readCache.get(key);
+  if (cached && cached.expiresAt > now) return cached.templates;
+  const existing = readInflight.get(key);
+  if (existing) return existing;
+  const request = fetchReadTemplates(calls, upstream)
+    .then((templates) => {
+      if (templates.every((template) => !("error" in template))) {
+        pruneReadCache(Date.now());
+        readCache.set(key, {
+          expiresAt: Date.now() + envUint("HYPEREVM_READ_RPC_CACHE_TTL_MS", 1_000),
+          templates,
+        });
+      }
+      return templates;
+    })
+    .finally(() => readInflight.delete(key));
+  readInflight.set(key, request);
+  return request;
 }
 export async function POST(request: NextRequest) {
   const contentLength = Number.parseInt(request.headers.get("content-length") ?? "0", 10);
   if (contentLength > MAX_BODY_BYTES) return noStore({ error: "request too large" }, 413);
   if (isRateLimited(request)) return noStore({ error: "rate limited" }, 429);
 
-  const upstreams = upstreamConfigs();
-  if (upstreams.length === 0) return noStore({ error: "read RPC unavailable" }, 503);
+  const upstream = upstreamConfig();
+  if (!upstream) return noStore({ error: "read RPC unavailable" }, 503);
 
   let body: unknown;
   try {
@@ -200,31 +266,16 @@ export async function POST(request: NextRequest) {
     return noStore({ error: "unsupported JSON-RPC request" }, 400);
   }
 
-  for (const upstream of upstreams) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
-    try {
-      const response = await fetch(upstream.url, {
-        method: "POST",
-        headers: upstream.headers,
-        body: JSON.stringify(body),
-        cache: "no-store",
-        signal: controller.signal,
-      });
-      const raw = await response.text();
-      if (Buffer.byteLength(raw, "utf8") > MAX_RESPONSE_BYTES) continue;
-      if (!response.ok) continue;
-      try {
-        return noStore(JSON.parse(raw));
-      } catch {
-        // Try the next reviewed read endpoint on malformed upstream output.
-      }
-    } catch {
-      // Timeout/network failure: immediately fail over instead of making the
-      // browser wait through viem's full retry cycle on one provider.
-    } finally {
-      clearTimeout(timer);
-    }
+  const validCalls = calls as JsonRpcRequest[];
+  try {
+    const templates = await cachedRead(validCalls, upstream);
+    const payload = validCalls.map((call, index) => ({
+      jsonrpc: "2.0" as const,
+      id: call.id,
+      ...templates[index]!,
+    }));
+    return noStore(Array.isArray(body) ? payload : payload[0]);
+  } catch {
+    return noStore({ error: "upstream unavailable" }, 502);
   }
-  return noStore({ error: "all read RPC upstreams unavailable" }, 502);
 }

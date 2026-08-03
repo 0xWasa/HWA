@@ -163,7 +163,7 @@ export function PurchaseBox({ snapshot }: { snapshot?: PoolSnapshot }) {
   const [driftBps, setDriftBps] = useState<number>(FWA_PARAMS.defaultDriftBps);
   const [reviewing, setReviewing] = useState(false);
 
-  const quote = useAcquisitionQuote(quantity, driftBps);
+  const quote = useAcquisitionQuote(quantity, driftBps, !prelaunch && (snapshot?.acquisitionsEnabled ?? false));
   const { data: balance } = useNativeBalance();
   const { data: trackedTxs = [] } = useTrackedTxs();
   const recentAcquireTxs = useMemo(() => {

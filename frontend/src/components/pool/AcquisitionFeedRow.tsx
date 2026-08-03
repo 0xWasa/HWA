@@ -12,8 +12,12 @@ import { RowChevron } from "./ListingCard";
  */
 type Outcome = { label: string; className: string };
 
-/** Not a SettlementOutcome — the state before one exists. Labels are wording
-    contracts shared with chips elsewhere; only the stamp frame is styled. */
+/** Not a SettlementOutcome — the states before one exists. Labels are wording
+    contracts shared with chips elsewhere; only the stamp frame is styled.
+    An allocated row is simply inside its settlement window: calling that
+    "Pending claim" read as money stuck, which it is not. PENDING is kept for
+    the genuinely unknown case, a settled row whose outcome did not resolve. */
+const AWAITING: Outcome = { label: "Awaiting settlement", className: "stamp stamp--blue" };
 const PENDING: Outcome = { label: "Pending claim", className: "stamp stamp--amber" };
 
 /* Keyed by the union so a new SettlementOutcome fails the build instead of
@@ -36,7 +40,11 @@ export function AcquisitionFeedRow({
   onOpen: (id: bigint) => void;
 }) {
   const name = sanitizeLabel(listing.nft.name, `#${listing.tokenId}`);
-  const outcome = listing.settlement ? OUTCOME[listing.settlement] : PENDING;
+  const outcome = listing.settlement
+    ? OUTCOME[listing.settlement]
+    : listing.status === "allocated"
+      ? AWAITING
+      : PENDING;
   return (
     <button
       onClick={() => onOpen(listing.id)}

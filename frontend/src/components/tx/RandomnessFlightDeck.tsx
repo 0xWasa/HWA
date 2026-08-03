@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { env } from "@/config/env";
 import { randomnessSecurityBufferSec } from "@/protocol/params";
 import type { AcquisitionTicket, PoolSnapshot } from "@/protocol/types";
@@ -12,6 +12,42 @@ const PHASES: { phases: AcquisitionTicket["phase"][]; label: string }[] = [
   { phases: ["processing"], label: "Selecting" },
   { phases: ["allocated"], label: "Revealed" },
 ];
+
+/**
+ * Counts the real protocol security buffer down from the request timestamp.
+ * This is not a prediction of the reveal: the buffer is a contract constant,
+ * so once it reaches zero the copy stops promising anything and simply says
+ * the round is eligible.
+ */
+function SecurityBufferTimer({ requestedAt, seconds }: { requestedAt: number; seconds: number }) {
+  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Math.floor(Date.now() / 1000)), 1_000);
+    return () => clearInterval(timer);
+  }, []);
+  const remaining = Math.max(0, requestedAt + seconds - now);
+  const pct = seconds > 0 ? ((seconds - remaining) / seconds) * 100 : 100;
+  return (
+    <div className="mt-3 flex items-center justify-center gap-2.5" data-testid="randomness-buffer-timer">
+      <span aria-hidden className="relative grid size-7 shrink-0 place-items-center">
+        <svg viewBox="0 0 36 36" className="absolute inset-0 -rotate-90">
+          <circle cx="18" cy="18" r="15" fill="none" stroke="var(--hwa-border)" strokeWidth="3" />
+          <circle
+            cx="18" cy="18" r="15" fill="none"
+            stroke={remaining > 0 ? "var(--hwa-chain)" : "var(--hwa-accent)"}
+            strokeWidth="3" strokeLinecap="round"
+            strokeDasharray={`${(pct / 100) * 94.2} 94.2`}
+            style={{ transition: "stroke-dasharray 1s linear" }}
+          />
+        </svg>
+        <span className="num font-mono text-3xs font-semibold text-dim">{remaining}</span>
+      </span>
+      <span className="font-mono text-3xs uppercase tracking-[0.1em] text-chain">
+        {remaining > 0 ? "Security buffer" : "Round eligible"}
+      </span>
+    </div>
+  );
+}
 
 /**
  * FWA-like concealed deck shown while drand is in flight. It only presents
@@ -124,10 +160,7 @@ export function RandomnessFlightDeck({
           The NFT remains unknown until the authenticated drand word is received and the FIFO sequence is processed.
           {ordered.length > 1 && <span className="text-dim"> {ordered.length} requests are queued in this batch.</span>}
         </p>
-        <p className="mt-1.5 text-center font-mono text-3xs uppercase tracking-[0.1em] text-chain">
-          {env.chainId === 999 ? "Mainnet security buffer" : "Testnet relay buffer"}: at least {securityBuffer} seconds
-          before the target round
-        </p>
+        <SecurityBufferTimer requestedAt={ticket.requestedAt} seconds={securityBuffer} />
       </div>
     </div>
   );

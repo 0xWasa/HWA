@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 2,
+  "chainId": 999,
+  "generatedAtUtc": "2026-08-02T00:00:00Z",
+  "broadcast": false,
+  "executable": false,
+  "generatedBy": "manual on-chain verification (no PowerShell/cast available on the authoring host)",
+  "deploymentSource": "https://hwa.fun/deployments/hyperevm-mainnet-999.json (live production manifest)",
+  "onchainValidation": {
+    "performed": true,
+    "chainId": 999,
+    "rpc": "https://rpc.hyperliquid.xyz/evm",
+    "checkedAtBlock": 42107006,
+    "fwa": "0x79400B603d97D9A1b07cC9aFA6B112bfb7bcb104",
+    "whitelist": "0x9A1D846287ECb0D026d01045BdB61268B5e91c22",
+    "whitelistBoundFwa": "0x79400b603d97d9a1b07cc9afa6b112bfb7bcb104",
+    "owner": "0x24398fc31899e2384e4e070fcdbf8bb6d916fcd9",
+    "ownerIsEoa": true,
+    "acquisitionsEnabled": true,
+    "referenceCollectionWhitelisted": true,
+    "targetAlreadyWhitelisted": false,
+    "callSimulatedFromOwner": "success"
+  },
+  "postCanaryPublicCollections": [
+    {
+      "order": 1,
+      "to": "0x9A1D846287ECb0D026d01045BdB61268B5e91c22",
+      "value": "0",
+      "data": "0x909d6a4b000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000822c4f30414299e003ef39e9aba49d8f8d4445ba",
+      "operation": 0,
+      "description": "Allowlist the reviewed Rekt Wolf ERC-721 collection (0x822c4f30414299e003ef39e9aba49d8f8d4445ba) on the production FWA"
+    }
+  ],
+  "supersededAttempts": [
+    {
+      "transaction": "0x12cefcd51dab5d0b404280cf7ac2a02f9b928a518ea3ad9c4cfb3ecf85b8b5fa",
+      "block": 42107006,
+      "status": "success",
+      "whitelist": "0xD2E5eC83bD273d3ced73E473a3cAd5cdEa146C37",
+      "boundFwa": "0x13aB222c1079084064F75713e72defCE20751f4A",
+      "effect": "none on production",
+      "reason": "Targeted the legacy deployment, which the production manifest lists as legacyFwa. The allowlist entry exists on the legacy contract only and does not affect hwa.fun. Consider reverting it with setCollections([...], false) for hygiene, or leaving it if the legacy deployment is considered fully retired."
+    }
+  ],
+  "notes": [
+    "This file contains calldata only and never broadcasts.",
+    "acquisitionsEnabled() is TRUE on production: executing this makes Rekt Wolf immediately depositable and available for live gameplay.",
+    "Rekt Wolf is an upgradeable ERC1967 proxy whose implementation can be replaced by an EOA-controlled owner; see the collection entry in release/hwa-mainnet-collections-attestation.json for the full risk note.",
+    "git main is 37 commits behind this branch and still describes the legacy V1 deployment. Any address taken from main is wrong for production.",
+    "Do NOT reuse release/mainnet-owner-actions-eoa.json (2026-07-29): its whitelist 0x4261cE6B... is bound to FWA 0x4e010e44..., a third and even older deployment.",
+    "Re-verify immediately before owner execution; do not execute stale calldata."
+  ]
+}

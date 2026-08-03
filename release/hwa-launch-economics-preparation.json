@@ -1,44 +1,44 @@
-﻿{
-    "schemaVersion":  1,
-    "generatedAtUtc":  "2026-07-27T16:01:27.8165245Z",
-    "status":  "recommended-pending-owner-confirmation",
-    "chainId":  999,
-    "token":  {
-                  "name":  "Hyper World Assets",
-                  "symbol":  "HWA",
-                  "totalSupplyWei":  "1000000000000000000000000000",
-                  "oneSidedLpSupplyWei":  "500000000000000000000000000"
-              },
-    "economics":  {
-                      "targetFdvHype":  "640",
-                      "targetFdvHypeWei":  "640000000000000000000",
-                      "minimumFdvHype":  "600",
-                      "minimumFdvHypeWei":  "600000000000000000000",
-                      "maximumFdvHype":  "700",
-                      "maximumFdvHypeWei":  "700000000000000000000",
-                      "operationalHypeBudget":  "20",
-                      "operationalHypeBudgetWei":  "20000000000000000000",
-                      "hypeSeededIntoLp":  "0",
-                      "explanation":  "Project X launch LP is one-sided in HWA; the 20 HYPE cap funds deployment, drand and canary operations, not LP principal."
-                  },
-    "priceCandidates":  {
-                            "hwaIsToken0":  {
-                                                "condition":  "predicted HWA address is lower than wHYPE",
-                                                "sqrtPriceX96":  "63382530011411470074835160",
-                                                "derivedFdvHypeWei":  "639999999999999999999",
-                                                "currentTick":  -142626,
-                                                "tickLower":  -142600,
-                                                "tickUpper":  -139000
-                                            },
-                            "hwaIsToken1":  {
-                                                "condition":  "predicted HWA address is higher than wHYPE",
-                                                "sqrtPriceX96":  "99035203142830421991929937920000",
-                                                "derivedFdvHypeWei":  "640000000000000000000",
-                                                "currentTick":  142625,
-                                                "tickLower":  139000,
-                                                "tickUpper":  142600
-                                            }
-                        },
-    "selectionRule":  "Predict the launch factory and HWA CREATE addresses from the funded deployer nonce, select exactly one candidate, then reproduce the FDV independently in the Foundry simulation before broadcast.",
-    "rationale":  "Rounded native-asset purchasing-power parity with the forensic FWA launch (~25 ETH FDV) at the 27 July 2026 ETH/HYPE reference ratio; final approval remains explicit because the pool price is irreversible."
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-07-30T14:21:09.8837655Z",
+  "status": "recommended-pending-owner-confirmation",
+  "chainId": 999,
+  "token": {
+    "name": "Hyper World Assets",
+    "symbol": "HWA",
+    "totalSupplyWei": "1000000000000000000000000000",
+    "oneSidedLpSupplyWei": "500000000000000000000000000"
+  },
+  "economics": {
+    "targetFdvHype": "748.271959",
+    "targetFdvHypeWei": "748271959000000000000",
+    "minimumFdvHype": "710.858361",
+    "minimumFdvHypeWei": "710858361000000000000",
+    "maximumFdvHype": "785.685557",
+    "maximumFdvHypeWei": "785685557000000000000",
+    "operationalHypeBudget": "5",
+    "operationalHypeBudgetWei": "5000000000000000000",
+    "hypeSeededIntoLp": "0",
+    "explanation": "Project X launch LP is one-sided in HWA; the 20 HYPE cap funds deployment, drand and canary operations, not LP principal."
+  },
+  "priceCandidates": {
+    "hwaIsToken0": {
+      "condition": "predicted HWA address is lower than wHYPE",
+      "sqrtPriceX96": "68534511104844771028355309",
+      "derivedFdvHypeWei": "748271958999999999999",
+      "currentTick": -141063,
+      "tickLower": -141000,
+      "tickUpper": 887200
+    },
+    "hwaIsToken1": {
+      "condition": "predicted HWA address is higher than wHYPE",
+      "sqrtPriceX96": "91590377376208442188003077571423",
+      "derivedFdvHypeWei": "748271959000000000000",
+      "currentTick": 141062,
+      "tickLower": -887200,
+      "tickUpper": 141000
+    }
+  },
+  "selectionRule": "Predict the launch factory and HWA CREATE addresses from the funded deployer nonce, select exactly one candidate, then reproduce the FDV independently in the Foundry simulation before broadcast.",
+  "rationale": "FWA-parity one-sided launch with 500M HWA in the widest valid Project X range and a spot-calibrated circa-USD-40k initial FDV; the pool price is irreversible."
 }

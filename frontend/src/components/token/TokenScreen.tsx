@@ -170,6 +170,19 @@ export function TokenScreen() {
           <span className="text-dim">{market.dex ?? "—"}</span>
           {market.feeTierBps !== undefined && <Tag tone="accent">{market.feeTierBps / 100}% fee tier</Tag>}
         </span>
+        {/* Built from the pool this page already reads, so the link can never
+            point at a different market than the chart above it. */}
+        {market.poolAddress && (
+          <a
+            href={`https://dexscreener.com/hyperevm/${market.poolAddress.toLowerCase()}`}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="ml-auto font-medium text-accent hover:underline"
+            data-testid="dexscreener-link"
+          >
+            View on DexScreener →
+          </a>
+        )}
       </div>
     </Shell>
   );

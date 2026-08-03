@@ -13,6 +13,21 @@ test.describe("Pool exploration", () => {
     expect(await cards.count()).toBeGreaterThan(8);
   });
 
+  test("show more reveals every current pool position without limiting the hero deck", async ({ page }) => {
+    await page.goto("/?scenario=default");
+
+    const cards = page.locator('[data-testid^="listing-card-"]');
+    await expect(cards).toHaveCount(24);
+    const showMore = page.getByRole("button", { name: /Show more/ });
+    await expect(showMore).toBeVisible();
+
+    const heroTotal = Number(await page.getByTestId("hero-stage").getAttribute("data-total"));
+    expect(heroTotal).toBe(24);
+
+    await showMore.click();
+    await expect(cards).toHaveCount(27);
+    await expect(showMore).toHaveCount(0);
+  });
   test("browses the hero deck by drag, arrows and keyboard — never on hover", async ({ page }) => {
     await page.goto("/?scenario=default");
     const stage = page.getByTestId("hero-stage");
@@ -134,5 +149,22 @@ test.describe("Pool exploration", () => {
     await expect(page.getByTestId("prize-stack").locator(".skeleton")).toHaveCount(0);
     await expect(page.getByText("The pool is empty", { exact: true })).toBeVisible();
     await expect(page.getByTestId("acquire-panel")).toContainText("Acquisitions closed");
+  });
+
+  test("the allowlist shelf routes to the deposit flow and quotes the live emission", async ({ page }) => {
+    // Rewards inactive: the shelf still sells the deposit, but must not invent a rate.
+    await page.goto("/?scenario=default");
+    const shelf = page.getByTestId("supported-collections");
+    await expect(shelf).toBeVisible();
+    const cta = page.getByTestId("deposit-cta");
+    await expect(cta).toContainText("square root");
+    await expect(cta).not.toContainText("a day is split");
+
+    // Rewards active: the daily figure comes from the emission rate, not a constant.
+    await page.goto("/?scenario=rewardsActive");
+    await expect(page.getByTestId("deposit-cta")).toContainText("10M $HWA a day");
+
+    await page.getByTestId("deposit-cta").getByRole("button", { name: "Deposit an NFT" }).click();
+    await expect(page).toHaveURL(/\/deposit$/);
   });
 });

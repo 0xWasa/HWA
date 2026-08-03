@@ -1,6 +1,6 @@
 "use client";
 
-import { sanitizeLabel } from "@/lib/format";
+import { sanitizeLabel, shortId } from "@/lib/format";
 import type { AcquisitionTicket, Listing } from "@/protocol/types";
 import { useListing } from "@/state/queries";
 import { Hype } from "@/components/ui/Hype";
@@ -30,9 +30,13 @@ export function TicketProgress({ ticket }: { ticket: AcquisitionTicket }) {
       data-testid={`ticket-${ticket.requestId}`}
       data-phase={ticket.phase}
     >
-      <div className="mb-1.5 flex items-center justify-between text-2xs">
-        <span className="num font-mono text-mute">req #{ticket.requestId.toString()}</span>
-        <span className="num font-mono text-faint">seq {ticket.sequence.toString()}</span>
+      {/* A mainnet requestId is a full uint256: printed raw it blew the panel
+          open and gave the whole sidebar a horizontal scrollbar. */}
+      <div className="mb-1.5 flex items-center justify-between gap-2 text-2xs">
+        <span className="num min-w-0 truncate font-mono text-mute" title={ticket.requestId.toString()}>
+          req #{shortId(ticket.requestId)}
+        </span>
+        <span className="num shrink-0 font-mono text-faint">seq {ticket.sequence.toString()}</span>
       </div>
 
       {!failed ? (

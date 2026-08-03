@@ -18,6 +18,17 @@ import type { AcquisitionTicket } from "@/protocol/types";
 
 const STORAGE_KEY = "hwa.revealed";
 
+/**
+ * How recent an allocation has to be for the first snapshot to still open it.
+ *
+ * Priming used to swallow every allocation already present when the queue
+ * mounted, and wrote those ids to sessionStorage, so a reload while the
+ * randomness was still settling burned the reveal permanently. A draw the user
+ * just paid for is theirs to see; only allocations old enough to belong to an
+ * earlier visit are skipped.
+ */
+const PRIME_GRACE_SEC = 30 * 60;
+
 export interface RevealQueue {
   /** Listing id to reveal, or null when nothing is queued. */
   current: bigint | null;
@@ -90,13 +101,15 @@ export function useRevealQueue(): RevealQueue {
 
     const fresh: QueuedReveal[] = [];
     let added = false;
+    const nowSec = Math.floor(Date.now() / 1000);
     for (const t of tickets) {
       if (t.phase !== "allocated" || t.listingId === undefined) continue;
       const key = t.requestId.toString();
       if (seen.has(key)) continue;
       seen.add(key);
       added = true;
-      if (primedRef.current) fresh.push({ requestId: key, listingId: t.listingId, ticket: { ...t } });
+      const fromAnEarlierVisit = !primedRef.current && nowSec - t.requestedAt > PRIME_GRACE_SEC;
+      if (!fromAnEarlierVisit) fresh.push({ requestId: key, listingId: t.listingId, ticket: { ...t } });
     }
     if (added) persistSeen(seen);
     primedRef.current = true;

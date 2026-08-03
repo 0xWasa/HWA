@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { QUOTE_FRESH_MS, QUOTE_REFRESH_MS } from "@/protocol/params";
 import { useProtocol } from "@/protocol/provider";
-import type { ActivityQuery, ListingsQuery } from "@/protocol/types";
+import type { ActivityQuery, Address, ListingsQuery } from "@/protocol/types";
 
 /**
  * Data hooks — thin, typed wrappers over the ProtocolClient. Serialization of
@@ -17,7 +17,8 @@ export function usePoolSnapshot() {
     queryKey: ["pool"],
     queryFn: () => client!.getPoolSnapshot(),
     enabled: !!client,
-    refetchInterval: 6_000,
+    refetchInterval: 15_000,
+    staleTime: 10_000,
   });
 }
 
@@ -66,8 +67,8 @@ export function useActivity(query: ActivityQuery) {
     ],
     queryFn: () => client!.getActivity(query),
     enabled: !!client,
-    refetchInterval: 30_000,
-    staleTime: 15_000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
     placeholderData: (prev) => prev,
   });
 }
@@ -116,7 +117,8 @@ export function useNativeBalance() {
     queryKey: ["balance", account.address ?? ""],
     queryFn: () => client!.getNativeBalance(account.address!),
     enabled: !!client && account.status === "connected" && !!account.address,
-    refetchInterval: 8_000,
+    refetchInterval: 20_000,
+    staleTime: 10_000,
   });
 }
 
@@ -126,7 +128,8 @@ export function useSettlementInfo(listingId: bigint | null) {
     queryKey: ["settlement", listingId === null ? "" : listingId.toString()],
     queryFn: () => client!.getSettlementInfo(listingId!),
     enabled: !!client && listingId !== null,
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
   });
 }
 
@@ -136,7 +139,8 @@ export function useTokenMarket() {
     queryKey: ["tokenMarket", account.address ?? ""],
     queryFn: () => client!.getTokenMarket(account.address),
     enabled: !!client,
-    refetchInterval: 15_000,
+    refetchInterval: 30_000,
+    staleTime: 15_000,
   });
 }
 
@@ -160,14 +164,24 @@ export function useSwapQuote(side: "buy" | "sell", amountIn: bigint | null, slip
   });
 }
 
+/** How much HWA the venue may pull. Selling waits on this the first time. */
+export function useTradeAllowance(account: Address | undefined) {
+  const { client } = useProtocol();
+  return useQuery({
+    queryKey: ["tradeAllowance", account ?? ""],
+    queryFn: () => client!.tradeAllowance(account!),
+    enabled: !!client && !!account,
+  });
+}
+
 export function useConnectionHealth() {
   const { client } = useProtocol();
   return useQuery({
     queryKey: ["health"],
     queryFn: () => client!.getConnectionHealth(),
     enabled: !!client,
-    refetchInterval: 30_000,
-    staleTime: 15_000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
     retry: 1,
   });
 }
@@ -187,13 +201,13 @@ export type QuoteFreshness = "fresh" | "stale" | "refreshing";
  * Acquisition quote with explicit freshness. Auto-refreshes while mounted
  * unless the scenario freezes it (staleQuote); manual refresh always works.
  */
-export function useAcquisitionQuote(quantity: number, driftToleranceBps: number) {
+export function useAcquisitionQuote(quantity: number, driftToleranceBps: number, enabled = true) {
   const { client, scenario } = useProtocol();
   const frozen = scenario?.freezeQuote ?? false;
   const query = useQuery({
     queryKey: ["quote", quantity, driftToleranceBps],
     queryFn: () => client!.quoteAcquisition({ quantity, driftToleranceBps }),
-    enabled: !!client,
+    enabled: !!client && enabled,
     refetchInterval: frozen ? false : QUOTE_REFRESH_MS,
     refetchOnWindowFocus: !frozen,
     retry: 0,
